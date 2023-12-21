@@ -28,6 +28,13 @@ import { HomeComponent } from './core/components/home/home.component';
                                     './modules/gestion-docentes/gestion-docentes.module'
                                 ).then((m) => m.GestionDocentesModule),
                         },
+                        {
+                            path: 'examen-de-valoracion',
+                            loadChildren: () =>
+                                import(
+                                    './modules/examen-de-valoracion/examen-de-valoracion.module'
+                                ).then((m) => m.ExamenDeValoracionModule),
+                        },
                     ],
                 },
                 { path: 'pages/error', component: ErrorComponent },

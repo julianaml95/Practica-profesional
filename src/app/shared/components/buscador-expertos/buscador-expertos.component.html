@@ -5,15 +5,15 @@
             pInputText
             type="text"
             class="w-full"
-            placeholder="Buscar docente"
-            (input)="filterDocentes($event.target.value)"
+            placeholder="Buscar experto"
+            (input)="filterExpertos($event.target.value)"
         />
     </span>
 </div>
 <br/>
 <p-table
-    #tableDocentes
-    [value]="docentes"
+    #tableExpertos
+    [value]="expertos"
     [paginator]="true"
     [loading]="loading"
     [rows]="5"
@@ -22,24 +22,24 @@
     [showCurrentPageReport]="true"
     currentPageReportTemplate="{first} - {last} de {totalRecords}"
     selectionMode="single"
-    [(selection)]="docenteSeleccionado"
+    [(selection)]="expertoSeleccionado"
     dataKey="id"
     >
     <ng-template pTemplate="header">
         <tr>
-            <th scope="col">Identificación</th>
+            <th scope="col">Indetificación</th>
             <th scope="col">Nombres</th>
             <th scope="col">Apellidos</th>
             <th scope="col">Correo electronico</th>
         </tr>
     </ng-template>
     <!-- Contenido  -->
-    <ng-template pTemplate="body" let-docente>
-        <tr [pSelectableRow]="docente">
-            <td>{{ docente.persona.identificacion }}</td>
-            <td>{{ docente.persona.nombre }}</td>
-            <td>{{ docente.persona.apellido }}</td>
-            <td>{{ docente.persona.correoElectronico }}</td>
+    <ng-template pTemplate="body" let-experto>
+        <tr [pSelectableRow]="experto">
+            <td>{{ experto.persona.identificacion }}</td>
+            <td>{{ experto.persona.nombre }}</td>
+            <td>{{ experto.persona.apellido }}</td>
+            <td>{{ experto.persona.correoElectronico }}</td>
         </tr>
     </ng-template>
     <!-- Mensaje sin registros -->
@@ -55,7 +55,7 @@
 <div class="sticky footer-modal">
     <button
         pButton
-        label="¿Desea registrar un docente?"
+        label="¿Desea registrar un experto?"
         class="p-button-text"
         (click)="onRegistrar()"
     ></button>
@@ -69,7 +69,7 @@
     <button
         pButton
         icon="pi pi-check"
-        [disabled]="!docenteSeleccionado"
+        [disabled]="!expertoSeleccionado"
         label="Seleccionar"
         (click)="onSeleccionar()"
     ></button>

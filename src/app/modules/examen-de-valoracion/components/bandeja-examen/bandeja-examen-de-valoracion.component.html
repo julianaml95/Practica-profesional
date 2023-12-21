@@ -1,0 +1,83 @@
+<p-splitter styleClass="mb-5" layout="vertical">
+    <ng-template pTemplate>
+        <div class="col flex align-items-center justify-content-center">
+            <p-card
+                class="m-2"
+                header="Datos del Estudiante"
+                [style]="{ width: '600px' }"
+            >
+                <div class="mt-2 flex justify-content-between">
+                    <span>Codigo</span>
+                    <span>John Doe</span>
+                </div>
+                <div class="mt-2 flex justify-content-between">
+                    <span>Numero de Identificacion</span>
+                    <span>John Doe</span>
+                </div>
+                <div class="mt-2 flex justify-content-between">
+                    <span>Nombres y Apellidos</span>
+                    <span>John Doe</span>
+                </div>
+            </p-card>
+        </div>
+    </ng-template>
+    <ng-template pTemplate>
+        <div
+            class="col flex flex-column align-items-center justify-content-center"
+        >
+            <div class="flex justify-content-center mb-3">
+                <button
+                    pButton
+                    icon="pi pi-plus"
+                    label="Crear Examen de Valoracion"
+                    (click)="onProcesoExamen()"
+                ></button>
+            </div>
+            <p-table
+                [value]="solicitudes"
+                [paginator]="true"
+                [loading]="loading"
+                [rows]="5"
+                [tableStyle]="{ 'min-width': '50rem' }"
+                [showCurrentPageReport]="true"
+                breakpoint="768px"
+                styleClass="p-datatable-gridlines p-datatable-striped"
+                currentPageReportTemplate="{first} - {last} de {totalRecords}"
+            >
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th scope="col">Titulo</th>
+                        <th scope="col">
+                            Fecha creacion de Examen de Valoracion
+                        </th>
+                        <th scope="col">Estado Actual</th>
+                        <th scope="col" class="text-center w-2">Opciones</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-solicitud>
+                    <tr>
+                        <td>{{ solicitud.titulo }}</td>
+                        <td>{{ solicitud.fecha }}</td>
+                        <td>{{ solicitud.estado }}</td>
+                        <td class="text-center">
+                            <button
+                                pButton
+                                pTooltip="Editar"
+                                type="button"
+                                icon="pi pi-pencil"
+                                class="p-button-rounded p-button-text p-button-warning"
+                                (click)="onEditar(solicitud.id)"
+                            ></button>
+                        </td>
+                    </tr>
+                </ng-template>
+                <!-- Mensaje sin registros -->
+                <ng-template pTemplate="emptymessage" let-columns>
+                    <tr>
+                        <td [attr.colspan]="6">No se encontraron registros</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </ng-template>
+</p-splitter>

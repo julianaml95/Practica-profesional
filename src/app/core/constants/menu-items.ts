@@ -38,6 +38,23 @@ export const menuItems: MenuItem[] = [
     { separator: true },
     {
         label: 'TRABAJOS DE GRADO',
-        icon: 'pi pi-fw pi-book'
+        icon: 'pi pi-fw pi-book',
+        items: [
+            {
+                label: 'Examen de valoracion',
+                icon: 'pi pi-user',
+                routerLink: '/examen-de-valoracion',
+            },
+            {
+                label: 'Generar Hoja de Vida',
+                icon: 'pi pi-user',
+                routerLink: '/hoja-de-vida',
+            },
+            {
+                label: 'Seguimiento a egresados',
+                icon: 'pi pi-user',
+                routerLink: '/seguimiento-de-egresados',
+            },
+        ]
     }
 ];

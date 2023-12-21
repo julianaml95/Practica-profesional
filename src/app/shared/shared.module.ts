@@ -4,6 +4,7 @@ import { PrimenNgModule } from '../modules/primen-ng/primen-ng.module';
 import { EmptyLabelPipe } from './pipes/empty-label.pipe';
 import { BuscadorDocentesComponent } from './components/buscador-docentes/buscador-docentes.component';
 import { BuscadorEstudiantesComponent } from './components/buscador-estudiantes/buscador-estudiantes.component';
+import { BuscadorExpertosComponent } from './components/buscador-expertos/buscador-expertos.component';
 
 
 
@@ -11,7 +12,8 @@ import { BuscadorEstudiantesComponent } from './components/buscador-estudiantes/
   declarations: [
     EmptyLabelPipe,
     BuscadorDocentesComponent,
-    BuscadorEstudiantesComponent
+    BuscadorEstudiantesComponent,
+    BuscadorExpertosComponent
   ],
   imports: [
     CommonModule,
