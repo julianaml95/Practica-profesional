@@ -1,0 +1,10 @@
+::ng-deep {
+    .p-datepicker tr > td {
+        padding: 0.25rem !important;
+    }
+
+    .p-datepicker td > span {
+        width: 18px !important;
+        height: 18px !important;
+    }
+}

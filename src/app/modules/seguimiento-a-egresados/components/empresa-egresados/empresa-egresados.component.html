@@ -1,0 +1,146 @@
+<form [formGroup]="empresaForm">
+    <div class="flex flex-column gap-2 mt-4">
+        <div class="field grid">
+            <div class="col-5 text-right align-self-center">
+                <label class="label-required">Nombre de la Empresa</label>
+            </div>
+            <div class="col-7">
+                <input
+                    pInputText
+                    [maxLength]="250"
+                    class="p-inputtext-sm w-25rem"
+                    formControlName="nombre"
+                    [ngClass]="{
+                        'ng-invalid ng-dirty':
+                            getFormControl('nombre').invalid &&
+                            getFormControl('nombre').touched
+                    }"
+                />
+            </div>
+        </div>
+        <div class="field grid">
+            <div class="col-5 text-right align-self-center">
+                <label class="label-required">Ubicación de la Empresa</label>
+            </div>
+            <div class="col-7">
+                <input
+                    pInputText
+                    [maxLength]="250"
+                    class="p-inputtext-sm w-25rem"
+                    formControlName="ubicacion"
+                    [ngClass]="{
+                        'ng-invalid ng-dirty':
+                            getFormControl('ubicacion').invalid &&
+                            getFormControl('ubicacion').touched
+                    }"
+                />
+            </div>
+        </div>
+        <div class="field grid">
+            <div class="col-5 text-right align-self-center">
+                <label class="label-required">Cargo</label>
+            </div>
+            <div class="col-7">
+                <input
+                    pInputText
+                    [maxLength]="250"
+                    class="p-inputtext-sm w-25rem"
+                    formControlName="cargo"
+                    [ngClass]="{
+                        'ng-invalid ng-dirty':
+                            getFormControl('cargo').invalid &&
+                            getFormControl('cargo').touched
+                    }"
+                />
+            </div>
+        </div>
+        <div class="field grid">
+            <div class="col-5 text-right align-self-center">
+                <label class="label-required">Jefe Directo</label>
+            </div>
+            <div class="col-7">
+                <input
+                    pInputText
+                    [maxLength]="250"
+                    class="p-inputtext-sm w-25rem"
+                    formControlName="jefeDirecto"
+                    [ngClass]="{
+                        'ng-invalid ng-dirty':
+                            getFormControl('jefeDirecto').invalid &&
+                            getFormControl('jefeDirecto').touched
+                    }"
+                />
+            </div>
+        </div>
+        <div class="field grid">
+            <div class="col-5 text-right align-self-center">
+                <label class="label-required">Teléfono de la Empresa</label>
+            </div>
+            <div class="col-7">
+                <input
+                    pInputText
+                    [maxLength]="250"
+                    class="p-inputtext-sm w-25rem"
+                    formControlName="telefonoEmpresa"
+                    [ngClass]="{
+                        'ng-invalid ng-dirty':
+                            getFormControl('telefonoEmpresa').invalid &&
+                            getFormControl('telefonoEmpresa').touched
+                    }"
+                />
+            </div>
+        </div>
+        <div class="field grid">
+            <div class="col-5 text-right align-self-center">
+                <label class="label-required">Correo Electrónico</label>
+            </div>
+            <div class="col-7">
+                <input
+                    pInputText
+                    [maxLength]="250"
+                    class="p-inputtext-sm w-25rem"
+                    formControlName="correoEmpresa"
+                    [ngClass]="{
+                        'ng-invalid ng-dirty':
+                            getFormControl('correoEmpresa').invalid &&
+                            getFormControl('correoEmpresa').touched
+                    }"
+                />
+            </div>
+        </div>
+        <div class="field grid">
+            <div class="col-5 text-right align-self-center">
+                <label class="label-required">Estado</label>
+            </div>
+            <div class="col-7">
+                <p-dropdown
+                [options]="estados"
+                placeholder="Seleccione"
+                styleClass="p-inputtext-sm w-25rem"
+                formControlName="estado"
+                [ngClass]="{ 'ng-invalid ng-dirty': getFormControl('estado').invalid && getFormControl('estado').touched }"
+            ></p-dropdown>
+            </div>
+        </div>
+    </div>
+    <div class="flex align-items-center justify-content-end mt-7">
+        <button
+        pButton
+            *ngIf="!editMode"
+            type="submit"
+            icon="pi pi-save"
+            label="Registrar Información"
+            (click)="onSave()"
+            [loading]="loading"
+        ></button>
+        <button
+            *ngIf="editMode"
+            pButton
+            type="submit"
+            icon="pi pi-save"
+            label="Actualizar Información"
+            (click)="onSave()"
+            [loading]="loading"
+        ></button>
+    </div>
+</form>

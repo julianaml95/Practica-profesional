@@ -1,0 +1,5 @@
+::ng-deep.p-steps .p-steps-item .p-menuitem-link:not(.p-disabled):focus {
+    outline: 0 none !important;
+    outline-offset: 0 !important;
+    box-shadow: 0 0 0 0 !important;
+}

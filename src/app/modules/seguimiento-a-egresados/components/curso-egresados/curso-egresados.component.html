@@ -1,0 +1,94 @@
+<form [formGroup]="cursoForm" class="mt-5">
+    <div class="flex flex-column gap-3">
+        <div class="field grid">
+            <div class="col-5 text-right align-self-center">
+                <label class="label-required">Nombre del Curso</label>
+            </div>
+            <div class="col-7">
+                <input
+                    pInputText
+                    [maxLength]="250"
+                    class="p-inputtext-sm w-25rem"
+                    formControlName="nombre"
+                    [ngClass]="{
+                        'ng-invalid ng-dirty':
+                            getFormControl('nombre').invalid &&
+                            getFormControl('nombre').touched
+                    }"
+                />
+            </div>
+        </div>
+        <div class="field grid">
+            <div class="col-5 text-right align-self-center">
+                <label class="label-required">Orientado a</label>
+            </div>
+            <div class="col-7">
+                <input
+                    pInputText
+                    [maxLength]="250"
+                    class="p-inputtext-sm w-25rem"
+                    formControlName="orientadoA"
+                    [ngClass]="{
+                        'ng-invalid ng-dirty':
+                            getFormControl('orientadoA').invalid &&
+                            getFormControl('orientadoA').touched
+                    }"
+                />
+            </div>
+        </div>
+        <div class="field grid">
+            <div class="col-5 text-right align-self-center">
+                <label class="label-required">Fecha de Inicio</label>
+            </div>
+            <div class="col-7">
+                <p-calendar
+                    formControlName="fechaInicio"
+                    [showIcon]="true"
+                    dateFormat="dd.mm.yy"
+                    [ngClass]="{
+                        'ng-invalid ng-dirty':
+                            getFormControl('fechaInicio').invalid &&
+                            getFormControl('fechaInicio').touched
+                    }"
+                ></p-calendar>
+            </div>
+        </div>
+        <div class="field grid">
+            <div class="col-5 text-right align-self-center">
+                <label class="label-required">Fecha de Fin</label>
+            </div>
+            <div class="col-7">
+                <p-calendar
+                    formControlName="fechaFin"
+                    [showIcon]="true"
+                    dateFormat="dd.mm.yy"
+                    [ngClass]="{
+                        'ng-invalid ng-dirty':
+                            getFormControl('fechaFin').invalid &&
+                            getFormControl('fechaFin').touched
+                    }"
+                ></p-calendar>
+            </div>
+        </div>
+    </div>
+    <div class="flex align-items-center justify-content-center mt-8">
+        <button
+            pButton
+            *ngIf="!editMode"
+            type="submit"
+            icon="pi pi-save"
+            label="Registrar Información"
+            (click)="onSave()"
+            [loading]="loading"
+        ></button>
+        <button
+            *ngIf="editMode"
+            pButton
+            type="submit"
+            icon="pi pi-save"
+            label="Actualizar Información"
+            (click)="onSave()"
+            [loading]="loading"
+        ></button>
+    </div>
+</form>
