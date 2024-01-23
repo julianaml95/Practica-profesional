@@ -10,15 +10,19 @@ import { InformacionPersonalComponent } from './components/crear-editar-docente/
 import { InformacionUniversidadComponent } from './components/crear-editar-docente/informacion-universidad/informacion-universidad.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { InformacionTituloComponent } from './components/crear-editar-docente/informacion-titulo/informacion-titulo.component';
+import { CargarDocentesComponent } from './components/cargar-docentes/cargar-docentes.component';
+import { BandejaDocentesComponent } from './components/bandeja-docentes/bandeja-docentes.component';
 
 
 @NgModule({
   declarations: [
     PrincipalGestionDocentesComponent,
+    BandejaDocentesComponent,
     CrearEditarDocenteComponent,
     InformacionPersonalComponent,
     InformacionUniversidadComponent,
-    InformacionTituloComponent
+    InformacionTituloComponent,
+    CargarDocentesComponent
   ],
   imports: [
     CommonModule,

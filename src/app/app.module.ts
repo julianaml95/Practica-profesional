@@ -22,9 +22,6 @@ import { MessageService, SharedModule } from 'primeng/api';
 import { GestionEstudiantesModule } from './modules/gestion-estudiantes/gestion-estudiantes.module';
 import { AppBreadcrumbComponent } from './core/components/breadcrumb/app.breadcrumb.component';
 import { BreadcrumbService } from './core/components/breadcrumb/app.breadcrumb.service';
-import { BandejaDocentesComponent } from './modules/gestion-docentes/components/bandeja-docentes/bandeja-docentes.component';
-import { CargarDocentesComponent } from './modules/gestion-docentes/components/cargar-docentes/cargar-docentes.component';
-import { SolicitudExamenComponent } from './modules/examen-de-valoracion/components/soliticud-examen/solicitud-examen.component';
 
 @NgModule({
     imports: [
@@ -48,9 +45,6 @@ import { SolicitudExamenComponent } from './modules/examen-de-valoracion/compone
         AppConfigComponent,
         AppBreadcrumbComponent,
         HomeComponent,
-        BandejaDocentesComponent,
-        CargarDocentesComponent,
-        SolicitudExamenComponent,
     ],
     providers: [
         { provide: LocationStrategy, useClass: HashLocationStrategy },

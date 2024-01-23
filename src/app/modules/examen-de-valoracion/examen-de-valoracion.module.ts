@@ -8,14 +8,16 @@ import { PrimenNgModule } from '../primen-ng/primen-ng.module';
 import { ReactiveFormsModule } from '@angular/forms';
 import { PrincipalExamenDeValoracionComponent } from './pages/principal-examen-de-valoracion/principal-examen-de-valoracion.component';
 import { BandejaExamenDeValoracionComponent } from './components/bandeja-examen/bandeja-examen-de-valoracion.component';
-import { ProcesoExamenComponent } from './components/proceso-examen/proceso-examen.component';
 import { SolicitudService } from './services/solicitud.service';
+import { CrearSolicitudExamenComponent } from './components/crear-solicitud-examen/crear-solicitud-examen.component';
+import { SolicitudExamenComponent } from './components/solicitud-examen/solicitud-examen.component';
 
 @NgModule({
     declarations: [
         PrincipalExamenDeValoracionComponent,
         BandejaExamenDeValoracionComponent,
-        ProcesoExamenComponent,
+        CrearSolicitudExamenComponent,
+        SolicitudExamenComponent
     ],
     imports: [
         CommonModule,

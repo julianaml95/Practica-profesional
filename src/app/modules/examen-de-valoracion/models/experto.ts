@@ -1,6 +1,6 @@
-import { LineaInvestigacion } from "./linea-investigacion";
+import { LineaInvestigacion } from "../../gestion-docentes/models/linea-investigacion";
+import { Titulo } from "../../gestion-docentes/models/titulo";
 import { Persona } from "./persona";
-import { Titulo } from "./titulo";
 
 export interface Experto {
     id?: number;

@@ -5,6 +5,21 @@ export enum EstadoMastria {
     EN_SUSPENSION = 'En suspención',
 }
 
+export enum EstadoEmpresa {
+    LABORA_ACTUALMENTE = 'Labora actualmente en la empresa',
+    CONTRATO_FINALIZADO = 'Contrato finalizado',
+}
+
+export enum Rol {
+    TUTOR = 'Tutor',
+    ASESOR = 'Asesor',
+}
+
+export enum TipoRol {
+    INTERNO = 'Interno',
+    EXTERNO = 'Externo',
+}
+
 export enum TipoIdentificacion {
     CEDULA_CIUDADANIA = 'Cédula de ciudadanía',
     PASAPORTE = 'Pasaporte',
@@ -84,47 +99,47 @@ export enum ModalidadIngreso {
 }
 
 export enum TipoBeca {
-	PARCIAL = "Parcial",
-    TOTAL = "Total"
+    PARCIAL = 'Parcial',
+    TOTAL = 'Total',
 }
 
 export enum DedicacionBeca {
-	TIEMPO_PARCIAL = "Tiempo parcial",
-	TIEMPO_COMPLETO = "Tiempo completo",
+    TIEMPO_PARCIAL = 'Tiempo parcial',
+    TIEMPO_COMPLETO = 'Tiempo completo',
 }
 
 export enum CategoriaMinCiencia {
-	JUNIOR = "Junior",
-	SENIOR = "Senior",
-	ASOCIADO = "Asociado",
-	SIN_CATEGORIA = "Sin categoría",
+    JUNIOR = 'Junior',
+    SENIOR = 'Senior',
+    ASOCIADO = 'Asociado',
+    SIN_CATEGORIA = 'Sin categoría',
 }
 
 export enum TipoVinculacion {
-	PLANTA = "Planta",
-	OCACIONAL = "Ocacional",
-	CATEDRA = "Catedra",
+    PLANTA = 'Planta',
+    OCACIONAL = 'Ocacional',
+    CATEDRA = 'Catedra',
 }
 
 export enum EscalafonDocente {
-	AUXILIAR = "Auxiliar",
-	ASISTENTE = "Asistente",
-	ASOCICADO = "Asociado",
-	TITULAR = "Titular",
+    AUXILIAR = 'Auxiliar',
+    ASISTENTE = 'Asistente',
+    ASOCICADO = 'Asociado',
+    TITULAR = 'Titular',
 }
 
 export enum AbreviaturaTitulo {
-	ING = "Ing.",
-	ESP = "Esp.",
-	MG = "Mg.",
-	PHD = "Phd.",
+    ING = 'Ing.',
+    ESP = 'Esp.',
+    MG = 'Mg.',
+    PHD = 'Phd.',
 }
 
 export enum TipoProrrogaSupencion {
-    CIRCUNSTANCIAS_PERSONALES = "Circunstancias personales",
-    INVESTIGACION_O_PROYECTOS = "Investigación o proyectos especiales",
-    LICENCIA_MEDICA = "Licencia médica",
-    PROBLEMAS_ACADEMICOS = "Problemas académicos",
-    RAZONES_FAMILIARES = "Razones familiares",
-    SERVICIO_MILITAR = "Servicio militar o servicio público",
-  }
+    CIRCUNSTANCIAS_PERSONALES = 'Circunstancias personales',
+    INVESTIGACION_O_PROYECTOS = 'Investigación o proyectos especiales',
+    LICENCIA_MEDICA = 'Licencia médica',
+    PROBLEMAS_ACADEMICOS = 'Problemas académicos',
+    RAZONES_FAMILIARES = 'Razones familiares',
+    SERVICIO_MILITAR = 'Servicio militar o servicio público',
+}

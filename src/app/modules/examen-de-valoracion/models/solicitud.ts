@@ -1,3 +1,7 @@
+import { Docente } from '../../gestion-docentes/models/docente';
+import { Estudiante } from '../../gestion-estudiantes/models/estudiante';
+import { Experto } from './experto';
+
 export interface Solicitud {
     id?: number;
     fecha?: string;
@@ -6,8 +10,9 @@ export interface Solicitud {
     doc_solicitud_valoracion?: File;
     doc_anteproyecto_examen?: File;
     doc_examen_valoracion?: File;
-    docente?: string;
-    experto?: string;
+    estudiante?: Estudiante;
+    docente?: Docente;
+    experto?: Experto;
     numero_acta?: string;
     fecha_acta?: string;
     doc_oficio_jurados?: File;

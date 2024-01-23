@@ -6,10 +6,9 @@ import { getHeaders } from 'src/app/core/constants/header';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root',
 })
 export class DocenteService {
-
     constructor(private http: HttpClient) {}
 
     filterDocentes(filter: string): Observable<Docente[]> {
@@ -20,9 +19,8 @@ export class DocenteService {
     }
 
     listDocentes(): Observable<Docente[]> {
-        return this.http.get<Docente[]>(
-            backend('docentes'),
-            { headers: getHeaders() }
-        );
+        return this.http.get<Docente[]>(backend('docentes'), {
+            headers: getHeaders(),
+        });
     }
 }

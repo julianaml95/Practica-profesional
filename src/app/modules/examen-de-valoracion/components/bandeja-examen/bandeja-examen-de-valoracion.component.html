@@ -1,29 +1,62 @@
-<p-splitter styleClass="mb-5" layout="vertical">
-    <ng-template pTemplate>
-        <div class="col flex align-items-center justify-content-center">
+<p-panel>
+    <ng-template pTemplate="header">
+        <span class="font-medium" *ngIf="!estudianteSeleccionado"
+            >Por favor, seleccione el estudiante que se encuentra bajo su
+            dirección</span
+        >
+        <span class="font-bold" *ngIf="estudianteSeleccionado"
+            >Informacion General</span
+        >
+    </ng-template>
+    <ng-template pTemplate="content">
+        <div
+            class="flex flex-column align-items-center justify-content-center gap-2"
+        >
+            <button
+                pButton
+                icon="pi pi-plus"
+                label="Seleccionar Estudiante"
+                (click)="onSeleccionarEstudiante()"
+                *ngIf="!estudianteSeleccionado"
+            ></button>
             <p-card
                 class="m-2"
-                header="Datos del Estudiante"
                 [style]="{ width: '600px' }"
+                *ngIf="estudianteSeleccionado"
             >
+                <div class="flex justify-content-between">
+                    <span style="font-size: 18px; font-weight: bold"
+                        >Datos del Estudiante</span
+                    >
+                    <button
+                        pButton
+                        icon="pi pi-times"
+                        style="border: none; font-size: 1.2rem"
+                        (click)="limpiarEstudiante()"
+                    ></button>
+                </div>
                 <div class="mt-2 flex justify-content-between">
                     <span>Codigo</span>
-                    <span>John Doe</span>
+                    <span>{{ estudianteSeleccionado.codigo }}</span>
                 </div>
                 <div class="mt-2 flex justify-content-between">
                     <span>Numero de Identificacion</span>
-                    <span>John Doe</span>
+                    <span>{{ estudianteSeleccionado.identificacion }}</span>
                 </div>
                 <div class="mt-2 flex justify-content-between">
                     <span>Nombres y Apellidos</span>
-                    <span>John Doe</span>
+                    <span
+                        >{{ estudianteSeleccionado.nombre }}
+                        {{ estudianteSeleccionado.apellido }}</span
+                    >
                 </div>
             </p-card>
         </div>
     </ng-template>
-    <ng-template pTemplate>
+    <ng-template pTemplate="footer">
         <div
             class="col flex flex-column align-items-center justify-content-center"
+            *ngIf="estudianteSeleccionado"
         >
             <div class="flex justify-content-center mb-3">
                 <button
@@ -80,4 +113,4 @@
             </p-table>
         </div>
     </ng-template>
-</p-splitter>
+</p-panel>

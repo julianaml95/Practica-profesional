@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { SolicitudService } from '../../services/solicitud.service';
+import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
+import { DialogService } from 'primeng/dynamicdialog';
+import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 
 @Component({
     selector: 'app-bandeja-examen-de-valoracion',
@@ -10,6 +13,7 @@ import { SolicitudService } from '../../services/solicitud.service';
 })
 export class BandejaExamenDeValoracionComponent implements OnInit {
     loading: boolean;
+    estudianteSeleccionado: Estudiante;
     solicitudes: any[] = [
         {
             id: 1,
@@ -76,7 +80,8 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
     constructor(
         private breadcrumbService: BreadcrumbService,
         private router: Router,
-        private solicitudService: SolicitudService
+        private solicitudService: SolicitudService,
+        private dialogService: DialogService
     ) {}
 
     ngOnInit(): void {
@@ -89,6 +94,37 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
             { label: 'Trabajos de Grado' },
             { label: 'Examen de Valoracion' },
         ]);
+    }
+
+    showBuscadorEstudiantes() {
+        return this.dialogService.open(BuscadorEstudiantesComponent, {
+            header: 'Seleccionar estudiante',
+            width: '60%',
+        });
+    }
+
+    mapEstudianteLabel(estudiante: Estudiante) {
+        return {
+            codigo: estudiante.codigo,
+            nombre: estudiante.persona.nombre,
+            apellido: estudiante.persona.apellido,
+            identificacion: estudiante.persona.identificacion,
+        };
+    }
+
+    onSeleccionarEstudiante() {
+        const ref = this.showBuscadorEstudiantes();
+        ref.onClose.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.estudianteSeleccionado =
+                        this.mapEstudianteLabel(response);
+                    this.solicitudService.setEstudianteSeleccionado(
+                        this.mapEstudianteLabel(response)
+                    );
+                }
+            },
+        });
     }
 
     listSolicitudes() {
@@ -104,8 +140,12 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
             .add(() => (this.loading = false));
     }
 
+    limpiarEstudiante() {
+        this.estudianteSeleccionado = null;
+    }
+
     onProcesoExamen() {
-        this.router.navigate(['examen-de-valoracion/proceso']);
+        this.router.navigate(['examen-de-valoracion/solicitud']);
     }
 
     onEditar(id: number) {

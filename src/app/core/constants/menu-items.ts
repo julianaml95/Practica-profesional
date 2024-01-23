@@ -53,7 +53,7 @@ export const menuItems: MenuItem[] = [
             {
                 label: 'Seguimiento a egresados',
                 icon: 'pi pi-user',
-                routerLink: '/seguimiento-de-egresados',
+                routerLink: '/seguimiento-a-egresados',
             },
         ]
     }
