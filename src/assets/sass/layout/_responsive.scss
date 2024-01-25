@@ -87,3 +87,11 @@
         overflow: hidden;
     }
 }
+
+@media (max-width: 425px) {
+    .layout-wrapper {
+        .layout-main-container {
+            padding-left: 0rem;
+        }
+    }
+}
