@@ -1,14 +1,14 @@
-<form [formGroup]="cursoForm" class="mt-5">
+<form [formGroup]="cursoForm" class="cursoForm mt-5">
     <div class="flex flex-column gap-3">
         <div class="field grid">
-            <div class="col-5 text-right align-self-center">
+            <div class="col-3 col-label text-right align-self-center">
                 <label class="label-required">Nombre del Curso</label>
             </div>
-            <div class="col-7">
+            <div class="col-9 col-input">
                 <input
                     pInputText
                     [maxLength]="250"
-                    class="p-inputtext-sm w-25rem"
+                    class="p-inputtext-sm w-full"
                     formControlName="nombre"
                     [ngClass]="{
                         'ng-invalid ng-dirty':
@@ -19,14 +19,14 @@
             </div>
         </div>
         <div class="field grid">
-            <div class="col-5 text-right align-self-center">
+            <div class="col-3 col-label text-right align-self-center">
                 <label class="label-required">Orientado a</label>
             </div>
-            <div class="col-7">
+            <div class="col-9 col-input">
                 <input
                     pInputText
                     [maxLength]="250"
-                    class="p-inputtext-sm w-25rem"
+                    class="p-inputtext-sm w-full"
                     formControlName="orientadoA"
                     [ngClass]="{
                         'ng-invalid ng-dirty':
@@ -37,10 +37,10 @@
             </div>
         </div>
         <div class="field grid">
-            <div class="col-5 text-right align-self-center">
+            <div class="col-3 col-label text-right align-self-center">
                 <label class="label-required">Fecha de Inicio</label>
             </div>
-            <div class="col-7">
+            <div class="col-9 col-input">
                 <p-calendar
                     formControlName="fechaInicio"
                     [showIcon]="true"
@@ -54,10 +54,10 @@
             </div>
         </div>
         <div class="field grid">
-            <div class="col-5 text-right align-self-center">
+            <div class="col-3 col-label text-right align-self-center">
                 <label class="label-required">Fecha de Fin</label>
             </div>
-            <div class="col-7">
+            <div class="col-9 col-input">
                 <p-calendar
                     formControlName="fechaFin"
                     [showIcon]="true"

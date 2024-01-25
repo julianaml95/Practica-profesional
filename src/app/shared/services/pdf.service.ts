@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2pdf from 'html2pdf.js';
 
 @Injectable({
     providedIn: 'root',
@@ -16,8 +15,20 @@ export class PdfService {
                 font-size: 1.2rem;
             }
 
+            .p-card .p-card-content {
+                padding: 1.25rem 0;
+            }
+
+            .p-disabled, .p-component:disabled {
+                opacity: 1;
+            }
+
             .pdf-text {
                 font-size: 1.4rem;
+            }
+
+            .p-show {
+                display: block !important;
             }
 
             .pdf-label {
@@ -38,27 +49,18 @@ export class PdfService {
             }
         `
     ) {
-        // Agregar estilos dinámicos al HTML
         const style = document.createElement('style');
+        const options = {
+            margin: 10,
+            filename: filename,
+            image: { type: 'png', quality: 1 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'pt', format: 'legal', orientation: 'portrait' },
+        };
         style.innerHTML = scssStyle;
         htmlContent.appendChild(style);
 
-        // Generar PDF a partir del contenido HTML
-        html2canvas(htmlContent).then((canvas) => {
-            const fileWidth = 208;
-            const fileHeight = (canvas.height * fileWidth) / canvas.width;
-            const FILEURI = canvas.toDataURL('image/png', 1.0);
-
-            const PDF = new jsPDF('p', 'mm', 'a4');
-            const position = 20;
-
-            // Agregar la imagen al PDF
-            PDF.addImage(FILEURI, 'PNG', 0, position, fileWidth, fileHeight);
-
-            // Guardar el archivo PDF con el nombre especificado
-            PDF.save(filename);
-
-            // Eliminar los estilos agregados después de la generación del PDF
+        html2pdf(htmlContent, options).then(() => {
             htmlContent.removeChild(style);
         });
     }

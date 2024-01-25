@@ -20,8 +20,7 @@
                 *ngIf="!estudianteSeleccionado"
             ></button>
             <p-card
-                class="m-2"
-                [style]="{ width: '600px' }"
+                class="m-2 w-full max-w-30rem"
                 *ngIf="estudianteSeleccionado"
             >
                 <div class="flex justify-content-between">
@@ -35,15 +34,15 @@
                         (click)="limpiarEstudiante()"
                     ></button>
                 </div>
-                <div class="mt-2 flex justify-content-between">
+                <div class="mt-2 card-data flex justify-content-between">
                     <span>Codigo</span>
                     <span>{{ estudianteSeleccionado.codigo }}</span>
                 </div>
-                <div class="mt-2 flex justify-content-between">
+                <div class="mt-2 card-data flex justify-content-between">
                     <span>Numero de Identificacion</span>
                     <span>{{ estudianteSeleccionado.identificacion }}</span>
                 </div>
-                <div class="mt-2 flex justify-content-between">
+                <div class="mt-2 card-data flex justify-content-between">
                     <span>Nombres y Apellidos</span>
                     <span
                         >{{ estudianteSeleccionado.nombre }}
@@ -55,10 +54,10 @@
     </ng-template>
     <ng-template pTemplate="footer">
         <div
-            class="col flex flex-column align-items-center justify-content-center"
+            class="col flex flex-column align-items-center justify-content-center w-full"
             *ngIf="estudianteSeleccionado"
         >
-            <div class="flex justify-content-center mb-3">
+            <div class="flex justify-content-center mb-3 w-full">
                 <button
                     pButton
                     icon="pi pi-plus"
@@ -71,28 +70,29 @@
                 [paginator]="true"
                 [loading]="loading"
                 [rows]="5"
-                [tableStyle]="{ 'min-width': '50rem' }"
+                [tableStyle]="{ width: '100%', 'max-width': '50rem' }"
                 [showCurrentPageReport]="true"
-                breakpoint="768px"
-                styleClass="p-datatable-gridlines p-datatable-striped"
+                [scrollable]="true"
                 currentPageReportTemplate="{first} - {last} de {totalRecords}"
             >
                 <ng-template pTemplate="header">
                     <tr>
-                        <th scope="col">Titulo</th>
-                        <th scope="col">
+                        <th scope="col" style="min-width: 200px">Titulo</th>
+                        <th scope="col" style="min-width: 200px">
                             Fecha creacion de Examen de Valoracion
                         </th>
-                        <th scope="col">Estado Actual</th>
-                        <th scope="col" class="text-center w-2">Opciones</th>
+                        <th scope="col" style="min-width: 200px">
+                            Estado Actual
+                        </th>
+                        <th scope="col" style="min-width: 200px">Opciones</th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-solicitud>
                     <tr>
-                        <td>{{ solicitud.titulo }}</td>
-                        <td>{{ solicitud.fecha }}</td>
-                        <td>{{ solicitud.estado }}</td>
-                        <td class="text-center">
+                        <td style="min-width: 200px">{{ solicitud.titulo }}</td>
+                        <td style="min-width: 200px">{{ solicitud.fecha }}</td>
+                        <td style="min-width: 200px">{{ solicitud.estado }}</td>
+                        <td style="min-width: 200px">
                             <button
                                 pButton
                                 pTooltip="Editar"
@@ -101,6 +101,15 @@
                                 class="p-button-rounded p-button-text p-button-warning"
                                 (click)="onEditar(solicitud.id)"
                             ></button>
+                            <button
+                                pButton
+                                pTooltip="Eliminar"
+                                type="button"
+                                icon="pi pi-trash"
+                                class="p-button-rounded p-button-text p-button-danger"
+                                (click)="onDelete($event, solicitud.id)"
+                            ></button>
+                            <p-confirmPopup></p-confirmPopup>
                         </td>
                     </tr>
                 </ng-template>

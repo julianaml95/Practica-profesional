@@ -1,82 +1,85 @@
 <p-panel>
-    <!-- Panel de Datos del Estudiante -->
     <ng-template pTemplate="header">
         <div class="flex flex-column w-full">
             <div class="m-4 text-center">
-                <span class="font-bold uppercase" style="font-size: 2rem"
+                <span class="font-bold uppercase bandeja-title"
                     >Seguimiento a egresados</span
                 >
             </div>
             <div class="field grid">
-                <div class="col-2"></div>
-                <div class="col-10 text-right align-self-center">
-                    <!-- Panel de Datos del Estudiante -->
+                <div class="col-2 card-label"></div>
+                <div class="col-10 card-input text-right align-self-center">
                     <p-card
-                        class="m-2"
                         header="Datos del Estudiante"
-                        [style]="{ width: '600px' }"
+                        class="m-2 w-full max-w-30rem"
+                        style="display: block"
                     >
-                        <div class="mt-2 flex justify-content-between">
+                        <!-- Agrega los detalles del estudiante aquí -->
+                        <div
+                            class="mt-2 card-data flex justify-content-between"
+                        >
                             <span>Código</span>
                             <span>ABC123</span>
                         </div>
-                        <!-- Agrega más detalles del estudiante aquí -->
-                        <!-- Ejemplo: -->
-                        <div class="mt-2 flex justify-content-between">
+                        <div
+                            class="mt-2 card-data flex justify-content-between"
+                        >
                             <span>Nombres y Apellidos</span>
                             <span>John Doe</span>
                         </div>
-                        <div class="mt-2 flex justify-content-between">
+                        <div
+                            class="mt-2 card-data flex justify-content-between"
+                        >
                             <span>Cohorte</span>
                             <span>2023</span>
                         </div>
-                        <div class="mt-2 flex justify-content-between">
+                        <div
+                            class="mt-2 card-data flex justify-content-between"
+                        >
                             <span>Periodo de Ingreso</span>
                             <span>2022-2023</span>
                         </div>
                     </p-card>
                 </div>
             </div>
-
-            <!-- Detalles adicionales del estudiante -->
             <div class="flex flex-column gap-2">
                 <div class="field grid">
-                    <div class="col-2 text-right align-self-center">
+                    <div class="col-2 col-label text-right align-self-center">
                         <label>Fecha de grado</label>
                     </div>
-                    <div class="col-10">
+                    <div class="col-10 col-input">
                         <input
                             pInputText
                             [maxLength]="250"
-                            class="p-inputtext-sm w-25rem"
+                            class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
                             value="01/01/2023"
                             disabled
                         />
                     </div>
                 </div>
                 <div class="field grid">
-                    <div class="col-2 text-right align-self-center">
+                    <div class="col-2 col-label text-right align-self-center">
                         <label>Teléfono de contacto</label>
                     </div>
-                    <div class="col-10">
+                    <div class="col-10 col-input">
                         <input
                             pInputText
                             [maxLength]="250"
-                            class="p-inputtext-sm w-25rem"
+                            class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
                             value="123-456-7890"
                             disabled
                         />
                     </div>
                 </div>
                 <div class="field grid">
-                    <div class="col-2 text-right align-self-center">
+                    <div class="col-2 col-label text-right align-self-center">
                         <label>Correo electrónico</label>
                     </div>
-                    <div class="col-10">
+                    <div class="col-10 col-input">
                         <input
                             pInputText
                             [maxLength]="250"
-                            class="p-inputtext-sm w-25rem"
+                            class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
                             value="correo@example.com"
                             disabled
                         />
@@ -87,13 +90,12 @@
     </ng-template>
 
     <ng-template pTemplate="content">
-        <!-- Panel de Empresas donde ha laborado -->
         <div class="flex flex-column gap-2 w-full">
             <div class="field grid">
-                <div class="col-2 text-right align-self-center">
+                <div class="col-2 col-label text-right align-self-center">
                     <label class="font-bold">Empresas donde ha laborado</label>
                 </div>
-                <div class="col-10 text-right">
+                <div class="col-10 col-input text-right">
                     <button
                         pButton
                         icon="pi pi-plus"
@@ -104,8 +106,8 @@
                 </div>
             </div>
             <div class="field grid">
-                <div class="col-2"></div>
-                <div class="col-10">
+                <div class="col-2 col-label"></div>
+                <div class="col-10 col-input">
                     <!-- Tabla de Empresas -->
                     <p-table
                         [value]="empresas"
@@ -114,42 +116,93 @@
                         [rows]="5"
                         [tableStyle]="{ 'min-width': '50rem', width: '100%' }"
                         [showCurrentPageReport]="true"
-                        breakpoint="768px"
-                        styleClass="p-datatable-gridlines p-datatable-striped"
+                        [scrollable]="true"
                         currentPageReportTemplate="{first} - {last} de {totalRecords}"
                     >
                         <ng-template pTemplate="header">
                             <tr>
-                                <th scope="col" class="text-center">Empresa</th>
-                                <th scope="col" class="text-center">
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
+                                    Empresa
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
                                     Ubicación
                                 </th>
-                                <th scope="col" class="text-center">Cargo</th>
-                                <th scope="col" class="text-center">
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
+                                    Cargo
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
                                     Jefe Directo
                                 </th>
-                                <th scope="col" class="text-center">
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
                                     Teléfono de la Empresa
                                 </th>
-                                <th scope="col" class="text-center w-2">
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
                                     Correo Electrónico
                                 </th>
-                                <th scope="col" class="text-center">Estado</th>
-                                <th scope="col" class="text-center w-2">
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
+                                    Estado
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
                                     Opciones
                                 </th>
                             </tr>
                         </ng-template>
                         <ng-template pTemplate="body" let-empresa>
                             <tr>
-                                <td>{{ empresa.nombre }}</td>
-                                <td>{{ empresa.ubicacion }}</td>
-                                <td>{{ empresa.cargo }}</td>
-                                <td>{{ empresa.jefeDirecto }}</td>
-                                <td>{{ empresa.telefono }}</td>
-                                <td>{{ empresa.correo }}</td>
-                                <td>{{ empresa.estado }}</td>
-                                <td class="text-center">
+                                <td style="min-width: 200px">
+                                    {{ empresa.nombre }}
+                                </td>
+                                <td style="min-width: 200px">
+                                    {{ empresa.ubicacion }}
+                                </td>
+                                <td style="min-width: 200px">
+                                    {{ empresa.cargo }}
+                                </td>
+                                <td style="min-width: 200px">
+                                    {{ empresa.jefeDirecto }}
+                                </td>
+                                <td style="min-width: 200px">
+                                    {{ empresa.telefono }}
+                                </td>
+                                <td style="min-width: 200px">
+                                    {{ empresa.correo }}
+                                </td>
+                                <td style="min-width: 200px">
+                                    {{ empresa.estado }}
+                                </td>
+                                <td style="min-width: 200px">
                                     <button
                                         pButton
                                         pTooltip="Editar"
@@ -176,7 +229,6 @@
                                 </td>
                             </tr>
                         </ng-template>
-                        <!-- Mensaje sin registros -->
                         <ng-template pTemplate="emptymessage" let-columns>
                             <tr>
                                 <td [attr.colspan]="8">
@@ -192,13 +244,13 @@
     <ng-template pTemplate="footer">
         <div class="flex flex-column gap-2 w-full">
             <div class="field grid">
-                <div class="col-2 text-right align-self-center">
+                <div class="col-2 col-label text-right align-self-center">
                     <label class="font-bold"
                         >Cursos que ha orientado en la universidad del
                         Cauca</label
                     >
                 </div>
-                <div class="col-10 text-right">
+                <div class="col-10 col-input text-right">
                     <button
                         pButton
                         icon="pi pi-plus"
@@ -209,8 +261,8 @@
                 </div>
             </div>
             <div class="field grid">
-                <div class="col-2"></div>
-                <div class="col-10">
+                <div class="col-2 col-label"></div>
+                <div class="col-10 col-input">
                     <!-- Tabla de Cursos -->
                     <p-table
                         [value]="cursos"
@@ -219,38 +271,63 @@
                         [rows]="5"
                         [tableStyle]="{ 'min-width': '50rem', width: '100%' }"
                         [showCurrentPageReport]="true"
-                        breakpoint="768px"
-                        styleClass="p-datatable-gridlines p-datatable-striped"
+                        [scrollable]="true"
                         currentPageReportTemplate="{first} - {last} de {totalRecords}"
                     >
                         <ng-template pTemplate="header">
                             <tr>
-                                <th scope="col" class="text-center">Curso</th>
-                                <th scope="col" class="text-center">
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
+                                    Curso
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
                                     Orientado a
                                 </th>
-                                <th scope="col" class="text-center">
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
                                     Fecha inicio
                                 </th>
-                                <th scope="col" class="text-center">
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
                                     Fecha Fin
                                 </th>
-                                <th scope="col" class="text-center w-2">
+                                <th
+                                    scope="col"
+                                    class="text-center"
+                                    style="min-width: 200px"
+                                >
                                     Opciones
                                 </th>
                             </tr>
                         </ng-template>
                         <ng-template pTemplate="body" let-curso>
                             <tr>
-                                <td>{{ curso.nombre }}</td>
-                                <td>{{ curso.orientadoA }}</td>
-                                <td class="text-center">
+                                <td style="min-width: 200px">
+                                    {{ curso.nombre }}
+                                </td>
+                                <td style="min-width: 200px">
+                                    {{ curso.orientadoA }}
+                                </td>
+                                <td style="min-width: 200px">
                                     {{ curso.fechaInicio }}
                                 </td>
-                                <td class="text-center">
+                                <td style="min-width: 200px">
                                     {{ curso.fechaFin }}
                                 </td>
-                                <td class="text-center">
+                                <td style="min-width: 200px">
                                     <button
                                         pButton
                                         pTooltip="Editar"

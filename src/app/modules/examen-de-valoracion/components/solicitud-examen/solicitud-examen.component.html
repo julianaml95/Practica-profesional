@@ -8,15 +8,15 @@
             header="Datos del Estudiante"
             *ngIf="estudianteSeleccionado"
         >
-            <div class="mt-2 flex justify-content-between">
+            <div class="mt-2 card-data flex justify-content-between">
                 <span>Codigo</span>
                 <span>{{ estudianteSeleccionado.codigo }}</span>
             </div>
-            <div class="mt-2 flex justify-content-between">
+            <div class="mt-2 card-data flex justify-content-between">
                 <span>Numero de Identificacion</span>
                 <span>{{ estudianteSeleccionado.identificacion }}</span>
             </div>
-            <div class="mt-2 flex justify-content-between">
+            <div class="mt-2 card-data flex justify-content-between">
                 <span>Nombres y Apellidos</span>
                 <span
                     >{{ estudianteSeleccionado.nombre }}
@@ -25,7 +25,7 @@
             </div>
         </p-card>
     </div>
-    <div class="card" *ngIf="isWindowWidthGreaterThan400()">
+    <div class="card col-steps">
         <p-toast></p-toast>
         <p-steps
             [model]="items"
@@ -46,12 +46,12 @@
                     </p>
                 </div>
                 <div class="field grid">
-                    <div class="col-5 text-right align-self-center">
+                    <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
                             >Título del Trabajo de Investigacion</label
                         >
                     </div>
-                    <div class="col-7">
+                    <div class="col-7 col-input">
                         <input
                             pInputText
                             [maxLength]="250"
@@ -66,12 +66,12 @@
                     </div>
                 </div>
                 <div class="field grid">
-                    <div class="col-5 text-right align-self-center">
+                    <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
                             >Solicitud Examen de Valoracion (Formato A .pdf)
                         </label>
                     </div>
-                    <div class="col-7">
+                    <div class="col-7 col-input">
                         <div class="flex flex-wrap gap-2">
                             <p-fileUpload
                                 name="doc_solicitud_valoracion"
@@ -115,13 +115,13 @@
                     </div>
                 </div>
                 <div class="field grid">
-                    <div class="col-5 text-right align-self-center">
+                    <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
                             >Anteproyecto presentado a Examen (Formato D .pdf,
                             .rar, .zip)
                         </label>
                     </div>
-                    <div class="col-7">
+                    <div class="col-7 col-input">
                         <div class="flex gap-2">
                             <p-fileUpload
                                 name="doc_anteproyecto_examen"
@@ -156,12 +156,12 @@
                     </div>
                 </div>
                 <div class="field grid">
-                    <div class="col-5 text-right align-self-center">
+                    <div class="col-5 col-label text-right align-self-center">
                         <label
                             >Examen de Valoracion (Formato E .pdf, .rar, .zip)
                         </label>
                     </div>
-                    <div class="col-7">
+                    <div class="col-7 col-input">
                         <div class="flex gap-2">
                             <p-fileUpload
                                 name="doc_examen_valoracion"
@@ -190,11 +190,11 @@
                     </div>
                 </div>
                 <div class="field grid">
-                    <div class="col-5 text-right align-self-center">
+                    <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required">Evaluador Externo</label>
                     </div>
                     <div
-                        class="col-7"
+                        class="col-7 col-input"
                         *ngIf="experto?.value; else noEvaluadorSelected"
                     >
                         <div class="flex align-items-center">
@@ -244,11 +244,11 @@
                     </div>
                 </div>
                 <div class="field grid">
-                    <div class="col-5 text-right align-self-center">
+                    <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required">Evaluador Interno</label>
                     </div>
                     <div
-                        class="col-7"
+                        class="col-7 col-input"
                         *ngIf="docente?.value; else noEvaluadorSelected"
                     >
                         <div class="flex align-items-center">
@@ -298,12 +298,12 @@
                     </div>
                 </div>
                 <div class="field grid">
-                    <div class="col-5 text-right align-self-center">
+                    <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
                             >No Acta de aprobacion del examen</label
                         >
                     </div>
-                    <div class="col-7">
+                    <div class="col-7 col-input">
                         <p-inputNumber
                             inputId="integeronly"
                             formControlName="numero_acta"
@@ -316,10 +316,10 @@
                     </div>
                 </div>
                 <div class="field grid">
-                    <div class="col-5 text-right align-self-center">
+                    <div class="col-5 col-label text-right align-self-center">
                         <label>Fecha del Acta</label>
                     </div>
-                    <div class="col-7">
+                    <div class="col-7 col-input">
                         <p-calendar
                             formControlName="fecha_acta"
                             [showIcon]="true"
@@ -328,13 +328,13 @@
                     </div>
                 </div>
                 <div class="field grid">
-                    <div class="col-5 text-right align-self-center">
+                    <div class="col-5 col-label text-right align-self-center">
                         <label
                             >Oficio dirigido a jurados sobre instrucciones para
                             el examen de valoracion (.pdf)
                         </label>
                     </div>
-                    <div class="col-7">
+                    <div class="col-7 col-input">
                         <div class="flex gap-2">
                             <p-fileUpload
                                 name="doc_oficio_jurados"
@@ -357,10 +357,10 @@
                     </div>
                 </div>
                 <div class="field grid">
-                    <div class="col-5 text-right align-self-center">
+                    <div class="col-5 col-label text-right align-self-center">
                         <label>Fecha Maxima de la Evaluacion</label>
                     </div>
-                    <div class="col-7">
+                    <div class="col-7 col-input">
                         <p-calendar
                             formControlName="fecha_maxima_evaluacion"
                             [showIcon]="true"
@@ -371,10 +371,19 @@
             </div>
             <div class="flex align-items-center justify-content-end mt-4">
                 <button
+                    *ngIf="!editMode"
                     pButton
                     type="button"
                     icon="pi pi-save"
                     label="Registar Informacion"
+                    (click)="onSave()"
+                    [loading]="loading"
+                ></button>
+                <button
+                    *ngIf="editMode"
+                    pButton
+                    icon="pi pi-save"
+                    label="Editar Informacion"
                     (click)="onSave()"
                     [loading]="loading"
                 ></button>

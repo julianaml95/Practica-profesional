@@ -5,6 +5,10 @@ import { SolicitudService } from '../../services/solicitud.service';
 import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
+import { ConfirmationService, MessageService, PrimeIcons } from 'primeng/api';
+import { Mensaje } from 'src/app/core/enums/enums';
+import { infoMessage } from 'src/app/core/utils/message-util';
+import { Solicitud } from '../../models/solicitud';
 
 @Component({
     selector: 'app-bandeja-examen-de-valoracion',
@@ -14,7 +18,7 @@ import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiant
 export class BandejaExamenDeValoracionComponent implements OnInit {
     loading: boolean;
     estudianteSeleccionado: Estudiante;
-    solicitudes: any[] = [
+    solicitudes: Solicitud[] = [
         {
             id: 1,
             fecha: '2023-19-12',
@@ -23,8 +27,6 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
             doc_solicitud_valoracion: 'archivo1.pdf',
             doc_anteproyecto_examen: 'archivo2.pdf',
             doc_examen_valoracion: 'archivo3.pdf',
-            docente: 'Juan Pérez',
-            experto: 'María Gómez',
             numero_acta: 'A001',
             fecha_acta: '2023-12-20',
             doc_oficio_jurados: 'oficio.pdf',
@@ -38,8 +40,6 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
             doc_solicitud_valoracion: 'archivo4.pdf',
             doc_anteproyecto_examen: 'archivo5.pdf',
             doc_examen_valoracion: 'archivo6.pdf',
-            docente: 'Ana López',
-            experto: 'Carlos Rodríguez',
             numero_acta: 'A002',
             fecha_acta: '2023-12-22',
             doc_oficio_jurados: 'oficio2.pdf',
@@ -53,8 +53,6 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
             doc_solicitud_valoracion: 'archivo7.pdf',
             doc_anteproyecto_examen: 'archivo8.pdf',
             doc_examen_valoracion: 'archivo9.pdf',
-            docente: 'Pedro Ramírez',
-            experto: 'Laura Martínez',
             numero_acta: 'A003',
             fecha_acta: '2023-12-23',
             doc_oficio_jurados: 'oficio3.pdf',
@@ -63,13 +61,11 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         {
             id: 4,
             fecha: '2023-19-12',
-            estado: 'ACTIVO',
+            estado: 'INACTIVO',
             titulo: 'Solicitud 4',
             doc_solicitud_valoracion: 'archivo10.pdf',
             doc_anteproyecto_examen: 'archivo11.pdf',
             doc_examen_valoracion: 'archivo12.pdf',
-            docente: 'Elena Gutiérrez',
-            experto: 'José Martín',
             numero_acta: 'A004',
             fecha_acta: '2023-12-24',
             doc_oficio_jurados: 'oficio4.pdf',
@@ -81,12 +77,14 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         private breadcrumbService: BreadcrumbService,
         private router: Router,
         private solicitudService: SolicitudService,
-        private dialogService: DialogService
+        private messageService: MessageService,
+        private dialogService: DialogService,
+        private confirmationService: ConfirmationService
     ) {}
 
     ngOnInit(): void {
-        this.setBreadcrumb();
         this.listSolicitudes();
+        this.setBreadcrumb();
     }
 
     setBreadcrumb() {
@@ -149,6 +147,28 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
     }
 
     onEditar(id: number) {
-        this.router.navigate(['examen-de-valoracion/editar', id]);
+        this.router.navigate(['examen-de-valoracion/solicitud/editar', id]);
+    }
+
+    deleteSolicitud(id: number) {
+        this.solicitudService.deleteSolicitud(id).subscribe({
+            next: () => {
+                this.messageService.add(
+                    infoMessage(Mensaje.SOLICITUD_ELIMINADA_CORRECTAMENTE)
+                );
+                this.listSolicitudes();
+            },
+        });
+    }
+
+    onDelete(event: any, id: number) {
+        this.confirmationService.confirm({
+            target: event.target,
+            message: Mensaje.CONFIRMAR_ELIMINAR_REGISTRO,
+            icon: PrimeIcons.EXCLAMATION_TRIANGLE,
+            acceptLabel: 'Si, eliminar',
+            rejectLabel: 'No',
+            accept: () => this.deleteSolicitud(id),
+        });
     }
 }

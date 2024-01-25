@@ -1,10 +1,23 @@
-::ng-deep {
-    .p-datepicker tr > td {
-        padding: 0.25rem !important;
+// ::ng-deep {
+//     .p-datepicker tr > td {
+//         padding: 0.25rem !important;
+//     }
+
+//     .p-datepicker td > span {
+//         width: 18px !important;
+//         height: 18px !important;
+//     }
+// }
+
+@media (max-width: 768px) {
+    .col-label,
+    .col-input {
+        flex: 0 0 100%;
+        max-width: 100%;
     }
 
-    .p-datepicker td > span {
-        width: 18px !important;
-        height: 18px !important;
+    .col-label {
+        text-align: left !important;
+        margin-bottom: 1rem;
     }
 }

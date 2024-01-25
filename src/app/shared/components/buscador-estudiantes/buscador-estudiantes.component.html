@@ -17,9 +17,9 @@
     [paginator]="true"
     [loading]="loading"
     [rows]="5"
-    breakpoint="768px"
-    styleClass="p-datatable-gridlines p-datatable-striped"
+    [scrollable]="true"
     [showCurrentPageReport]="true"
+    [tableStyle]="{ width: '100%' }"
     currentPageReportTemplate="{first} - {last} de {totalRecords}"
     selectionMode="single"
     [(selection)]="estudianteSeleccionado"
@@ -27,19 +27,23 @@
 >
     <ng-template pTemplate="header">
         <tr>
-            <th scope="col">Identificación</th>
-            <th scope="col">Nombres</th>
-            <th scope="col">Apellidos</th>
-            <th scope="col">Correo electrónico</th>
+            <th scope="col" style="min-width: 150px">Identificación</th>
+            <th scope="col" style="min-width: 150px">Nombres</th>
+            <th scope="col" style="min-width: 150px">Apellidos</th>
+            <th scope="col" style="min-width: 150px">Correo electrónico</th>
         </tr>
     </ng-template>
     <!-- Contenido  -->
     <ng-template pTemplate="body" let-estudiante>
         <tr [pSelectableRow]="estudiante">
-            <td>{{ estudiante.persona.identificacion }}</td>
-            <td>{{ estudiante.persona.nombre }}</td>
-            <td>{{ estudiante.persona.apellido }}</td>
-            <td>{{ estudiante.persona.correoElectronico }}</td>
+            <td style="min-width: 150px">
+                {{ estudiante.persona.identificacion }}
+            </td>
+            <td style="min-width: 150px">{{ estudiante.persona.nombre }}</td>
+            <td style="min-width: 150px">{{ estudiante.persona.apellido }}</td>
+            <td style="min-width: 150px">
+                {{ estudiante.persona.correoElectronico }}
+            </td>
         </tr>
     </ng-template>
     <!-- Mensaje sin registros -->

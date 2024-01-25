@@ -19,6 +19,10 @@ const routes: Routes = [
                 component: SolicitudExamenComponent,
             },
             {
+                path: 'solicitud/editar/:id',
+                component: SolicitudExamenComponent,
+            },
+            {
                 path: 'solicitud/crear',
                 component: CrearSolicitudExamenComponent,
             },

@@ -171,7 +171,7 @@ export class CrearSolicitudExamenComponent implements OnInit {
     showBuscadorExpertos() {
         return this.dialogService.open(BuscadorExpertosComponent, {
             header: 'Seleccionar experto',
-            width: '60%',
+            width: '40%',
         });
     }
 
@@ -204,7 +204,7 @@ export class CrearSolicitudExamenComponent implements OnInit {
     showBuscadorDocentes() {
         return this.dialogService.open(BuscadorDocentesComponent, {
             header: 'Seleccionar docente',
-            width: '60%',
+            width: '40%',
         });
     }
     nombreCompletoEstudiante(e: any) {

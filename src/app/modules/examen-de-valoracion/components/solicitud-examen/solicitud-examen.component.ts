@@ -1,17 +1,11 @@
-import {
-    Component,
-    EventEmitter,
-    OnInit,
-    Output,
-    Renderer2,
-} from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import {
     FormBuilder,
     FormControl,
     FormGroup,
     Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
@@ -30,6 +24,7 @@ import { SolicitudService } from '../../services/solicitud.service';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { LocalStorageService } from '../../services/localstorage.service';
 import { Observable } from 'rxjs';
+import { Solicitud } from '../../models/solicitud';
 
 @Component({
     selector: 'app-solicitud-examen',
@@ -40,8 +35,9 @@ export class SolicitudExamenComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
 
     loading: boolean;
+    editMode: boolean = false;
     items: any;
-    localStorageKey = 'miFormulario';
+    localStorageKey: string = 'miFormulario';
     estudianteSeleccionado: Estudiante = {};
     activeIndex: number = 0;
     solicitudForm: FormGroup;
@@ -55,10 +51,10 @@ export class SolicitudExamenComponent implements OnInit {
         private messageService: MessageService,
         private dialogService: DialogService,
         private solicitudService: SolicitudService,
+        private route: ActivatedRoute,
         private localStorageService: LocalStorageService,
         private fb: FormBuilder,
-        private router: Router,
-        private renderer: Renderer2
+        private router: Router
     ) {}
 
     get docente(): FormControl {
@@ -74,7 +70,11 @@ export class SolicitudExamenComponent implements OnInit {
     }
 
     ngOnInit() {
+        if (this.router.url.includes('editar')) {
+            this.loadEditMode();
+        }
         this.initForm();
+        this.loadData();
         this.subscribeToEstudianteSeleccionado();
         this.setupAdditionalFunctionality('doc_solicitud_valoracion');
         this.setupAdditionalFunctionality('doc_anteproyecto_examen');
@@ -121,6 +121,24 @@ export class SolicitudExamenComponent implements OnInit {
         this.setBreadcrumb();
     }
 
+    loadEditMode() {
+        this.editMode = true;
+        this.loadSolicitud();
+    }
+
+    loadSolicitud() {
+        const id = Number(this.route.snapshot.paramMap.get('id'));
+        this.solicitudService.getSolicitud(id).subscribe({
+            next: (response) => this.setValuesForm(response),
+        });
+    }
+
+    setValuesForm(solicitud: Solicitud) {
+        this.solicitudForm.patchValue({
+            ...solicitud,
+        });
+    }
+
     private subscribeToEstudianteSeleccionado() {
         this.solicitudService.estudianteSeleccionado$.subscribe((response) => {
             this.handleEstudianteSeleccionado(response);
@@ -134,6 +152,7 @@ export class SolicitudExamenComponent implements OnInit {
         } else {
             const estudianteFormValue =
                 this.solicitudForm.get('estudiante').value;
+            console.log(estudianteFormValue);
             this.estudianteSeleccionado = estudianteFormValue;
 
             if (estudianteFormValue) {
@@ -144,10 +163,6 @@ export class SolicitudExamenComponent implements OnInit {
                 this.router.navigate(['examen-de-valoracion']);
             }
         }
-    }
-
-    isWindowWidthGreaterThan400(): boolean {
-        return this.renderer && window.innerWidth >= 600;
     }
 
     onActiveIndexChange(event: number) {
@@ -237,10 +252,6 @@ export class SolicitudExamenComponent implements OnInit {
     }
 
     initForm(): void {
-        const savedState = this.localStorageService.getFormState(
-            this.localStorageKey
-        );
-
         this.solicitudForm = this.fb.group({
             titulo: [null, Validators.required],
             doc_solicitud_valoracion: [null, Validators.required],
@@ -255,29 +266,37 @@ export class SolicitudExamenComponent implements OnInit {
             fecha_maxima_evaluacion: [null],
         });
 
-        if (savedState) {
-            // Convierte la cadena de fecha a objeto Date
-            if (savedState.fecha_acta) {
-                savedState.fecha_acta = new Date(savedState.fecha_acta);
-            }
+        this.formReady.emit(this.solicitudForm);
+    }
 
-            if (savedState.fecha_maxima_evaluacion) {
-                savedState.fecha_maxima_evaluacion = new Date(
-                    savedState.fecha_maxima_evaluacion
-                );
-            }
-
-            this.solicitudForm.patchValue(savedState);
-        }
-
-        this.solicitudForm.valueChanges.subscribe(() => {
-            this.localStorageService.saveFormState(
-                this.solicitudForm,
+    loadData(): void {
+        if (!this.editMode) {
+            const savedState = this.localStorageService.getFormState(
                 this.localStorageKey
             );
-        });
 
-        this.formReady.emit(this.solicitudForm);
+            if (savedState) {
+                // Convierte la cadena de fecha a objeto Date
+                if (savedState.fecha_acta) {
+                    savedState.fecha_acta = new Date(savedState.fecha_acta);
+                }
+
+                if (savedState.fecha_maxima_evaluacion) {
+                    savedState.fecha_maxima_evaluacion = new Date(
+                        savedState.fecha_maxima_evaluacion
+                    );
+                }
+
+                this.solicitudForm.patchValue(savedState);
+            }
+
+            this.solicitudForm.valueChanges.subscribe(() => {
+                this.localStorageService.saveFormState(
+                    this.solicitudForm,
+                    this.localStorageKey
+                );
+            });
+        }
     }
 
     private setupAdditionalFunctionality(fieldName: string): void {
@@ -291,6 +310,7 @@ export class SolicitudExamenComponent implements OnInit {
     }
 
     private getFileAndSetValue(fieldName: string): Observable<any> {
+        console.log(this.estudianteSeleccionado.codigo);
         const palabraClave = this.solicitudService.generatePalabraClave(
             this.estudianteSeleccionado.codigo,
             fieldName
@@ -370,7 +390,29 @@ export class SolicitudExamenComponent implements OnInit {
                         infoMessage(Mensaje.GUARDADO_EXITOSO)
                     ),
                 error: (e) => this.handlerResponseException(e),
-                complete: () => this.redirectToIndex(),
+                complete: () => {
+                    this.redirectToBandeja(),
+                        this.localStorageService.clearLocalStorage(
+                            this.localStorageKey
+                        );
+                },
+            })
+            .add(() => (this.loading = false));
+    }
+
+    updateSolicitud() {
+        const id = Number(this.route.snapshot.paramMap.get('id'));
+        const request = this.mapRequest();
+        this.loading = true;
+        this.solicitudService
+            .updateEstudiante(id, request)
+            .subscribe({
+                next: () =>
+                    this.messageService.add(
+                        infoMessage(Mensaje.ACTUALIZACION_EXITOSA)
+                    ),
+                error: (e) => this.handlerResponseException(e),
+                complete: () => this.redirectToBandeja(),
             })
             .add(() => (this.loading = false));
     }
@@ -383,7 +425,7 @@ export class SolicitudExamenComponent implements OnInit {
             );
             return;
         }
-        this.createSolicitud();
+        this.editMode ? this.updateSolicitud() : this.createSolicitud();
     }
 
     onCrearDocumento() {
@@ -398,7 +440,7 @@ export class SolicitudExamenComponent implements OnInit {
         this.docente.setValue(null);
     }
 
-    redirectToIndex() {
+    redirectToBandeja() {
         this.router.navigate(['examen-de-valoracion']);
     }
 

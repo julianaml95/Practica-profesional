@@ -3,6 +3,7 @@ export enum Mensaje {
     ERROR_CARGAR_ESTUDIANTES = 'Carga de estudiantes fallida. Verifica los datos e intenta nuevamente',
     REGISTRE_CAMPOS_OBLIGATORIOS = 'Completa los campos marcados como obligatorios (*)',
     ESTUDIANTE_ELIMINADO_CORRECTAMENTE = 'Estudiante eliminado correctamente',
+    SOLICITUD_ELIMINADA_CORRECTAMENTE = 'Solicitud eliminada correctamente',
     CURSO_ELIMINADO_CORRECTAMENTE = 'Curso eliminado correctamente',
     EMPRESA_ELIMINADA_CORRECTAMENTE = 'Empresa eliminada correctamente',
     CONFIRMAR_ELIMINAR_ESTUDIANTE = '¿Está seguro de eliminar este estudiante?',

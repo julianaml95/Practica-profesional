@@ -1,14 +1,14 @@
-<form [formGroup]="empresaForm">
+<form [formGroup]="empresaForm" class="empresaForm">
     <div class="flex flex-column gap-2 mt-4">
         <div class="field grid">
-            <div class="col-5 text-right align-self-center">
+            <div class="col-5 col-label text-right align-self-center">
                 <label class="label-required">Nombre de la Empresa</label>
             </div>
-            <div class="col-7">
+            <div class="col-7 col-input">
                 <input
                     pInputText
                     [maxLength]="250"
-                    class="p-inputtext-sm w-25rem"
+                    class="p-inputtext-sm w-full"
                     formControlName="nombre"
                     [ngClass]="{
                         'ng-invalid ng-dirty':
@@ -19,14 +19,14 @@
             </div>
         </div>
         <div class="field grid">
-            <div class="col-5 text-right align-self-center">
+            <div class="col-5 col-label text-right align-self-center">
                 <label class="label-required">Ubicación de la Empresa</label>
             </div>
-            <div class="col-7">
+            <div class="col-7 col-input">
                 <input
                     pInputText
                     [maxLength]="250"
-                    class="p-inputtext-sm w-25rem"
+                    class="p-inputtext-sm w-full"
                     formControlName="ubicacion"
                     [ngClass]="{
                         'ng-invalid ng-dirty':
@@ -37,14 +37,14 @@
             </div>
         </div>
         <div class="field grid">
-            <div class="col-5 text-right align-self-center">
+            <div class="col-5 col-label text-right align-self-center">
                 <label class="label-required">Cargo</label>
             </div>
-            <div class="col-7">
+            <div class="col-7 col-input">
                 <input
                     pInputText
                     [maxLength]="250"
-                    class="p-inputtext-sm w-25rem"
+                    class="p-inputtext-sm w-full"
                     formControlName="cargo"
                     [ngClass]="{
                         'ng-invalid ng-dirty':
@@ -55,14 +55,14 @@
             </div>
         </div>
         <div class="field grid">
-            <div class="col-5 text-right align-self-center">
+            <div class="col-5 col-label text-right align-self-center">
                 <label class="label-required">Jefe Directo</label>
             </div>
-            <div class="col-7">
+            <div class="col-7 col-input">
                 <input
                     pInputText
                     [maxLength]="250"
-                    class="p-inputtext-sm w-25rem"
+                    class="p-inputtext-sm w-full"
                     formControlName="jefeDirecto"
                     [ngClass]="{
                         'ng-invalid ng-dirty':
@@ -73,14 +73,14 @@
             </div>
         </div>
         <div class="field grid">
-            <div class="col-5 text-right align-self-center">
+            <div class="col-5 col-label text-right align-self-center">
                 <label class="label-required">Teléfono de la Empresa</label>
             </div>
-            <div class="col-7">
+            <div class="col-7 col-input">
                 <input
                     pInputText
                     [maxLength]="250"
-                    class="p-inputtext-sm w-25rem"
+                    class="p-inputtext-sm w-full"
                     formControlName="telefonoEmpresa"
                     [ngClass]="{
                         'ng-invalid ng-dirty':
@@ -91,14 +91,14 @@
             </div>
         </div>
         <div class="field grid">
-            <div class="col-5 text-right align-self-center">
+            <div class="col-5 col-label text-right align-self-center">
                 <label class="label-required">Correo Electrónico</label>
             </div>
-            <div class="col-7">
+            <div class="col-7 col-input">
                 <input
                     pInputText
                     [maxLength]="250"
-                    class="p-inputtext-sm w-25rem"
+                    class="p-inputtext-sm w-full"
                     formControlName="correoEmpresa"
                     [ngClass]="{
                         'ng-invalid ng-dirty':
@@ -109,23 +109,27 @@
             </div>
         </div>
         <div class="field grid">
-            <div class="col-5 text-right align-self-center">
+            <div class="col-5 col-label text-right align-self-center">
                 <label class="label-required">Estado</label>
             </div>
-            <div class="col-7">
+            <div class="col-7 col-input">
                 <p-dropdown
-                [options]="estados"
-                placeholder="Seleccione"
-                styleClass="p-inputtext-sm w-25rem"
-                formControlName="estado"
-                [ngClass]="{ 'ng-invalid ng-dirty': getFormControl('estado').invalid && getFormControl('estado').touched }"
-            ></p-dropdown>
+                    [options]="estados"
+                    placeholder="Seleccione"
+                    styleClass="p-inputtext-sm w-full"
+                    formControlName="estado"
+                    [ngClass]="{
+                        'ng-invalid ng-dirty':
+                            getFormControl('estado').invalid &&
+                            getFormControl('estado').touched
+                    }"
+                ></p-dropdown>
             </div>
         </div>
     </div>
     <div class="flex align-items-center justify-content-end mt-7">
         <button
-        pButton
+            pButton
             *ngIf="!editMode"
             type="submit"
             icon="pi pi-save"

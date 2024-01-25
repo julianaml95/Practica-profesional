@@ -35,6 +35,24 @@ export class SolicitudService {
         this.estudianteSeleccionadoSubject.next(estudiante);
     }
 
+    deleteSolicitud(id: number) {
+        return this.http.delete<any>(backend(`solicitud/${id}`), {
+            headers: getHeaders(),
+        });
+    }
+
+    updateEstudiante(id: number, solicitud: Solicitud) {
+        return this.http.put<any>(backend(`solicitud/${id}`), solicitud, {
+            headers: getHeaders(),
+        });
+    }
+
+    getSolicitud(id: number) {
+        return this.http.get<Solicitud>(backend(`solicitud/${id}`), {
+            headers: getHeaders(),
+        });
+    }
+
     // logFormData(formData: FormData): void {
     //     const formDataObject: { [key: string]: any } = {};
     //     formData.forEach((value, key) => {

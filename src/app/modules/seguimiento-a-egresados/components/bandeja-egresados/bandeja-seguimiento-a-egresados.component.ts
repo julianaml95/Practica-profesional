@@ -70,6 +70,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     ngOnInit(): void {
         this.setBreadcrumb();
         this.listEmpresas();
+        this.listCursos();
     }
 
     setBreadcrumb() {
@@ -107,7 +108,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
         return this.dialogService.open(EmpresaEgresadoComponent, {
             header: 'Agregar empresa',
             height: '60vh',
-            width: '60%',
+            width: '40%',
         });
     }
 
@@ -115,16 +116,16 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
         return this.dialogService.open(EmpresaEgresadoComponent, {
             header: 'Editar empresa',
             height: '60vh',
-            width: '60%',
+            width: '40%',
             data: { id: id },
         });
     }
 
     showAddCurso() {
         return this.dialogService.open(CursoEgresadoComponent, {
-            header: 'Agregar empresa',
+            header: 'Agregar curso',
             height: '58vh',
-            width: '60%',
+            width: '40%',
         });
     }
 
@@ -132,7 +133,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
         return this.dialogService.open(CursoEgresadoComponent, {
             header: 'Editar curso',
             height: '58vh',
-            width: '60%',
+            width: '40%',
             data: { id: id },
         });
     }

@@ -16,6 +16,10 @@ export class LocalStorageService {
         }
     }
 
+    clearLocalStorage(key: string) {
+        localStorage.removeItem(key);
+    }
+
     getFormState(key: string): any {
         const storedValue = localStorage.getItem(key);
         return storedValue ? JSON.parse(storedValue) : null;
