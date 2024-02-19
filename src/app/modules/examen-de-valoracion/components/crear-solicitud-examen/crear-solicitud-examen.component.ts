@@ -127,6 +127,7 @@ export class CrearSolicitudExamenComponent implements OnInit {
             firma_estudiante: [null, Validators.required],
         });
 
+        this.crearSolicitudForm.get('estudiante').disable();
         this.formReady.emit(this.crearSolicitudForm);
     }
 

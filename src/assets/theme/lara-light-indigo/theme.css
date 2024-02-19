@@ -107,7 +107,7 @@
 
 .p-disabled,
 .p-component:disabled {
-    opacity: 0.8;
+    opacity: 0.6;
 }
 
 .p-error {
@@ -119,7 +119,7 @@
 }
 
 .pi {
-    font-size: 13px;
+    font-size: 1rem;
 }
 
 .p-link {
@@ -1889,11 +1889,11 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
     color: #ffffff;
     background: #6366f1;
     border: 1px solid #6366f1;
-    padding: 0.5rem 1rem;
-    font-size: 13px;
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
     transition: background-color 0.2s, color 0.2s, border-color 0.2s,
         box-shadow 0.2s;
-    border-radius: 5px;
+    border-radius: 6px;
 }
 .p-button:enabled:hover {
     background: #4f46e5;
@@ -1911,7 +1911,7 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
     border: 1px solid;
 }
 .p-button.p-button-outlined:enabled:hover {
-    background: rgba(99, 102, 241, 0.15);
+    background: rgba(99, 102, 241, 0.04);
     color: #6366f1;
     border: 1px solid;
 }
@@ -1991,8 +1991,8 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
     border-radius: 2rem;
 }
 .p-button.p-button-icon-only {
-    width: 2.357rem;
-    padding: 0.5rem 0;
+    width: 3rem;
+    padding: 0.75rem 0;
 }
 .p-button.p-button-icon-only .p-button-icon-left,
 .p-button.p-button-icon-only .p-button-icon-right {
@@ -2000,18 +2000,18 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
 }
 .p-button.p-button-icon-only.p-button-rounded {
     border-radius: 50%;
-    height: 2.357rem;
+    height: 3rem;
 }
 .p-button.p-button-sm {
     font-size: 0.875rem;
-    padding: 0.4375rem 0.875rem;
+    padding: 0.65625rem 1.09375rem;
 }
 .p-button.p-button-sm .p-button-icon {
     font-size: 0.875rem;
 }
 .p-button.p-button-lg {
     font-size: 1.25rem;
-    padding: 0.625rem 1.25rem;
+    padding: 0.9375rem 1.5625rem;
 }
 .p-button.p-button-lg .p-button-icon {
     font-size: 1.25rem;
@@ -2027,7 +2027,7 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
     width: 100%;
 }
 .p-fluid .p-button-icon-only {
-    width: 2.357rem;
+    width: 3rem;
 }
 .p-fluid .p-buttonset {
     display: flex;
@@ -2677,7 +2677,7 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
     text-align: left;
     border: 1px solid #dee2e6;
     border-width: 0 0 1px 0;
-    padding: 0.5rem 1rem;
+    padding: 1rem 1rem;
 }
 .p-datatable .p-datatable-tbody > tr > td .p-row-toggler,
 .p-datatable .p-datatable-tbody > tr > td .p-row-editor-init,
@@ -4175,6 +4175,9 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
 }
 .p-fieldset .p-fieldset-legend {
     padding: 1.25rem;
+    border: 1px solid #dee2e6;
+    color: #343a40;
+    background: #f8f9fa;
     font-weight: 700;
     border-radius: 6px;
 }
@@ -4212,7 +4215,6 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
     color: #343a40;
     border-top-right-radius: 6px;
     border-top-left-radius: 6px;
-    justify-content: center;
 }
 .p-panel .p-panel-header .p-panel-title {
     font-weight: 700;
@@ -4244,22 +4246,16 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
     border: 1px solid #dee2e6;
     background: #ffffff;
     color: #495057;
-    border-bottom-right-radius: 0px;
-    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
     border-top: 0 none;
 }
 .p-panel .p-panel-footer {
-    padding: 1.25rem 1.25rem;
+    padding: 0.75rem 1.25rem;
     border: 1px solid #dee2e6;
     background: #ffffff;
     color: #495057;
     border-top: 0 none;
-    display: flex;
-    justify-content: flex-end;
-}
-
-.p-panel .p-panel-footer .p-button {
-    margin-left: 0.5rem;
 }
 
 .p-scrollpanel .p-scrollpanel-bar {
@@ -4369,7 +4365,7 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
     color: #495057;
     border: 0 none;
     border-radius: 6px;
-    box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 .p-confirm-popup .p-confirm-popup-content {
     padding: 1.25rem;
@@ -4386,14 +4382,14 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
     margin: 0;
 }
 .p-confirm-popup:after {
-    border: solid gray;
-    border-color: rgba(255, 255, 255, 0.2);
-    border-bottom-color: #f8f8f8;
+    border: solid transparent;
+    border-color: rgba(255, 255, 255, 0);
+    border-bottom-color: #ffffff;
 }
 .p-confirm-popup:before {
     border: solid transparent;
     border-color: rgba(255, 255, 255, 0);
-    border-bottom-color: #f8f8f8;
+    border-bottom-color: #ffffff;
 }
 .p-confirm-popup.p-confirm-popup-flipped:after {
     border-top-color: #ffffff;
@@ -4424,8 +4420,6 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
 .p-dialog .p-dialog-header .p-dialog-title {
     font-weight: 700;
     font-size: 1.25rem;
-    width: 100%;
-    text-align: center;
 }
 .p-dialog .p-dialog-header .p-dialog-header-icon {
     width: 2rem;
@@ -4603,34 +4597,9 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
 .p-fileupload .p-progressbar {
     height: 0.25rem;
 }
-
-.p-fileupload-row {
-    justify-content: space-between !important;
-}
-
-.p-fileupload-filename {
-    margin-left: 1.5rem;
-    width: 12rem;
-}
-
-.p-fileupload-filename ~ div {
-    text-align: right;
-    width: 0;
-}
-
-.p-fileupload-row > div:first-of-type {
-    display: none;
-    width: 0;
-}
-
-.p-fileupload-row > div:last-of-type {
-    width: 0;
-}
-
 .p-fileupload .p-fileupload-row > div {
-    padding: 0.2rem 0.2rem;
+    padding: 1rem 1rem;
 }
-
 .p-fileupload.p-fileupload-advanced .p-message {
     margin-top: 0;
 }
@@ -4647,7 +4616,10 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
 }
 
 .p-breadcrumb {
-    padding: 1.25rem 3rem;
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 1rem;
 }
 .p-breadcrumb ul li .p-menuitem-link {
     transition: box-shadow 0.2s;
@@ -5102,7 +5074,7 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
     border-radius: 6px;
 }
 .p-menubar .p-menuitem-link {
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1.25rem;
     color: #495057;
     border-radius: 0;
     transition: box-shadow 0.2s;
@@ -6393,6 +6365,10 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
         "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+.p-button-label {
+    font-weight: 700;
+}
+
 .p-accordion .p-accordion-header .p-accordion-header-link {
     transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
@@ -6438,24 +6414,4 @@ p-treeselect.ng-invalid.ng-dirty > .p-treeselect {
 }
 .p-button.p-button-danger:enabled:focus {
     box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #f7a2a2, 0 1px 2px 0 black;
-}
-
-.p-button:disabled {
-    background-color: rgba(0, 0, 0, 0.12) !important;
-    color: rgba(0, 0, 0, 0.38) !important;
-    border-color: rgba(0, 0, 0, 0.06) !important;
-    opacity: 1;
-}
-.p-button:disabled.p-button-text {
-    background-color: transparent !important;
-    color: rgba(0, 0, 0, 0.38) !important;
-    border-color: rgba(0, 0, 0, 0.38) !important;
-}
-.p-button:disabled.p-button-outlined {
-    background-color: transparent !important;
-    color: rgba(0, 0, 0, 0.48) !important;
-    border-color: rgba(0, 0, 0, 0.18) !important;
-}
-.p-calendar-w-btn .p-datepicker-trigger.p-button:disabled {
-    background-color: transparent !important;
 }

@@ -1,10 +1,14 @@
 <p-panel>
     <ng-template pTemplate="header">
-        <span class="font-medium" *ngIf="!estudianteSeleccionado"
+        <span
+            class="font-medium w-full text-center"
+            *ngIf="!estudianteSeleccionado"
             >Por favor, seleccione el estudiante que se encuentra bajo su
             dirección</span
         >
-        <span class="font-bold" *ngIf="estudianteSeleccionado"
+        <span
+            class="font-bold w-full text-center"
+            *ngIf="estudianteSeleccionado"
             >Informacion General</span
         >
     </ng-template>

@@ -1,7 +1,7 @@
 <p-panel>
-    <p-header>
-        <b>Examen de Valoracion</b>
-    </p-header>
+    <ng-template pTemplate="header">
+        <span class="font-bold w-full text-center" style="font-size: 20px">Examen de Valoracion</span>
+    </ng-template>
     <div class="col flex align-items-center justify-content-center">
         <p-card
             class="m-2 w-full max-w-30rem"
@@ -34,7 +34,7 @@
             (activeIndexChange)="onActiveIndexChange($event)"
         ></p-steps>
     </div>
-    <p-footer class="w-full">
+    <ng-template class="w-full" pTemplate="footer">
         <form [formGroup]="solicitudForm">
             <div class="flex flex-column gap-2">
                 <div class="text-center font-medium mb-4">
@@ -389,7 +389,7 @@
                 ></button>
             </div>
         </form>
-    </p-footer>
+    </ng-template>
 </p-panel>
 <ng-template #noEvaluadorSelected>
     <p-fieldset legend="Cargar Evaluador"></p-fieldset>

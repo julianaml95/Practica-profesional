@@ -1,16 +1,14 @@
 <p-panel id="htmlData">
-    <p-header>
-        <div class="mb-4">
-            <span class="pdf-text" style="font-size: 2rem"
-                >SOLICITUD EXAMEN DE VALORACION</span
-            >
-        </div>
-        <div class="mt-4 text-center">
+    <ng-template pTemplate="header">
+        <div class="flex flex-column w-full justify-content-center align-items-center row-gap-4">
+            <span class="pdf-text" style="font-size: 20px">
+                SOLICITUD EXAMEN DE VALORACION
+            </span>
             <span class="pdf-text">
                 Popayán {{ fechaActual | date : "dd/MM/yyyy HH:mm:ss" }}
             </span>
         </div>
-    </p-header>
+    </ng-template>
     <form [formGroup]="crearSolicitudForm">
         <div class="flex flex-column gap-4">
             <div class="field grid">
@@ -68,7 +66,6 @@
                         [maxLength]="250"
                         class="p-inputtext-md w-full pdf-text"
                         formControlName="estudiante"
-                        disabled
                     />
                 </div>
             </div>
