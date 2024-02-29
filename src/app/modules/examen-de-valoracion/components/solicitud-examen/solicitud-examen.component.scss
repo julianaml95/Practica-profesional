@@ -4,6 +4,17 @@
     box-shadow: 0 0 0 0 !important;
 }
 
+::ng-deep.p-fileupload .p-message {
+    display: none;
+}
+
+.spinner {
+    transform: translate(-50%, 50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
 @media (max-width: 1240px) {
     ::ng-deep.p-dialog {
         width: 60% !important;

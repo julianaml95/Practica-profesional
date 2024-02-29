@@ -5,12 +5,14 @@ import { EmptyLabelPipe } from './pipes/empty-label.pipe';
 import { BuscadorDocentesComponent } from './components/buscador-docentes/buscador-docentes.component';
 import { BuscadorEstudiantesComponent } from './components/buscador-estudiantes/buscador-estudiantes.component';
 import { BuscadorExpertosComponent } from './components/buscador-expertos/buscador-expertos.component';
+import { BytesToKbPipe } from './pipes/bytes-to-kb.pipe';
 
 
 
 @NgModule({
   declarations: [
     EmptyLabelPipe,
+    BytesToKbPipe,
     BuscadorDocentesComponent,
     BuscadorEstudiantesComponent,
     BuscadorExpertosComponent
@@ -21,6 +23,7 @@ import { BuscadorExpertosComponent } from './components/buscador-expertos/buscad
   ],
   exports: [
     EmptyLabelPipe,
+    BytesToKbPipe,
     BuscadorDocentesComponent,
     BuscadorEstudiantesComponent,
   ]

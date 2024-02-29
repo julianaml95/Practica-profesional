@@ -9,6 +9,8 @@ import { ConfirmationService, MessageService, PrimeIcons } from 'primeng/api';
 import { Mensaje } from 'src/app/core/enums/enums';
 import { infoMessage } from 'src/app/core/utils/message-util';
 import { Solicitud } from '../../models/solicitud';
+import { RespuestaService } from '../../services/respuesta.service';
+import { LocalStorageService } from '../../services/localstorage.service';
 
 @Component({
     selector: 'app-bandeja-examen-de-valoracion',
@@ -77,14 +79,27 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         private breadcrumbService: BreadcrumbService,
         private router: Router,
         private solicitudService: SolicitudService,
+        private respuestaService: RespuestaService,
         private messageService: MessageService,
         private dialogService: DialogService,
+        private localStorageService: LocalStorageService,
         private confirmationService: ConfirmationService
     ) {}
 
     ngOnInit(): void {
-        this.listSolicitudes();
+        this.loadData();
         this.setBreadcrumb();
+    }
+
+    loadData() {
+        if (this.localStorageService.getLocalStorage('est')) {
+            this.solicitudService.setEstudianteSeleccionado(
+                this.localStorageService.getLocalStorage('est')
+            );
+            this.estudianteSeleccionado =
+                this.localStorageService.getLocalStorage('est');
+            this.listSolicitudes(this.estudianteSeleccionado.id);
+        }
     }
 
     setBreadcrumb() {
@@ -103,6 +118,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
 
     mapEstudianteLabel(estudiante: Estudiante) {
         return {
+            id: estudiante.id,
             codigo: estudiante.codigo,
             nombre: estudiante.persona.nombre,
             apellido: estudiante.persona.apellido,
@@ -120,26 +136,39 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                     this.solicitudService.setEstudianteSeleccionado(
                         this.mapEstudianteLabel(response)
                     );
+                    this.listSolicitudes(this.estudianteSeleccionado.id);
+                    this.localStorageService.saveLocalStorage(
+                        this.mapEstudianteLabel(response),
+                        'est'
+                    );
                 }
             },
         });
     }
 
-    listSolicitudes() {
+    listSolicitudes(id: number) {
         this.loading = true;
         this.solicitudService
-            .listSolicitudes()
+            .listSolicitudes(id)
             .subscribe({
-                next: (response) =>
-                    (this.solicitudes = response.filter(
-                        (d) => d.estado === 'ACTIVO'
-                    )),
+                next: (response) => {
+                    if (response) {
+                        this.solicitudes = response.filter(
+                            (d) =>
+                                d.estudiante == this.estudianteSeleccionado.id
+                        );
+                    }
+                },
             })
             .add(() => (this.loading = false));
+        this.solicitudService.setRespuestaSeleccionada(null);
+        this.solicitudService.setSolicitudSeleccionada(null);
+        this.solicitudService.setTituloSeleccionadoSubject(null);
     }
 
     limpiarEstudiante() {
         this.estudianteSeleccionado = null;
+        this.localStorageService.clearLocalStorage('est');
     }
 
     onProcesoExamen() {
@@ -147,16 +176,31 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
     }
 
     onEditar(id: number) {
+        this.solicitudService.getSolicitud(id).subscribe({
+            next: (response) => {
+                this.solicitudService.setSolicitudSeleccionada(response);
+            },
+        });
+        this.respuestaService.getRespuestaBySolicitud(id).subscribe({
+            next: (response) => {
+                this.solicitudService.setRespuestaSeleccionada(response);
+            },
+        });
         this.router.navigate(['examen-de-valoracion/solicitud/editar', id]);
     }
 
     deleteSolicitud(id: number) {
         this.solicitudService.deleteSolicitud(id).subscribe({
-            next: () => {
+            next: () =>
                 this.messageService.add(
                     infoMessage(Mensaje.SOLICITUD_ELIMINADA_CORRECTAMENTE)
-                );
-                this.listSolicitudes();
+                ),
+            error: (e) => console.log(e),
+            complete: () => {
+                this.respuestaService.deleteRespuesta(id).subscribe({
+                    error: (e) => console.log(e),
+                });
+                this.listSolicitudes(this.estudianteSeleccionado.id);
             },
         });
     }

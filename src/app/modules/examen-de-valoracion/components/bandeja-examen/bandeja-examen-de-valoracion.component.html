@@ -103,7 +103,7 @@
                                 type="button"
                                 icon="pi pi-pencil"
                                 class="p-button-rounded p-button-text p-button-warning"
-                                (click)="onEditar(solicitud.id)"
+                                (click)="onEditar(solicitud.solicitudId)"
                             ></button>
                             <button
                                 pButton
@@ -111,7 +111,7 @@
                                 type="button"
                                 icon="pi pi-trash"
                                 class="p-button-rounded p-button-text p-button-danger"
-                                (click)="onDelete($event, solicitud.id)"
+                                (click)="onDelete($event, solicitud.solicitudId)"
                             ></button>
                             <p-confirmPopup></p-confirmPopup>
                         </td>

@@ -1,4 +1,10 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import {
+    Component,
+    EventEmitter,
+    OnInit,
+    Output,
+    ViewChild,
+} from '@angular/core';
 import {
     FormBuilder,
     FormControl,
@@ -22,9 +28,18 @@ import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-ex
 import { Experto } from '../../models/experto';
 import { SolicitudService } from '../../services/solicitud.service';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
-import { LocalStorageService } from '../../services/localstorage.service';
-import { Observable } from 'rxjs';
+import {
+    Subject,
+    debounceTime,
+    distinctUntilChanged,
+    filter,
+    switchMap,
+    take,
+    takeUntil,
+    timer,
+} from 'rxjs';
 import { Solicitud } from '../../models/solicitud';
+import { FileUpload } from 'primeng/fileupload';
 
 @Component({
     selector: 'app-solicitud-examen',
@@ -33,14 +48,25 @@ import { Solicitud } from '../../models/solicitud';
 })
 export class SolicitudExamenComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
+    @ViewChild('fileUpload1') fileUpload1!: FileUpload;
+    @ViewChild('fileUpload2') fileUpload2!: FileUpload;
+    @ViewChild('fileUpload3') fileUpload3!: FileUpload;
+    @ViewChild('fileUpload4') fileUpload4!: FileUpload;
 
-    loading: boolean;
+    private unsubscribe$ = new Subject<void>();
+
+    solicitudId: number;
+    respuestaId: number;
+
+    isLoading: boolean;
     editMode: boolean = false;
-    items: any;
-    localStorageKey: string = 'miFormulario';
-    estudianteSeleccionado: Estudiante = {};
-    activeIndex: number = 0;
+    isSolicitudValid: boolean;
+
     solicitudForm: FormGroup;
+    estudianteSeleccionado: Estudiante = {};
+    docenteSeleccionado: Docente;
+    expertoSeleccionado: Experto;
+
     selectedFileFirst: File | null;
     selectedFileSecond: File | null;
     selectedFileThird: File | null;
@@ -52,7 +78,6 @@ export class SolicitudExamenComponent implements OnInit {
         private dialogService: DialogService,
         private solicitudService: SolicitudService,
         private route: ActivatedRoute,
-        private localStorageService: LocalStorageService,
         private fb: FormBuilder,
         private router: Router
     ) {}
@@ -70,55 +95,114 @@ export class SolicitudExamenComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.initForm();
+        this.subscribeToObservers();
         if (this.router.url.includes('editar')) {
             this.loadEditMode();
         }
-        this.initForm();
         this.loadData();
-        this.subscribeToEstudianteSeleccionado();
-        this.setupAdditionalFunctionality('doc_solicitud_valoracion');
-        this.setupAdditionalFunctionality('doc_anteproyecto_examen');
-        this.setupAdditionalFunctionality('doc_examen_valoracion');
-        this.setupAdditionalFunctionality('doc_oficio_jurados');
-        this.items = [
-            {
-                label: 'Solicitud Examen de Validacion',
-                command: (event: any) =>
-                    this.messageService.add({
-                        severity: 'info',
-                        summary: 'Primer Paso',
-                        detail: event.item.label,
-                    }),
-            },
-            {
-                label: 'Respuesta Examen de Validacion',
-                command: (event: any) =>
-                    this.messageService.add({
-                        severity: 'info',
-                        summary: 'Segundo Paso',
-                        detail: event.item.label,
-                    }),
-            },
-            {
-                label: 'Generacion de Resolucion',
-                command: (event: any) =>
-                    this.messageService.add({
-                        severity: 'info',
-                        summary: 'Tercer Paso',
-                        detail: event.item.label,
-                    }),
-            },
-            {
-                label: 'Sustentacion Proyecto de Investigacion',
-                command: (event: any) =>
-                    this.messageService.add({
-                        severity: 'info',
-                        summary: 'Cuarto Paso',
-                        detail: event.item.label,
-                    }),
-            },
-        ];
+        this.setup('doc_solicitud_valoracion');
+        this.setup('doc_anteproyecto_examen');
+        this.setup('doc_examen_valoracion');
+        this.setup('doc_oficio_jurados');
         this.setBreadcrumb();
+    }
+
+    initForm(): void {
+        this.solicitudForm = this.fb.group({
+            titulo: [null, Validators.required],
+            fecha: [null, Validators.required],
+            estado: [null, Validators.required],
+            doc_solicitud_valoracion: [null, Validators.required],
+            doc_anteproyecto_examen: [null, Validators.required],
+            doc_examen_valoracion: [null],
+            estudiante: [null, Validators.required],
+            docente: [null, Validators.required],
+            experto: [null, Validators.required],
+            numero_acta: [null, Validators.required],
+            fecha_acta: [null],
+            doc_oficio_jurados: [null],
+            fecha_maxima_evaluacion: [null],
+        });
+
+        this.formReady.emit(this.solicitudForm);
+    }
+
+    loadData(): void {
+        if (!this.editMode) {
+            this.isLoading = true;
+            this.isSolicitudValid = false;
+            this.solicitudForm
+                .get('fecha')
+                .setValue(new Date().toISOString().split('T')[0]);
+            this.solicitudForm
+                .get('estado')
+                .setValue(Mensaje.SIN_REGISTRAR_SOLICITUD_EXAMEN);
+            this.solicitudService
+                .createSolicitud(this.solicitudForm.value)
+                .subscribe({
+                    next: (response) => {
+                        if (response) {
+                            console.log(
+                                'Datos guardados en el backend:',
+                                response
+                            );
+                        }
+                    },
+                    error: () => {
+                        console.error(
+                            'Error al guardar los datos en el backend:'
+                        );
+                    },
+                    complete: () => {
+                        timer(2000).subscribe(() => {
+                            this.isLoading = false;
+                            this.router.navigate(['examen-de-valoracion']);
+                        });
+                    },
+                });
+        }
+    }
+
+    setup(fieldName: string) {
+        if (Object.keys(this.estudianteSeleccionado).length > 0) {
+            this.solicitudService
+                .getFile(this.estudianteSeleccionado?.id, fieldName)
+                .subscribe({
+                    next: (response: any) => {
+                        const regex = /estudianteId=(\d+)&tipoDocumento=(\w+)/;
+                        const match = response.url.match(regex);
+
+                        if (match) {
+                            const estudianteId = match[1];
+                            const tipoDocumento = match[2];
+                            const combined = `${estudianteId}_${tipoDocumento}`;
+
+                            const file = new File([response.body], combined, {
+                                type: response.type,
+                            });
+
+                            switch (fieldName) {
+                                case 'doc_solicitud_valoracion':
+                                    this.selectedFileFirst = file;
+                                    break;
+                                case 'doc_anteproyecto_examen':
+                                    this.selectedFileSecond = file;
+                                    break;
+                                case 'doc_examen_valoracion':
+                                    this.selectedFileThird = file;
+                                    break;
+                                case 'doc_oficio_jurados':
+                                    this.selectedFileFourth = file;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                });
+        }
     }
 
     loadEditMode() {
@@ -129,8 +213,64 @@ export class SolicitudExamenComponent implements OnInit {
     loadSolicitud() {
         const id = Number(this.route.snapshot.paramMap.get('id'));
         this.solicitudService.getSolicitud(id).subscribe({
-            next: (response) => this.setValuesForm(response),
+            next: (response) => {
+                if (response) {
+                    this.setValuesForm(response);
+                    this.solicitudForm
+                        .get('fecha_acta')
+                        .setValue(
+                            response?.fecha_acta
+                                ? new Date(response.fecha_acta)
+                                : null
+                        );
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
         });
+        this.solicitudForm.valueChanges
+            .pipe(
+                debounceTime(300), // Espera 300ms después de la última pulsación de tecla
+                distinctUntilChanged(), // Solo emite si los valores son diferentes
+                filter(() => this.solicitudForm.dirty), // Filtra si el formulario ha sido modificado
+                takeUntil(this.unsubscribe$),
+                switchMap(() =>
+                    this.solicitudService.updateSolicitud(
+                        this.solicitudForm.value,
+                        id
+                    )
+                )
+            )
+            .subscribe({
+                next: (response) => {
+                    if (response) {
+                        console.log('Datos actualizados en el backend:');
+                        this.solicitudService.setTituloSeleccionadoSubject(
+                            this.solicitudForm.get('titulo').value
+                        );
+                        if (this.solicitudForm.valid) {
+                            this.solicitudService
+                                .updateSolicitud(
+                                    {
+                                        ...this.solicitudForm.value,
+                                        estado: Mensaje.PENDIENTE_RESULTADO_EXAMEN,
+                                    },
+                                    id
+                                )
+                                .pipe(take(1))
+                                .subscribe(() => {
+                                    console.log('Estado actualizado con éxito');
+                                    this.isSolicitudValid = true;
+                                });
+                        }
+                    }
+                },
+            });
+    }
+
+    ngOnDestroy() {
+        // Finalizar la suscripción al destruir el componente
+        this.unsubscribe$.next();
+        this.unsubscribe$.complete();
     }
 
     setValuesForm(solicitud: Solicitud) {
@@ -139,45 +279,25 @@ export class SolicitudExamenComponent implements OnInit {
         });
     }
 
-    private subscribeToEstudianteSeleccionado() {
-        this.solicitudService.estudianteSeleccionado$.subscribe((response) => {
-            this.handleEstudianteSeleccionado(response);
-        });
-    }
-
-    private handleEstudianteSeleccionado(response: any) {
-        if (response) {
-            this.estudianteSeleccionado = response;
-            this.estudiante.setValue(response);
-        } else {
-            const estudianteFormValue =
-                this.solicitudForm.get('estudiante').value;
-            console.log(estudianteFormValue);
-            this.estudianteSeleccionado = estudianteFormValue;
-
-            if (estudianteFormValue) {
-                this.solicitudService.setEstudianteSeleccionado(
-                    estudianteFormValue
-                );
-            } else {
-                this.router.navigate(['examen-de-valoracion']);
-            }
-        }
-    }
-
-    onActiveIndexChange(event: number) {
-        this.activeIndex = event;
-    }
-
-    setBreadcrumb() {
-        this.breadcrumbService.setItems([
-            { label: 'Trabajos de Grado' },
-            {
-                label: 'Examen de Valoracion',
-                routerLink: 'examen-de-valoracion',
+    subscribeToObservers() {
+        this.solicitudService.estudianteSeleccionado$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.estudianteSeleccionado = response;
+                    this.estudiante.setValue(response.id);
+                } else {
+                    this.router.navigate(['examen-de-valoracion']);
+                }
             },
-            { label: 'Solicitud' },
-        ]);
+            error: (e) => this.handlerResponseException(e),
+        });
+        this.solicitudService.respuestaSeleccionadaSubject$.subscribe(
+            (response) => {
+                if (response) {
+                    this.respuestaId = response.respuestaId;
+                }
+            }
+        );
     }
 
     onFileSelectFirst(event: any) {
@@ -208,18 +328,58 @@ export class SolicitudExamenComponent implements OnInit {
         );
     }
 
-    onFileClear(event: any, field: string) {
+    onFileClear(field: string) {
         if (field == 'doc_solicitud_valoracion') {
             this.selectedFileFirst = null;
+            this.fileUpload1.clear();
+            this.solicitudService
+                .deleteFile(this.estudianteSeleccionado.id, field)
+                .subscribe({
+                    next: () =>
+                        this.messageService.add(
+                            infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
+                        ),
+                    error: (e) => this.handlerResponseException(e),
+                });
         }
         if (field == 'doc_anteproyecto_examen') {
             this.selectedFileSecond = null;
+            this.fileUpload2.clear();
+            this.solicitudService
+                .deleteFile(this.estudianteSeleccionado.id, field)
+                .subscribe({
+                    next: () =>
+                        this.messageService.add(
+                            infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
+                        ),
+                    error: (e) => this.handlerResponseException(e),
+                });
         }
         if (field == 'doc_examen_valoracion') {
             this.selectedFileThird = null;
+            this.fileUpload3.clear();
+            this.solicitudService
+                .deleteFile(this.estudianteSeleccionado.id, field)
+                .subscribe({
+                    next: () =>
+                        this.messageService.add(
+                            infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
+                        ),
+                    error: (e) => this.handlerResponseException(e),
+                });
         }
         if (field == 'doc_oficio_jurados') {
             this.selectedFileFourth = null;
+            this.fileUpload4.clear();
+            this.solicitudService
+                .deleteFile(this.estudianteSeleccionado.id, field)
+                .subscribe({
+                    next: () =>
+                        this.messageService.add(
+                            infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
+                        ),
+                    error: (e) => this.handlerResponseException(e),
+                });
         }
     }
 
@@ -232,7 +392,7 @@ export class SolicitudExamenComponent implements OnInit {
             this.solicitudService
                 .uploadFile(
                     selectedFile,
-                    this.estudianteSeleccionado.codigo,
+                    this.estudianteSeleccionado.id,
                     fileControlName
                 )
                 .subscribe({
@@ -240,7 +400,12 @@ export class SolicitudExamenComponent implements OnInit {
                         this.messageService.add(
                             infoMessage(Mensaje.GUARDADO_EXITOSO)
                         ),
-                    error: (e) => this.handlerResponseException(e),
+                    error: (e) => {
+                        this.messageService.add(
+                            warnMessage(Mensaje.ARCHIVO_DEMASIADO_GRANDE)
+                        ),
+                            this.handlerResponseException(e);
+                    },
                 });
 
             this.solicitudForm.get(fileControlName).setValue(selectedFile);
@@ -251,72 +416,29 @@ export class SolicitudExamenComponent implements OnInit {
         return null;
     }
 
-    initForm(): void {
-        this.solicitudForm = this.fb.group({
-            titulo: [null, Validators.required],
-            doc_solicitud_valoracion: [null, Validators.required],
-            doc_anteproyecto_examen: [null, Validators.required],
-            doc_examen_valoracion: [null],
-            estudiante: [null, Validators.required],
-            docente: [null, Validators.required],
-            experto: [null, Validators.required],
-            numero_acta: [null, Validators.required],
-            fecha_acta: [null],
-            doc_oficio_jurados: [null],
-            fecha_maxima_evaluacion: [null],
-        });
-
-        this.formReady.emit(this.solicitudForm);
-    }
-
-    loadData(): void {
-        if (!this.editMode) {
-            const savedState = this.localStorageService.getFormState(
-                this.localStorageKey
-            );
-
-            if (savedState) {
-                // Convierte la cadena de fecha a objeto Date
-                if (savedState.fecha_acta) {
-                    savedState.fecha_acta = new Date(savedState.fecha_acta);
-                }
-
-                if (savedState.fecha_maxima_evaluacion) {
-                    savedState.fecha_maxima_evaluacion = new Date(
-                        savedState.fecha_maxima_evaluacion
+    getFileAndSetValue(fieldName: string) {
+        this.solicitudForm.get(fieldName).setValue(fieldName); // para simular
+        this.solicitudService
+            .getFile(this.estudianteSeleccionado.id, fieldName)
+            .subscribe({
+                next: (response: any) => {
+                    const url = window.URL.createObjectURL(response.body);
+                    const a = document.createElement('a');
+                    document.body.appendChild(a);
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = fieldName;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    this.messageService.add(
+                        infoMessage(Mensaje.ACTUALIZACION_EXITOSA)
                     );
-                }
-
-                this.solicitudForm.patchValue(savedState);
-            }
-
-            this.solicitudForm.valueChanges.subscribe(() => {
-                this.localStorageService.saveFormState(
-                    this.solicitudForm,
-                    this.localStorageKey
-                );
+                },
+                error: (error: any) => {
+                    this.handlerResponseException(error);
+                },
             });
-        }
-    }
-
-    private setupAdditionalFunctionality(fieldName: string): void {
-        this.getFileAndSetValue(fieldName).subscribe({
-            next: (response) => {
-                console.log(response);
-                this.solicitudForm.get(fieldName).setValue(response);
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-    }
-
-    private getFileAndSetValue(fieldName: string): Observable<any> {
-        console.log(this.estudianteSeleccionado.codigo);
-        const palabraClave = this.solicitudService.generatePalabraClave(
-            this.estudianteSeleccionado.codigo,
-            fieldName
-        );
-
-        return this.solicitudService.getFile(palabraClave);
     }
 
     getFormControl(formControlName: string): FormControl {
@@ -343,7 +465,8 @@ export class SolicitudExamenComponent implements OnInit {
             next: (response) => {
                 if (response) {
                     const docente = this.mapDocenteLabel(response);
-                    this.docente.setValue(docente);
+                    this.docenteSeleccionado = docente;
+                    this.docente.setValue(this.docenteSeleccionado.id);
                 }
             },
         });
@@ -355,7 +478,11 @@ export class SolicitudExamenComponent implements OnInit {
             next: (response) => {
                 if (response) {
                     const experto = this.mapExpertoLabel(response);
-                    this.experto.setValue(experto);
+                    this.expertoSeleccionado = experto;
+                    this.solicitudService.setEvaluadorExternoSeleccionadoSubject(
+                        this.expertoSeleccionado
+                    );
+                    this.experto.setValue(this.expertoSeleccionado.id);
                 }
             },
         });
@@ -363,7 +490,6 @@ export class SolicitudExamenComponent implements OnInit {
 
     mapRequest(): any {
         const value = this.solicitudForm.getRawValue();
-        console.log(value);
         return {
             titulo: value.titulo,
             doc_solicitud_valoracion: value.doc_solicitud_valoracion,
@@ -379,65 +505,32 @@ export class SolicitudExamenComponent implements OnInit {
         };
     }
 
-    createSolicitud() {
-        const request = this.mapRequest();
-        this.loading = true;
-        this.solicitudService
-            .createSolicitud(request)
-            .subscribe({
-                next: () =>
-                    this.messageService.add(
-                        infoMessage(Mensaje.GUARDADO_EXITOSO)
-                    ),
-                error: (e) => this.handlerResponseException(e),
-                complete: () => {
-                    this.redirectToBandeja(),
-                        this.localStorageService.clearLocalStorage(
-                            this.localStorageKey
-                        );
-                },
-            })
-            .add(() => (this.loading = false));
-    }
-
-    updateSolicitud() {
-        const id = Number(this.route.snapshot.paramMap.get('id'));
-        const request = this.mapRequest();
-        this.loading = true;
-        this.solicitudService
-            .updateEstudiante(id, request)
-            .subscribe({
-                next: () =>
-                    this.messageService.add(
-                        infoMessage(Mensaje.ACTUALIZACION_EXITOSA)
-                    ),
-                error: (e) => this.handlerResponseException(e),
-                complete: () => this.redirectToBandeja(),
-            })
-            .add(() => (this.loading = false));
-    }
-
-    onSave() {
-        if (this.solicitudForm.invalid) {
-            this.messageService.clear();
-            this.messageService.add(
-                warnMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS)
-            );
-            return;
-        }
-        this.editMode ? this.updateSolicitud() : this.createSolicitud();
-    }
-
     onCrearDocumento() {
         this.router.navigate(['examen-de-valoracion/solicitud/crear']);
     }
 
     limpiarExperto() {
         this.experto.setValue(null);
+        this.expertoSeleccionado = null;
     }
 
     limpiarDocente() {
         this.docente.setValue(null);
+        this.docenteSeleccionado = null;
+    }
+
+    onEdit(solicitudId: number) {
+        this.router.navigate([
+            `examen-de-valoracion/solicitud/editar/${solicitudId}`,
+        ]);
+    }
+
+    rediectToRespuesta(respuestaId: number) {
+        respuestaId
+            ? this.router.navigate([
+                  `examen-de-valoracion/respuesta/editar/${respuestaId}`,
+              ])
+            : this.router.navigate(['examen-de-valoracion/respuesta']);
     }
 
     redirectToBandeja() {
@@ -459,7 +552,7 @@ export class SolicitudExamenComponent implements OnInit {
                 : 'Sin título universitario';
 
         return {
-            id: docente.persona.id,
+            id: docente.id,
             nombre: docente.persona.nombre,
             apellido: docente.persona.apellido,
             correo: docente.persona.correoElectronico,
@@ -480,5 +573,23 @@ export class SolicitudExamenComponent implements OnInit {
             correo: experto.persona.correoElectronico,
             universidad: ultimaUniversidad,
         };
+    }
+
+    isActiveIndex(): Boolean {
+        if (this.router.url.includes('editar')) {
+            return true;
+        }
+        return false;
+    }
+
+    setBreadcrumb() {
+        this.breadcrumbService.setItems([
+            { label: 'Trabajos de Grado' },
+            {
+                label: 'Examen de Valoracion',
+                routerLink: 'examen-de-valoracion',
+            },
+            { label: 'Solicitud' },
+        ]);
     }
 }

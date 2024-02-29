@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { ExamenDeValoracionRoutingModule } from './examen-de-valoracion-routing.module';
-import { SharedModule } from 'primeng/api';
+
 import { PrimenNgModule } from '../primen-ng/primen-ng.module';
 
 import { ReactiveFormsModule } from '@angular/forms';
@@ -11,13 +11,16 @@ import { BandejaExamenDeValoracionComponent } from './components/bandeja-examen/
 import { SolicitudService } from './services/solicitud.service';
 import { CrearSolicitudExamenComponent } from './components/crear-solicitud-examen/crear-solicitud-examen.component';
 import { SolicitudExamenComponent } from './components/solicitud-examen/solicitud-examen.component';
+import { RespuestaExamenComponent } from './components/respuesta-examen/respuesta-examen.component';
+import { SharedModule } from 'src/app/shared/shared.module';
 
 @NgModule({
     declarations: [
         PrincipalExamenDeValoracionComponent,
         BandejaExamenDeValoracionComponent,
         CrearSolicitudExamenComponent,
-        SolicitudExamenComponent
+        SolicitudExamenComponent,
+        RespuestaExamenComponent,
     ],
     imports: [
         CommonModule,

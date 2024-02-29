@@ -41,7 +41,7 @@ export class CargarDocentesComponent implements OnInit {
                 this.onReset();
             },
             error: () => {
-                this.messageService.add(errorMessage(Mensaje.ERROR_CARGAR_DOCENTESS))
+                this.messageService.add(errorMessage(Mensaje.ERROR_CARGAR_DOCENTES))
                 this.onReset();
             }
         });
