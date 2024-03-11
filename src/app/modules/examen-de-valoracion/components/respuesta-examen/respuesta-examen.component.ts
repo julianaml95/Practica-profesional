@@ -12,20 +12,24 @@ import {
 } from '@angular/forms';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { Mensaje } from 'src/app/core/enums/enums';
-import { errorMessage, infoMessage } from 'src/app/core/utils/message-util';
+import {
+    errorMessage,
+    infoMessage,
+    warnMessage,
+} from 'src/app/core/utils/message-util';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
-import { Respuesta } from '../../models/respuesta';
+import { Evaluacion, Respuesta } from '../../models/respuesta';
 import { RespuestaService } from '../../services/respuesta.service';
 import { Experto } from '../../models/experto';
 import {
     Subject,
     debounceTime,
     distinctUntilChanged,
-    filter,
     switchMap,
     takeUntil,
     timer,
 } from 'rxjs';
+import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 
 @Component({
     selector: 'app-respuesta-examen',
@@ -34,19 +38,31 @@ import {
 })
 export class RespuestaExamenComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
-    private unsubscribe$ = new Subject<void>();
+    private unsubscribe_respuesta$ = new Subject<void>();
+    private unsubscribe_evaluacion$ = new Subject<void>();
 
     isLoading: boolean;
     editMode: boolean = false;
 
-    respuestaId: number;
     solicitudId: number;
+    respuestaId: number;
+    resolucionId: number;
 
     respuestaForm: FormGroup;
+
+    selectedFiles: { [key: string]: File | string | null } = {};
+    evaluacionIds: number[] = [];
 
     tituloSeleccionado: string;
     estudianteSeleccionado: Estudiante = {};
     expertoSeleccionado: Experto;
+    docenteSeleccionado: Docente;
+
+    estados: any[] = [
+        { name: 'Aprobado' },
+        { name: 'Aplazado' },
+        { name: 'No Aprobado' },
+    ];
 
     constructor(
         private solicitudService: SolicitudService,
@@ -96,16 +112,15 @@ export class RespuestaExamenComponent implements OnInit {
                                 'Datos guardados en el backend-respuesta:',
                                 response
                             );
-                            this.respuestaId = response.respuestaId;
+                            this.respuestaId = response.id;
                             this.solicitudService.setRespuestaSeleccionada(
                                 response
                             );
-
                             timer(2000).subscribe(() => {
                                 this.isLoading = false;
                                 this.router.navigate([
                                     'examen-de-valoracion/respuesta/editar',
-                                    response.respuestaId,
+                                    response.id,
                                 ]);
                             });
                         }
@@ -149,6 +164,14 @@ export class RespuestaExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
+        this.solicitudService.respuestaSeleccionadaSubject$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.respuestaId = response.id;
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
         this.solicitudService.evaluadorExternoSeleccionadoSubject$.subscribe({
             next: (response) => {
                 this.expertoSeleccionado = response;
@@ -158,10 +181,53 @@ export class RespuestaExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
+        this.solicitudService.evaluadorInternoSeleccionadoSubject$.subscribe({
+            next: (response) => {
+                this.docenteSeleccionado = response;
+                this.respuestaForm
+                    .get('docente')
+                    .setValue(this.docenteSeleccionado.id);
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
     }
 
-    getFormControl(formControlName: string): FormControl {
-        return this.respuestaForm.get(formControlName) as FormControl;
+    setup(fieldName: string) {
+        if (this.evaluacionIds?.length > 0) {
+            this.evaluacionIds.forEach(
+                (evaluacionId: number, index: number) => {
+                    this.solicitudService
+                        .getFile(evaluacionId, false, fieldName)
+                        .subscribe({
+                            next: (response: any) => {
+                                if (response) {
+                                    const regex =
+                                        /evaluacionId=(\d+)&tipoDocumento=(\w+)/;
+                                    const match = response.url.match(regex);
+
+                                    if (match) {
+                                        const evaluacionId = match[1];
+                                        const tipoDocumento = match[2];
+                                        const combined = `${evaluacionId}_${tipoDocumento}`;
+
+                                        const file = new File(
+                                            [response.body],
+                                            combined,
+                                            {
+                                                type: response.type,
+                                            }
+                                        );
+
+                                        this.selectedFiles[fieldName + index] =
+                                            file;
+                                    }
+                                }
+                            },
+                            error: (e) => this.handlerResponseException(e),
+                        });
+                }
+            );
+        }
     }
 
     initForm(): void {
@@ -170,14 +236,7 @@ export class RespuestaExamenComponent implements OnInit {
             solicitud: [null, Validators.required],
             docente: [null, Validators.required],
             experto: [null, Validators.required],
-            evaluaciones: this.fb.array([
-                this.fb.group({
-                    doc_formatoB: [null, Validators.required],
-                    doc_formatoC: [null, Validators.required],
-                    doc_observaciones: [null, Validators.required],
-                    estado_respuesta: [null, Validators.required],
-                }),
-            ]),
+            evaluaciones: this.fb.array([]),
             fecha_correcciones: [null, Validators.required],
         });
 
@@ -210,12 +269,43 @@ export class RespuestaExamenComponent implements OnInit {
                     }
                 },
             });
+        this.respuestaService.getEvaluaciones(this.respuestaId).subscribe({
+            next: (response) => {
+                if (response?.length > 0) {
+                    response.forEach(
+                        (evaluacion: Evaluacion, index: number) => {
+                            this.evaluacionIds.push(evaluacion.id); // Agregar el ID al arreglo
+                            const evaluacionFormGroup = this.fb.group({
+                                ['docFormatoB' + index]: [
+                                    evaluacion.docFormatoB,
+                                    Validators.required,
+                                ],
+                                ['docFormatoC' + index]: [
+                                    evaluacion.docFormatoC,
+                                ],
+                                ['docObservaciones' + index]: [
+                                    evaluacion.docObservaciones,
+                                ],
+                                ['estadoRespuesta' + index]: [
+                                    evaluacion.estadoRespuesta,
+                                    Validators.required,
+                                ],
+                            });
+                            this.evaluaciones.push(evaluacionFormGroup);
+                        }
+                    );
+                    this.setup('docFormatoB');
+                    this.setup('docFormatoC');
+                    this.setup('docFormatoObservaciones');
+                }
+            },
+        });
         this.respuestaForm.valueChanges
             .pipe(
                 debounceTime(300), // Espera 300ms después de la última pulsación de tecla
                 distinctUntilChanged(), // Solo emite si los valores son diferentes
-                filter(() => this.respuestaForm.dirty), // Filtra si el formulario ha sido modificado
-                takeUntil(this.unsubscribe$),
+                // filter(() => this.respuestaForm.dirty), // Filtra si el formulario ha sido modificado
+                takeUntil(this.unsubscribe_respuesta$),
                 switchMap(() =>
                     this.respuestaService.updateRespuesta(
                         this.respuestaForm.value,
@@ -238,74 +328,165 @@ export class RespuestaExamenComponent implements OnInit {
                     );
                 },
             });
+
+        this.evaluaciones.valueChanges
+            .pipe(
+                debounceTime(300),
+                distinctUntilChanged(),
+                takeUntil(this.unsubscribe_evaluacion$)
+            )
+            .subscribe((evaluaciones) => {
+                evaluaciones.forEach(
+                    (evaluacionData: Evaluacion, index: number) => {
+                        const evaluacionId = this.evaluacionIds[index];
+                        const evaluacion: Evaluacion = {
+                            estadoRespuesta:
+                                evaluacionData['estadoRespuesta' + index],
+                        };
+                        this.respuestaService
+                            .updateEvaluacion(evaluacion, evaluacionId)
+                            .subscribe({
+                                next: (response) => {
+                                    if (response) {
+                                        console.log(
+                                            'Datos actualizados en el backend: evaluacion',
+                                            response
+                                        );
+                                    }
+                                },
+                                error: () => {
+                                    console.error(
+                                        'Error al actualizar los datos en el backend:'
+                                    );
+                                },
+                            });
+                    }
+                );
+            });
     }
 
     ngOnDestroy() {
         // Finalizar la suscripción al destruir el componente
-        this.unsubscribe$.next();
-        this.unsubscribe$.complete();
+        this.unsubscribe_respuesta$.next();
+        this.unsubscribe_respuesta$.complete();
+
+        this.unsubscribe_evaluacion$.next();
+        this.unsubscribe_evaluacion$.complete();
     }
 
-    agregarEvaluacion() {
-        this.evaluaciones.push(
-            this.fb.group({
-                doc_formatoB: [null, Validators.required],
-                doc_formatoC: [null, Validators.required],
-                doc_observaciones: [null, Validators.required],
-                estado_respuesta: [null, Validators.required],
+    mapEvaluacion() {
+        return this.evaluaciones.value.map(
+            (evaluacion: Evaluacion, i: number) => ({
+                docFormatoB: evaluacion['docFormatoB' + i],
+                docFormatoC: evaluacion['docFormatoC' + i],
+                docObservaciones: evaluacion['docObservaciones' + i],
+                estadoRespuesta: evaluacion['estadoRespuesta' + i],
             })
         );
     }
 
+    agregarEvaluacion() {
+        if (this.evaluaciones.invalid) {
+            this.messageService.add(
+                warnMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS)
+            );
+        } else {
+            const evaluacion = this.fb.group({
+                ['docFormatoB' + this.evaluaciones.length]: [
+                    null,
+                    Validators.required,
+                ],
+                ['docFormatoC' + this.evaluaciones.length]: [null],
+                ['docObservaciones' + this.evaluaciones.length]: [null],
+                ['estadoRespuesta' + this.evaluaciones.length]: [
+                    null,
+                    Validators.required,
+                ],
+            });
+            this.evaluaciones.push(evaluacion);
+
+            const evaluacionesData = this.mapEvaluacion();
+
+            this.respuestaService
+                .createEvaluacion(
+                    evaluacionesData[this.evaluaciones.value.length - 1],
+                    this.respuestaId
+                )
+                .subscribe({
+                    next: (response) => {
+                        if (response) {
+                            this.evaluacionIds.push(response.id); // Agregar el ID al arreglo
+
+                            this.messageService.add(
+                                infoMessage(Mensaje.REGISTRO_EVALUACION_EXITOSO)
+                            );
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                });
+        }
+    }
+
     eliminarEvaluacion(index: number) {
+        const evaluacionId = this.evaluacionIds[index];
+
+        Object.keys(this.selectedFiles).forEach((key) => {
+            if (
+                key.startsWith(`docFormatoB${index}`) ||
+                key.startsWith(`docFormatoC${index}`) ||
+                key.startsWith(`docObservaciones${index}`)
+            ) {
+                delete this.selectedFiles[key];
+            }
+        });
+
+        this.solicitudService.deleteAllFiles(evaluacionId).subscribe({
+            next: () => {},
+            error: (e) => this.handlerResponseException(e),
+        });
+        this.respuestaService.deleteEvaluacion(evaluacionId).subscribe({
+            next: () =>
+                this.messageService.add(
+                    infoMessage(Mensaje.EVALUACION_ELIMINADA_CORRECTAMENTE)
+                ),
+            error: (e) => this.handlerResponseException(e),
+        });
+        this.evaluacionIds.splice(index, 1); // Eliminar el ID del arreglo
         this.evaluaciones.removeAt(index);
     }
 
-    onFileSelectFirst(event: any) {
-        this.uploadFileAndSetValue(0, 'doc_formatoB', event);
+    onRemove(filename: string) {
+        this.selectedFiles[filename] = null;
     }
 
-    private uploadFileAndSetValue(
-        index: number,
-        formControlName: string,
-        event: any
-    ) {
-        const selectedFiles: FileList = event.files;
-
-        if (selectedFiles && selectedFiles.length > 0) {
-            const selectedFile = selectedFiles[0];
-
-            this.respuestaService
-                .uploadFile(
-                    selectedFile,
-                    this.estudianteSeleccionado.id,
-                    formControlName
-                )
-                .subscribe({
-                    next: () =>
-                        this.messageService.add(
-                            infoMessage(Mensaje.GUARDADO_EXITOSO)
-                        ),
-                    error: (e) => this.handlerResponseException(e),
-                });
-
-            this.evaluaciones
-                .at(index)
-                .get(formControlName)
-                .setValue(selectedFile);
-
-            return selectedFile;
-        }
-
-        return null;
+    onArchivoSeleccionado(arr: any): void {
+        this.selectedFiles[arr[0]] = arr[1];
     }
 
-    // getFileAndSetValue(fieldName: string) {
-    //     return this.solicitudService.getFile(
-    //         this.estudianteSeleccionado.id,
-    //         fieldName
-    //     );
-    // }
+    getFileAndSetValue(fieldName: string, index: number) {
+        this.evaluaciones
+            .at(index)
+            .get(`${fieldName}${index}`)
+            .setValue(`${fieldName}${index}`);
+        this.solicitudService
+            .getFile(this.evaluacionIds[index], false, `${fieldName}`)
+            .subscribe({
+                next: (response: any) => {
+                    const url = window.URL.createObjectURL(response.body);
+                    const a = document.createElement('a');
+                    document.body.appendChild(a);
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = fieldName;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                },
+                error: (error: any) => {
+                    this.handlerResponseException(error);
+                },
+            });
+    }
 
     onEdit(respuestaId: number) {
         this.router.navigate([
@@ -313,7 +494,7 @@ export class RespuestaExamenComponent implements OnInit {
         ]);
     }
 
-    rediectToRespuesta(respuestaId: number) {
+    redirectToRespuesta(respuestaId: number) {
         this.router.navigate([
             `examen-de-valoracion/respuesta/editar/${respuestaId}`,
         ]);
@@ -323,6 +504,14 @@ export class RespuestaExamenComponent implements OnInit {
         this.router.navigate([
             `examen-de-valoracion/solicitud/editar/${solicitudId}`,
         ]);
+    }
+
+    redirectToResolucion(resolucionId: number) {
+        resolucionId
+            ? this.router.navigate([
+                  `examen-de-valoracion/resolucion/editar/${resolucionId}`,
+              ])
+            : this.router.navigate(['examen-de-valoracion/resolucion']);
     }
 
     redirectToBandeja() {

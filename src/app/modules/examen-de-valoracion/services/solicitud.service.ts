@@ -19,6 +19,7 @@ export class SolicitudService {
     private estudianteSeleccionadoSubject = new BehaviorSubject<Estudiante>(
         null
     );
+    private evaluacionSeleccionadaSubject = new BehaviorSubject<any>(null);
     private respuestaSeleccionadaSubject = new BehaviorSubject<any>(null);
     private solicitudSeleccionadaSubject = new BehaviorSubject<any>(null);
     private tituloSeleccionadoSubject = new BehaviorSubject<string>(null);
@@ -37,6 +38,9 @@ export class SolicitudService {
 
     respuestaSeleccionadaSubject$: Observable<any> =
         this.respuestaSeleccionadaSubject.asObservable();
+
+    evaluacionSeleccionadaSubject$: Observable<any> =
+        this.evaluacionSeleccionadaSubject.asObservable();
 
     tituloSeleccionadoSubject$: Observable<string> =
         this.tituloSeleccionadoSubject.asObservable();
@@ -57,6 +61,10 @@ export class SolicitudService {
 
     setRespuestaSeleccionada(respuesta: any) {
         this.respuestaSeleccionadaSubject.next(respuesta);
+    }
+
+    setEvaluacionSeleccionada(evaluacion: any) {
+        this.evaluacionSeleccionadaSubject.next(evaluacion);
     }
 
     setTituloSeleccionadoSubject(titulo: string) {
@@ -109,21 +117,30 @@ export class SolicitudService {
         });
     }
 
-    uploadFile(document: File, estudianteId: number, tipoDocumento: string) {
+    uploadFile(
+        id: number,
+        isSolicitud: boolean,
+        document: File,
+        tipoDocumento: string
+    ) {
         const formData: FormData = new FormData();
-        const headers = new HttpHeaders();
-        headers.append('Content-Type', 'multipart/form-data');
         formData.append('document', document);
-        formData.append('estudianteId', estudianteId.toString());
+        formData.append(
+            isSolicitud ? 'solicitudId' : 'evaluacionId',
+            id?.toString()
+        );
         formData.append('tipoDocumento', tipoDocumento);
-        return this.http.post<any>(backend('files/upload'), formData, {
-            headers: headers,
-        });
+
+        return this.http.post<any>(backend('files/upload'), formData);
     }
 
-    getFile(estudianteId: number, tipoDocumento: string): Observable<any> {
+    getFile(
+        id: number,
+        isSolicitud: boolean,
+        tipoDocumento: string
+    ): Observable<any> {
         const params = new HttpParams()
-            .set('estudianteId', estudianteId.toString())
+            .set(isSolicitud ? 'solicitudId' : 'evaluacionId', id?.toString())
             .set('tipoDocumento', tipoDocumento);
 
         return this.http.get(backend('files/download'), {
@@ -133,9 +150,19 @@ export class SolicitudService {
         });
     }
 
-    deleteFile(estudianteId: number, tipoDocumento: string) {
+    deleteAllFiles(evaluacionId: number) {
+        const params = new HttpParams().set(
+            'evaluacionId',
+            evaluacionId?.toString()
+        );
+        return this.http.delete(backend('files/delete/all'), {
+            params,
+        });
+    }
+
+    deleteFile(id: number, isSolicitud: boolean, tipoDocumento: string) {
         const params = new HttpParams()
-            .set('estudianteId', estudianteId.toString())
+            .set(isSolicitud ? 'solicitudId' : 'evaluacionId', id?.toString())
             .set('tipoDocumento', tipoDocumento);
 
         return this.http.delete(backend('files/delete'), {

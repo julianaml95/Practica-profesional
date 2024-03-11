@@ -32,31 +32,38 @@
             <button
                 pButton
                 type="button"
-                (click)="redirectToBandeja()"
+                icon="pi pi-book"
+                class="w-15rem p-button-secondary"
+                [raised]="true"
+                severity="secondary"
+                label="Solicitud examen de valoración"
                 [disabled]="
                     !!this.solicitudId ? !!this.solicitudId : isActiveIndex()
                 "
-            >
-                SOLICITUD
-            </button>
+            ></button>
             <button
                 pButton
                 type="button"
+                icon="pi pi-envelope"
+                class="w-15rem p-button-secondary"
+                [raised]="true"
+                label="Respuesta al examen de valoración"
                 [disabled]="!this.isSolicitudValid"
-                (click)="rediectToRespuesta(this.respuestaId)"
-            >
-                RESPUESTA
-            </button>
+                (click)="redirectToRespuesta(this.respuestaId)"
+            ></button>
+            <button
+                pButton
+                type="button"
+                icon="pi pi-paperclip"
+                class="w-15rem p-button-secondary"
+                [raised]="true"
+                severity="secondary"
+                label="Generacion de resolucion"
+                [disabled]="!this.isSolicitudValid"
+                (click)="redirectToResolucion(this.resolucionId)"
+            ></button>
         </div>
         <div class="flex align-items-center">
-            <button
-                *ngIf="!editMode"
-                pButton
-                type="button"
-                icon="pi pi-save"
-                label="Modificar Informacion"
-                (click)="onEdit(this.solicitudId)"
-            ></button>
             <button
                 *ngIf="editMode"
                 pButton
@@ -122,7 +129,6 @@
                                         chooseIcon="pi pi-file"
                                         class="w-full max-w-30rem"
                                         maxFileSize="2000000"
-                                        invalidFileSizeMessage="El tamaño del archivo supera el límite de 2 MB"
                                         (onSelect)="onFileSelectFirst($event)"
                                         chooseLabel="Buscar documento"
                                     >
@@ -140,7 +146,7 @@
                                     ></button>
                                 </div>
                                 <div class="mt-2" *ngIf="selectedFileFirst">
-                                    {{ selectedFileFirst.name }}.pdf -
+                                    {{ selectedFileFirst.name }} -
                                     {{ selectedFileFirst.size | bytesToKb }}
                                     KB
                                 </div>
@@ -214,7 +220,7 @@
                                     ></button>
                                 </div>
                                 <div class="mt-2" *ngIf="selectedFileSecond">
-                                    {{ selectedFileSecond.name }}.pdf -
+                                    {{ selectedFileSecond.name }} -
                                     {{ selectedFileSecond.size | bytesToKb }}
                                     KB
                                 </div>
@@ -275,7 +281,7 @@
                                     ></button>
                                 </div>
                                 <div class="mt-2" *ngIf="selectedFileThird">
-                                    {{ selectedFileThird.name }}.pdf -
+                                    {{ selectedFileThird.name }} -
                                     {{ selectedFileThird.size | bytesToKb }}
                                     KB
                                 </div>
@@ -478,7 +484,7 @@
                                     ></button>
                                 </div>
                                 <div class="mt-2" *ngIf="selectedFileFourth">
-                                    {{ selectedFileFourth.name }}.pdf -
+                                    {{ selectedFileFourth.name }} -
                                     {{ selectedFileFourth.size | bytesToKb }}
                                     KB
                                 </div>

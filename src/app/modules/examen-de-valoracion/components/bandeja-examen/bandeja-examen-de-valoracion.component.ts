@@ -46,33 +46,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
             fecha_acta: '2023-12-22',
             doc_oficio_jurados: 'oficio2.pdf',
             fecha_maxima_evaluacion: '2023-12-31',
-        },
-        {
-            id: 3,
-            fecha: '2023-19-12',
-            estado: 'ACTIVO',
-            titulo: 'Solicitud 3',
-            doc_solicitud_valoracion: 'archivo7.pdf',
-            doc_anteproyecto_examen: 'archivo8.pdf',
-            doc_examen_valoracion: 'archivo9.pdf',
-            numero_acta: 'A003',
-            fecha_acta: '2023-12-23',
-            doc_oficio_jurados: 'oficio3.pdf',
-            fecha_maxima_evaluacion: '2023-12-31',
-        },
-        {
-            id: 4,
-            fecha: '2023-19-12',
-            estado: 'INACTIVO',
-            titulo: 'Solicitud 4',
-            doc_solicitud_valoracion: 'archivo10.pdf',
-            doc_anteproyecto_examen: 'archivo11.pdf',
-            doc_examen_valoracion: 'archivo12.pdf',
-            numero_acta: 'A004',
-            fecha_acta: '2023-12-24',
-            doc_oficio_jurados: 'oficio4.pdf',
-            fecha_maxima_evaluacion: '2023-12-31',
-        },
+        }
     ];
 
     constructor(

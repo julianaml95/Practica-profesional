@@ -32,7 +32,6 @@ import {
     Subject,
     debounceTime,
     distinctUntilChanged,
-    filter,
     switchMap,
     take,
     takeUntil,
@@ -40,6 +39,8 @@ import {
 } from 'rxjs';
 import { Solicitud } from '../../models/solicitud';
 import { FileUpload } from 'primeng/fileupload';
+import { DocenteService } from 'src/app/modules/gestion-docentes/services/docente.service';
+import { ExpertoService } from 'src/app/shared/services/experto.service';
 
 @Component({
     selector: 'app-solicitud-examen',
@@ -77,6 +78,8 @@ export class SolicitudExamenComponent implements OnInit {
         private messageService: MessageService,
         private dialogService: DialogService,
         private solicitudService: SolicitudService,
+        private docenteService: DocenteService,
+        private expertoService: ExpertoService,
         private route: ActivatedRoute,
         private fb: FormBuilder,
         private router: Router
@@ -141,14 +144,7 @@ export class SolicitudExamenComponent implements OnInit {
             this.solicitudService
                 .createSolicitud(this.solicitudForm.value)
                 .subscribe({
-                    next: (response) => {
-                        if (response) {
-                            console.log(
-                                'Datos guardados en el backend:',
-                                response
-                            );
-                        }
-                    },
+                    next: () => {},
                     error: () => {
                         console.error(
                             'Error al guardar los datos en el backend:'
@@ -165,38 +161,52 @@ export class SolicitudExamenComponent implements OnInit {
     }
 
     setup(fieldName: string) {
-        if (Object.keys(this.estudianteSeleccionado).length > 0) {
+        if (
+            Object.keys(this.estudianteSeleccionado).length > 0 &&
+            this.solicitudId
+        ) {
             this.solicitudService
-                .getFile(this.estudianteSeleccionado?.id, fieldName)
+                .getFile(this.solicitudId, true, fieldName)
                 .subscribe({
                     next: (response: any) => {
-                        const regex = /estudianteId=(\d+)&tipoDocumento=(\w+)/;
-                        const match = response.url.match(regex);
+                        if (response) {
+                            this.solicitudForm
+                                .get(fieldName)
+                                .setValue(fieldName);
+                            const regex =
+                                /solicitudId=(\d+)&tipoDocumento=(\w+)/;
+                            const match = response.url.match(regex);
 
-                        if (match) {
-                            const estudianteId = match[1];
-                            const tipoDocumento = match[2];
-                            const combined = `${estudianteId}_${tipoDocumento}`;
+                            if (match) {
+                                const solicitudId = match[1];
+                                const tipoDocumento = match[2];
+                                const combined = `${solicitudId}_${tipoDocumento}`;
 
-                            const file = new File([response.body], combined, {
-                                type: response.type,
-                            });
+                                const file = new File(
+                                    [response.body],
+                                    combined,
+                                    {
+                                        type: response.type,
+                                    }
+                                );
 
-                            switch (fieldName) {
-                                case 'doc_solicitud_valoracion':
-                                    this.selectedFileFirst = file;
-                                    break;
-                                case 'doc_anteproyecto_examen':
-                                    this.selectedFileSecond = file;
-                                    break;
-                                case 'doc_examen_valoracion':
-                                    this.selectedFileThird = file;
-                                    break;
-                                case 'doc_oficio_jurados':
-                                    this.selectedFileFourth = file;
-                                    break;
-                                default:
-                                    break;
+                                switch (fieldName) {
+                                    case 'doc_solicitud_valoracion':
+                                        this.selectedFileFirst = file;
+
+                                        break;
+                                    case 'doc_anteproyecto_examen':
+                                        this.selectedFileSecond = file;
+                                        break;
+                                    case 'doc_examen_valoracion':
+                                        this.selectedFileThird = file;
+                                        break;
+                                    case 'doc_oficio_jurados':
+                                        this.selectedFileFourth = file;
+                                        break;
+                                    default:
+                                        break;
+                                }
                             }
                         }
                     },
@@ -212,10 +222,23 @@ export class SolicitudExamenComponent implements OnInit {
 
     loadSolicitud() {
         const id = Number(this.route.snapshot.paramMap.get('id'));
+        this.solicitudId = id;
         this.solicitudService.getSolicitud(id).subscribe({
             next: (response) => {
                 if (response) {
                     this.setValuesForm(response);
+                    this.docenteService.getDocente(response.docente).subscribe({
+                        // change later
+                        next: (response) => {
+                            this.docenteSeleccionado = response;
+                        },
+                    });
+                    this.expertoService.getExperto(response.experto).subscribe({
+                        // change later
+                        next: (response) => {
+                            this.expertoSeleccionado = response;
+                        },
+                    });
                     this.solicitudForm
                         .get('fecha_acta')
                         .setValue(
@@ -231,7 +254,7 @@ export class SolicitudExamenComponent implements OnInit {
             .pipe(
                 debounceTime(300), // Espera 300ms después de la última pulsación de tecla
                 distinctUntilChanged(), // Solo emite si los valores son diferentes
-                filter(() => this.solicitudForm.dirty), // Filtra si el formulario ha sido modificado
+                // filter(() => this.solicitudForm.dirty), // Filtra si el formulario ha sido modificado
                 takeUntil(this.unsubscribe$),
                 switchMap(() =>
                     this.solicitudService.updateSolicitud(
@@ -243,7 +266,6 @@ export class SolicitudExamenComponent implements OnInit {
             .subscribe({
                 next: (response) => {
                     if (response) {
-                        console.log('Datos actualizados en el backend:');
                         this.solicitudService.setTituloSeleccionadoSubject(
                             this.solicitudForm.get('titulo').value
                         );
@@ -258,7 +280,6 @@ export class SolicitudExamenComponent implements OnInit {
                                 )
                                 .pipe(take(1))
                                 .subscribe(() => {
-                                    console.log('Estado actualizado con éxito');
                                     this.isSolicitudValid = true;
                                 });
                         }
@@ -294,7 +315,7 @@ export class SolicitudExamenComponent implements OnInit {
         this.solicitudService.respuestaSeleccionadaSubject$.subscribe(
             (response) => {
                 if (response) {
-                    this.respuestaId = response.respuestaId;
+                    this.respuestaId = response.id;
                 }
             }
         );
@@ -333,7 +354,7 @@ export class SolicitudExamenComponent implements OnInit {
             this.selectedFileFirst = null;
             this.fileUpload1.clear();
             this.solicitudService
-                .deleteFile(this.estudianteSeleccionado.id, field)
+                .deleteFile(this.solicitudId, true, field)
                 .subscribe({
                     next: () =>
                         this.messageService.add(
@@ -346,7 +367,7 @@ export class SolicitudExamenComponent implements OnInit {
             this.selectedFileSecond = null;
             this.fileUpload2.clear();
             this.solicitudService
-                .deleteFile(this.estudianteSeleccionado.id, field)
+                .deleteFile(this.solicitudId, true, field)
                 .subscribe({
                     next: () =>
                         this.messageService.add(
@@ -359,7 +380,7 @@ export class SolicitudExamenComponent implements OnInit {
             this.selectedFileThird = null;
             this.fileUpload3.clear();
             this.solicitudService
-                .deleteFile(this.estudianteSeleccionado.id, field)
+                .deleteFile(this.solicitudId, true, field)
                 .subscribe({
                     next: () =>
                         this.messageService.add(
@@ -372,7 +393,7 @@ export class SolicitudExamenComponent implements OnInit {
             this.selectedFileFourth = null;
             this.fileUpload4.clear();
             this.solicitudService
-                .deleteFile(this.estudianteSeleccionado.id, field)
+                .deleteFile(this.solicitudId, true, field)
                 .subscribe({
                     next: () =>
                         this.messageService.add(
@@ -391,8 +412,9 @@ export class SolicitudExamenComponent implements OnInit {
 
             this.solicitudService
                 .uploadFile(
+                    this.solicitudId,
+                    true,
                     selectedFile,
-                    this.estudianteSeleccionado.id,
                     fileControlName
                 )
                 .subscribe({
@@ -408,6 +430,7 @@ export class SolicitudExamenComponent implements OnInit {
                     },
                 });
 
+            console.log(selectedFile);
             this.solicitudForm.get(fileControlName).setValue(selectedFile);
 
             return selectedFile;
@@ -419,7 +442,7 @@ export class SolicitudExamenComponent implements OnInit {
     getFileAndSetValue(fieldName: string) {
         this.solicitudForm.get(fieldName).setValue(fieldName); // para simular
         this.solicitudService
-            .getFile(this.estudianteSeleccionado.id, fieldName)
+            .getFile(this.solicitudId, true, fieldName)
             .subscribe({
                 next: (response: any) => {
                     const url = window.URL.createObjectURL(response.body);
@@ -431,9 +454,6 @@ export class SolicitudExamenComponent implements OnInit {
                     a.click();
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
-                    this.messageService.add(
-                        infoMessage(Mensaje.ACTUALIZACION_EXITOSA)
-                    );
                 },
                 error: (error: any) => {
                     this.handlerResponseException(error);
@@ -466,7 +486,10 @@ export class SolicitudExamenComponent implements OnInit {
                 if (response) {
                     const docente = this.mapDocenteLabel(response);
                     this.docenteSeleccionado = docente;
-                    this.docente.setValue(this.docenteSeleccionado.id);
+                    this.solicitudService.setEvaluadorInternoSeleccionadoSubject(
+                        this.docenteSeleccionado
+                    );
+                    this.docente.setValue(docente.id);
                 }
             },
         });
@@ -482,7 +505,7 @@ export class SolicitudExamenComponent implements OnInit {
                     this.solicitudService.setEvaluadorExternoSeleccionadoSubject(
                         this.expertoSeleccionado
                     );
-                    this.experto.setValue(this.expertoSeleccionado.id);
+                    this.experto.setValue(experto.id);
                 }
             },
         });
@@ -525,12 +548,20 @@ export class SolicitudExamenComponent implements OnInit {
         ]);
     }
 
-    rediectToRespuesta(respuestaId: number) {
+    redirectToRespuesta(respuestaId: number) {
         respuestaId
             ? this.router.navigate([
                   `examen-de-valoracion/respuesta/editar/${respuestaId}`,
               ])
             : this.router.navigate(['examen-de-valoracion/respuesta']);
+    }
+
+    redirectToResolucion(resolucionId: number) {
+        resolucionId
+            ? this.router.navigate([
+                  `examen-de-valoracion/resolucion/editar/${resolucionId}`,
+              ])
+            : this.router.navigate(['examen-de-valoracion/resolucion']);
     }
 
     redirectToBandeja() {

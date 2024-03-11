@@ -3,6 +3,9 @@ import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { DocenteService } from '../../services/docente.service';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { Router } from '@angular/router';
+import { mapResponseException } from 'src/app/core/utils/exception-util';
+import { errorMessage } from 'src/app/core/utils/message-util';
+import { MessageService } from 'primeng/api';
 
 @Component({
     selector: 'app-buscador-docentes',
@@ -65,7 +68,8 @@ export class BuscadorDocentesComponent implements OnInit {
     constructor(
         private docenteService: DocenteService,
         private ref: DynamicDialogRef,
-        private router: Router
+        private router: Router,
+        private messageService: MessageService
     ) {}
 
     ngOnInit(): void {
@@ -79,6 +83,9 @@ export class BuscadorDocentesComponent implements OnInit {
             .subscribe({
                 next: (response) =>
                     (this.docentes = this.getDocentesActivos(response)),
+                error: (error: any) => {
+                    this.handlerResponseException(error);
+                },
             })
             .add(() => (this.loading = false));
     }
@@ -116,5 +123,13 @@ export class BuscadorDocentesComponent implements OnInit {
     onRegistrar() {
         this.ref.close();
         this.router.navigate(['docentes/registrar']);
+    }
+
+    handlerResponseException(response: any) {
+        if (response.status != 501) return;
+        const mapException = mapResponseException(response.error);
+        mapException.forEach((value, _) => {
+            this.messageService.add(errorMessage(value));
+        });
     }
 }

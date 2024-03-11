@@ -13,6 +13,8 @@ import { CrearSolicitudExamenComponent } from './components/crear-solicitud-exam
 import { SolicitudExamenComponent } from './components/solicitud-examen/solicitud-examen.component';
 import { RespuestaExamenComponent } from './components/respuesta-examen/respuesta-examen.component';
 import { SharedModule } from 'src/app/shared/shared.module';
+import { CustomFileUploadComponent } from './components/custom-file-upload/custom-file-upload.component';
+import { ResolucionExamenComponent } from './components/resolucion-examen/resolucion-examen.component';
 
 @NgModule({
     declarations: [
@@ -20,7 +22,9 @@ import { SharedModule } from 'src/app/shared/shared.module';
         BandejaExamenDeValoracionComponent,
         CrearSolicitudExamenComponent,
         SolicitudExamenComponent,
+        CustomFileUploadComponent,
         RespuestaExamenComponent,
+        ResolucionExamenComponent,
     ],
     imports: [
         CommonModule,

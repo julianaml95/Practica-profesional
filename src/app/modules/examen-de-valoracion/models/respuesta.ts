@@ -3,10 +3,11 @@ import { Experto } from './experto';
 import { Solicitud } from './solicitud';
 
 export interface Evaluacion {
-    doc_formatoB?: string;
-    doc_formatoC?: string;
-    doc_observaciones?: string;
-    estado_respuesta?: string;
+    id?: number;
+    docFormatoB?: string;
+    docFormatoC?: string;
+    docObservaciones?: string;
+    estadoRespuesta?: string;
 }
 
 export interface Respuesta {
@@ -15,6 +16,5 @@ export interface Respuesta {
     solicitud?: Solicitud;
     docente?: Docente;
     experto?: Experto;
-    evaluaciones?: Evaluacion[];
     fecha_correcciones?: string;
 }

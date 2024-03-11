@@ -32,31 +32,36 @@
             <button
                 pButton
                 type="button"
+                icon="pi pi-book"
+                class="w-15rem p-button-secondary"
+                [raised]="true"
+                severity="secondary"
+                label="Solicitud examen de valoración"
                 (click)="redirectToSolicitud(this.solicitudId)"
-            >
-                SOLICITUD
-            </button>
+            ></button>
             <button
                 pButton
-                #respuestaBtn
                 type="button"
-                (click)="rediectToRespuesta(this.respuestaId)"
+                icon="pi pi-envelope"
+                class="w-15rem p-button-secondary"
+                [raised]="true"
+                label="Respuesta al examen de valoración"
                 [disabled]="
                     !!this.respuestaId ? !!this.respuestaId : isActiveIndex()
                 "
-            >
-                RESPUESTA
-            </button>
-        </div>
-        <div class="flex align-items-center">
+            ></button>
             <button
-                *ngIf="!editMode"
                 pButton
                 type="button"
-                icon="pi pi-save"
-                label="Modificar Informacion"
-                (click)="onEdit(this.respuestaId)"
+                icon="pi pi-paperclip"
+                class="w-15rem p-button-secondary"
+                [raised]="true"
+                severity="secondary"
+                label="Generacion de resolucion"
+                (click)="redirectToResolucion(this.resolucionId)"
             ></button>
+        </div>
+        <div class="flex align-items-center">
             <button
                 *ngIf="editMode"
                 pButton
@@ -101,9 +106,8 @@
                             {{ expertoSeleccionado.apellido }}</span
                         >
                         <span
-                            >Universidad:{{
-                                expertoSeleccionado.universidad
-                            }}</span
+                            >Universidad:
+                            {{ expertoSeleccionado.universidad }}</span
                         >
                     </div>
                 </div>
@@ -135,58 +139,282 @@
                                             class="label-required col-2 text-right"
                                             >Formato B (.pdf)
                                         </label>
-                                        <p-fileUpload
-                                            name="doc_formatoB"
-                                            accept=".pdf"
-                                            chooseIcon="pi pi-file"
-                                            maxFileSize="5000000"
-                                            class="w-full max-w-30rem col-10"
-                                            [auto]="true"
-                                            (onSelect)="
-                                                onFileSelectFirst($event)
-                                            "
-                                            chooseLabel="Buscar documento"
-                                        ></p-fileUpload>
-                                        <button
-                                            pButton
-                                            type="button"
-                                            icon="pi pi-download"
-                                            (click)="
-                                                getFileAndSetValue(
-                                                    'doc_formatoB'
-                                                )
-                                            "
-                                        ></button>
+                                        <div class="col-7 col-input">
+                                            <div
+                                                class="flex flex-wrap gap-2 max-w-30rem align-items-start"
+                                            >
+                                                <div
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                >
+                                                    <app-custom-file-upload
+                                                        [formControlName]="
+                                                            'docFormatoB' + i
+                                                        "
+                                                        [filename]="
+                                                            'docFormatoB' + i
+                                                        "
+                                                        [selected]="
+                                                            selectedFiles
+                                                        "
+                                                        [evaluacionId]="
+                                                            this.evaluacionIds[
+                                                                i
+                                                            ]
+                                                        "
+                                                        (archivoDeseleccionado)="
+                                                            onRemove($event)
+                                                        "
+                                                        (archivoSeleccionado)="
+                                                            onArchivoSeleccionado(
+                                                                $event
+                                                            )
+                                                        "
+                                                    ></app-custom-file-upload>
+                                                    <div
+                                                        class="mt-2"
+                                                        *ngIf="
+                                                            selectedFiles[
+                                                                'docFormatoB' +
+                                                                    i
+                                                            ]
+                                                        "
+                                                    >
+                                                        {{
+                                                            selectedFiles[
+                                                                "docFormatoB" +
+                                                                    i
+                                                            ].name
+                                                        }}
+                                                        -
+                                                        {{
+                                                            selectedFiles[
+                                                                "docFormatoB" +
+                                                                    i
+                                                            ].size | bytesToKb
+                                                        }}
+                                                        KB
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    *ngIf="
+                                                        selectedFiles[
+                                                            'docFormatoB' + i
+                                                        ]
+                                                    "
+                                                    pButton
+                                                    type="button"
+                                                    icon="pi pi-download"
+                                                    (click)="
+                                                        getFileAndSetValue(
+                                                            'docFormatoB',
+                                                            i
+                                                        )
+                                                    "
+                                                ></button>
+                                            </div>
+                                            <div
+                                                class="mt-2"
+                                                *ngIf="
+                                                    !selectedFiles[
+                                                        'docFormatoB' + i
+                                                    ]
+                                                "
+                                            >
+                                                <p>
+                                                    No has seleccionado ningún
+                                                    documento.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="grid column-gap-4 mb-6">
                                         <label
                                             class="label-required col-2 text-right"
                                             >Formato C (.pdf)
                                         </label>
-                                        <p-fileUpload
-                                            name="doc_formatoC"
-                                            accept=".pdf"
-                                            chooseIcon="pi pi-file"
-                                            maxFileSize="5000000"
-                                            class="w-full max-w-30rem col-10"
-                                            [auto]="true"
-                                            chooseLabel="Buscar documento"
-                                        ></p-fileUpload>
+                                        <div class="col-7 col-input">
+                                            <div
+                                                class="flex flex-wrap gap-2 max-w-30rem align-items-start"
+                                            >
+                                                <div
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                >
+                                                    <app-custom-file-upload
+                                                        [formControlName]="
+                                                            'docFormatoC' + i
+                                                        "
+                                                        [filename]="
+                                                            'docFormatoC' + i
+                                                        "
+                                                        [selected]="
+                                                            selectedFiles
+                                                        "
+                                                        [evaluacionId]="
+                                                            this.evaluacionIds[
+                                                                i
+                                                            ]
+                                                        "
+                                                        (archivoDeseleccionado)="
+                                                            onRemove($event)
+                                                        "
+                                                        (archivoSeleccionado)="
+                                                            onArchivoSeleccionado(
+                                                                $event
+                                                            )
+                                                        "
+                                                    ></app-custom-file-upload>
+                                                    <div
+                                                        class="mt-2"
+                                                        *ngIf="
+                                                            selectedFiles[
+                                                                'docFormatoC' +
+                                                                    i
+                                                            ]
+                                                        "
+                                                    >
+                                                        {{
+                                                            selectedFiles[
+                                                                "docFormatoC" +
+                                                                    i
+                                                            ].name
+                                                        }}
+                                                        -
+                                                        {{
+                                                            selectedFiles[
+                                                                "docFormatoC" +
+                                                                    i
+                                                            ].size | bytesToKb
+                                                        }}
+                                                        KB
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    *ngIf="
+                                                        selectedFiles[
+                                                            'docFormatoC' + i
+                                                        ]
+                                                    "
+                                                    pButton
+                                                    type="button"
+                                                    icon="pi pi-download"
+                                                    (click)="
+                                                        getFileAndSetValue(
+                                                            'docFormatoC',
+                                                            i
+                                                        )
+                                                    "
+                                                ></button>
+                                            </div>
+                                            <div
+                                                class="mt-2"
+                                                *ngIf="
+                                                    !selectedFiles[
+                                                        'docFormatoC' + i
+                                                    ]
+                                                "
+                                            >
+                                                <p>
+                                                    No has seleccionado ningún
+                                                    documento.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="grid column-gap-4 mb-6">
                                         <label
                                             class="label-required col-2 text-right"
                                             >Observaciones (.pdf)
                                         </label>
-                                        <p-fileUpload
-                                            name="doc_observaciones"
-                                            accept=".pdf"
-                                            chooseIcon="pi pi-file"
-                                            maxFileSize="5000000"
-                                            class="w-full max-w-30rem col-10"
-                                            [auto]="true"
-                                            chooseLabel="Buscar documento"
-                                        ></p-fileUpload>
+                                        <div class="col-7 col-input">
+                                            <div
+                                                class="flex flex-wrap gap-2 max-w-30rem align-items-start"
+                                            >
+                                                <div
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                >
+                                                    <app-custom-file-upload
+                                                        [formControlName]="
+                                                            'docObservaciones' +
+                                                            i
+                                                        "
+                                                        [filename]="
+                                                            'docObservaciones' +
+                                                            i
+                                                        "
+                                                        [selected]="
+                                                            selectedFiles
+                                                        "
+                                                        [evaluacionId]="
+                                                            this.evaluacionIds[
+                                                                i
+                                                            ]
+                                                        "
+                                                        (archivoDeseleccionado)="
+                                                            onRemove($event)
+                                                        "
+                                                        (archivoSeleccionado)="
+                                                            onArchivoSeleccionado(
+                                                                $event
+                                                            )
+                                                        "
+                                                    ></app-custom-file-upload>
+                                                    <div
+                                                        class="mt-2"
+                                                        *ngIf="
+                                                            selectedFiles[
+                                                                'docObservaciones' +
+                                                                    i
+                                                            ]
+                                                        "
+                                                    >
+                                                        {{
+                                                            selectedFiles[
+                                                                "docObservaciones" +
+                                                                    i
+                                                            ].name
+                                                        }}
+                                                        -
+                                                        {{
+                                                            selectedFiles[
+                                                                "docObservaciones" +
+                                                                    i
+                                                            ].size | bytesToKb
+                                                        }}
+                                                        KB
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    *ngIf="
+                                                        selectedFiles[
+                                                            'docObservaciones' +
+                                                                i
+                                                        ]
+                                                    "
+                                                    pButton
+                                                    type="button"
+                                                    icon="pi pi-download"
+                                                    (click)="
+                                                        getFileAndSetValue(
+                                                            'docObservaciones',
+                                                            i
+                                                        )
+                                                    "
+                                                ></button>
+                                            </div>
+                                            <div
+                                                class="mt-2"
+                                                *ngIf="
+                                                    !selectedFiles[
+                                                        'docObservaciones' + i
+                                                    ]
+                                                "
+                                            >
+                                                <p>
+                                                    No has seleccionado ningún
+                                                    documento.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="grid column-gap-4 mb-6">
                                         <label
@@ -195,69 +423,33 @@
                                         </label>
                                         <div class="col-9 flex column-gap-4">
                                             <div
-                                                class="flex align-items-center"
+                                                *ngFor="
+                                                    let estado of estados;
+                                                    let j = index
+                                                "
+                                                class="field-checkbox"
                                             >
                                                 <p-radioButton
-                                                    formControlName="estado_respuesta"
-                                                    value="aprobado"
-                                                    inputId="radio_btn_1"
+                                                    [inputId]="
+                                                        'estadoRespuesta' + i
+                                                    "
+                                                    [value]="estado.name"
+                                                    [formControlName]="
+                                                        'estadoRespuesta' + i
+                                                    "
                                                 ></p-radioButton>
                                                 <label
-                                                    for="radio_btn_1"
+                                                    [for]="
+                                                        'estadoRespuesta' + i
+                                                    "
                                                     class="ml-2"
-                                                    >Aprobado</label
-                                                >
-                                            </div>
-
-                                            <div
-                                                class="flex align-items-center"
-                                            >
-                                                <p-radioButton
-                                                    formControlName="estado_respuesta"
-                                                    value="aplazado"
-                                                    inputId="radio_btn_2"
-                                                ></p-radioButton>
-                                                <label
-                                                    for="radio_btn_2"
-                                                    class="ml-2"
-                                                    >Aplazado</label
-                                                >
-                                            </div>
-
-                                            <div
-                                                class="flex align-items-center"
-                                            >
-                                                <p-radioButton
-                                                    formControlName="estado_respuesta"
-                                                    value="no_aprobado"
-                                                    inputId="radio_btn_3"
-                                                ></p-radioButton>
-                                                <label
-                                                    for="radio_btn_3"
-                                                    class="ml-2"
-                                                    >No Aprobado</label
+                                                    >{{ estado.name }}</label
                                                 >
                                             </div>
                                         </div>
                                     </div>
                                 </p-fieldset>
                             </div>
-                        </div>
-                    </div>
-                    <div class="field grid mt-4">
-                        <div
-                            class="col-6 w-19rem col-label text-right align-self-center"
-                        >
-                            <label class="label-required"
-                                >Fecha Maxima Entrega de Correciones</label
-                            >
-                        </div>
-                        <div class="col-6 col-input">
-                            <p-calendar
-                                formControlName="fecha_correcciones"
-                                [showIcon]="true"
-                                dateFormat="dd.mm.yy"
-                            ></p-calendar>
                         </div>
                     </div>
                     <div
@@ -268,8 +460,396 @@
                             pButton
                             type="button"
                             icon="pi pi-plus"
+                            label="Agregar Evaluacion"
                             (click)="agregarEvaluacion()"
                         ></button>
+                    </div>
+                </div>
+                <div class="field grid">
+                    <div
+                        class="col-2 col-label flex flex-column row-gap-4 text-right align-self-center"
+                    >
+                        <strong style="font-size: 16px"
+                            >Evaluador Interno</strong
+                        >
+                        <span
+                            >Nombre: {{ docenteSeleccionado.nombre }}
+                            {{ docenteSeleccionado.apellido }}</span
+                        >
+                        <span
+                            >Universidad:
+                            {{ docenteSeleccionado.universidad }}</span
+                        >
+                    </div>
+                </div>
+                <!-- <div class="field grid">
+                    <div style="max-width: 90%" class="col-12 flex m-auto">
+                        <div formArrayName="evaluaciones" class="w-full">
+                            <div
+                                *ngFor="
+                                    let evaluacion of evaluaciones.controls;
+                                    let i = index
+                                "
+                            >
+                                <div
+                                    class="flex align-items-center justify-content-end mt-4"
+                                >
+                                    <button
+                                        pButton
+                                        type="button"
+                                        icon="pi pi-trash"
+                                        (click)="eliminarEvaluacion(i)"
+                                    ></button>
+                                </div>
+                                <p-fieldset
+                                    legend="Evaluacion {{ i + 1 }}"
+                                    formGroupName="{{ i }}"
+                                >
+                                    <div class="grid column-gap-4 mb-6">
+                                        <label
+                                            class="label-required col-2 text-right"
+                                            >Formato B (.pdf)
+                                        </label>
+                                        <div class="col-7 col-input">
+                                            <div
+                                                class="flex flex-wrap gap-2 max-w-30rem align-items-start"
+                                            >
+                                                <div
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                >
+                                                    <app-custom-file-upload
+                                                        [formControlName]="
+                                                            'docFormatoB' + i
+                                                        "
+                                                        [filename]="
+                                                            'docFormatoB' + i
+                                                        "
+                                                        [selected]="
+                                                            selectedFiles
+                                                        "
+                                                        [evaluacionId]="
+                                                            this.evaluacionIds[
+                                                                i
+                                                            ]
+                                                        "
+                                                        (archivoDeseleccionado)="
+                                                            onRemove($event)
+                                                        "
+                                                        (archivoSeleccionado)="
+                                                            onArchivoSeleccionado(
+                                                                $event
+                                                            )
+                                                        "
+                                                    ></app-custom-file-upload>
+                                                    <div
+                                                        class="mt-2"
+                                                        *ngIf="
+                                                            selectedFiles[
+                                                                'docFormatoB' +
+                                                                    i
+                                                            ]
+                                                        "
+                                                    >
+                                                        {{
+                                                            selectedFiles[
+                                                                "docFormatoB" +
+                                                                    i
+                                                            ].name
+                                                        }}
+                                                        -
+                                                        {{
+                                                            selectedFiles[
+                                                                "docFormatoB" +
+                                                                    i
+                                                            ].size | bytesToKb
+                                                        }}
+                                                        KB
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    *ngIf="
+                                                        selectedFiles[
+                                                            'docFormatoB' + i
+                                                        ]
+                                                    "
+                                                    pButton
+                                                    type="button"
+                                                    icon="pi pi-download"
+                                                    (click)="
+                                                        getFileAndSetValue(
+                                                            'docFormatoB',
+                                                            i
+                                                        )
+                                                    "
+                                                ></button>
+                                            </div>
+                                            <div
+                                                class="mt-2"
+                                                *ngIf="
+                                                    !selectedFiles[
+                                                        'docFormatoB' + i
+                                                    ]
+                                                "
+                                            >
+                                                <p>
+                                                    No has seleccionado ningún
+                                                    documento.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid column-gap-4 mb-6">
+                                        <label
+                                            class="label-required col-2 text-right"
+                                            >Formato C (.pdf)
+                                        </label>
+                                        <div class="col-7 col-input">
+                                            <div
+                                                class="flex flex-wrap gap-2 max-w-30rem align-items-start"
+                                            >
+                                                <div
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                >
+                                                    <app-custom-file-upload
+                                                        [formControlName]="
+                                                            'docFormatoC' + i
+                                                        "
+                                                        [filename]="
+                                                            'docFormatoC' + i
+                                                        "
+                                                        [selected]="
+                                                            selectedFiles
+                                                        "
+                                                        [evaluacionId]="
+                                                            this.evaluacionIds[
+                                                                i
+                                                            ]
+                                                        "
+                                                        (archivoDeseleccionado)="
+                                                            onRemove($event)
+                                                        "
+                                                        (archivoSeleccionado)="
+                                                            onArchivoSeleccionado(
+                                                                $event
+                                                            )
+                                                        "
+                                                    ></app-custom-file-upload>
+                                                    <div
+                                                        class="mt-2"
+                                                        *ngIf="
+                                                            selectedFiles[
+                                                                'docFormatoC' +
+                                                                    i
+                                                            ]
+                                                        "
+                                                    >
+                                                        {{
+                                                            selectedFiles[
+                                                                "docFormatoC" +
+                                                                    i
+                                                            ].name
+                                                        }}
+                                                        -
+                                                        {{
+                                                            selectedFiles[
+                                                                "docFormatoC" +
+                                                                    i
+                                                            ].size | bytesToKb
+                                                        }}
+                                                        KB
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    *ngIf="
+                                                        selectedFiles[
+                                                            'docFormatoC' + i
+                                                        ]
+                                                    "
+                                                    pButton
+                                                    type="button"
+                                                    icon="pi pi-download"
+                                                    (click)="
+                                                        getFileAndSetValue(
+                                                            'docFormatoC',
+                                                            i
+                                                        )
+                                                    "
+                                                ></button>
+                                            </div>
+                                            <div
+                                                class="mt-2"
+                                                *ngIf="
+                                                    !selectedFiles[
+                                                        'docFormatoC' + i
+                                                    ]
+                                                "
+                                            >
+                                                <p>
+                                                    No has seleccionado ningún
+                                                    documento.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid column-gap-4 mb-6">
+                                        <label
+                                            class="label-required col-2 text-right"
+                                            >Observaciones (.pdf)
+                                        </label>
+                                        <div class="col-7 col-input">
+                                            <div
+                                                class="flex flex-wrap gap-2 max-w-30rem align-items-start"
+                                            >
+                                                <div
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                >
+                                                    <app-custom-file-upload
+                                                        [formControlName]="
+                                                            'docObservaciones' +
+                                                            i
+                                                        "
+                                                        [filename]="
+                                                            'docObservaciones' +
+                                                            i
+                                                        "
+                                                        [selected]="
+                                                            selectedFiles
+                                                        "
+                                                        [evaluacionId]="
+                                                            this.evaluacionIds[
+                                                                i
+                                                            ]
+                                                        "
+                                                        (archivoDeseleccionado)="
+                                                            onRemove($event)
+                                                        "
+                                                        (archivoSeleccionado)="
+                                                            onArchivoSeleccionado(
+                                                                $event
+                                                            )
+                                                        "
+                                                    ></app-custom-file-upload>
+                                                    <div
+                                                        class="mt-2"
+                                                        *ngIf="
+                                                            selectedFiles[
+                                                                'docObservaciones' +
+                                                                    i
+                                                            ]
+                                                        "
+                                                    >
+                                                        {{
+                                                            selectedFiles[
+                                                                "docObservaciones" +
+                                                                    i
+                                                            ].name
+                                                        }}
+                                                        -
+                                                        {{
+                                                            selectedFiles[
+                                                                "docObservaciones" +
+                                                                    i
+                                                            ].size | bytesToKb
+                                                        }}
+                                                        KB
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    *ngIf="
+                                                        selectedFiles[
+                                                            'docObservaciones' +
+                                                                i
+                                                        ]
+                                                    "
+                                                    pButton
+                                                    type="button"
+                                                    icon="pi pi-download"
+                                                    (click)="
+                                                        getFileAndSetValue(
+                                                            'docObservaciones',
+                                                            i
+                                                        )
+                                                    "
+                                                ></button>
+                                            </div>
+                                            <div
+                                                class="mt-2"
+                                                *ngIf="
+                                                    !selectedFiles[
+                                                        'docObservaciones' + i
+                                                    ]
+                                                "
+                                            >
+                                                <p>
+                                                    No has seleccionado ningún
+                                                    documento.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid column-gap-4 mb-6">
+                                        <label
+                                            class="label-required col-2 text-right"
+                                            >Respuesta al examen de valoración
+                                        </label>
+                                        <div class="col-9 flex column-gap-4">
+                                            <div
+                                                *ngFor="
+                                                    let estado of estados;
+                                                    let j = index
+                                                "
+                                                class="field-checkbox"
+                                            >
+                                                <p-radioButton
+                                                    [inputId]="
+                                                        'estadoRespuesta' + i
+                                                    "
+                                                    [value]="estado.name"
+                                                    [formControlName]="
+                                                        'estadoRespuesta' + i
+                                                    "
+                                                ></p-radioButton>
+                                                <label
+                                                    [for]="
+                                                        'estadoRespuesta' + i
+                                                    "
+                                                    class="ml-2"
+                                                    >{{ estado.name }}</label
+                                                >
+                                            </div>
+                                        </div>
+                                    </div>
+                                </p-fieldset>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        style="max-width: 90%"
+                        class="col-12 flex align-items-center mt-4 m-auto justify-content-end"
+                    >
+                        <button
+                            pButton
+                            type="button"
+                            icon="pi pi-plus"
+                            label="Agregar Evaluacion"
+                            (click)="agregarEvaluacion()"
+                        ></button>
+                    </div>
+                </div> -->
+                <div class="field grid mt-4">
+                    <div
+                        class="col-6 w-19rem col-label text-right align-self-center"
+                    >
+                        <label class="label-required"
+                            >Fecha Maxima Entrega de Correciones</label
+                        >
+                    </div>
+                    <div class="col-6 col-input">
+                        <p-calendar
+                            formControlName="fecha_correcciones"
+                            [showIcon]="true"
+                            dateFormat="dd.mm.yy"
+                        ></p-calendar>
                     </div>
                 </div>
             </div>
