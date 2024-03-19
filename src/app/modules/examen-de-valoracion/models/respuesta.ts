@@ -6,15 +6,16 @@ export interface Evaluacion {
     id?: number;
     docFormatoB?: string;
     docFormatoC?: string;
+    experto?: number;
+    docente?: number;
     docObservaciones?: string;
     estadoRespuesta?: string;
+    fechaCorrecciones?: string;
 }
 
 export interface Respuesta {
     id?: number;
     titulo?: string;
     solicitud?: Solicitud;
-    docente?: Docente;
-    experto?: Experto;
-    fecha_correcciones?: string;
+    finalizado: boolean;
 }

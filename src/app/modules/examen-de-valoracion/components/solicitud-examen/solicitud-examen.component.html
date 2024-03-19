@@ -34,8 +34,6 @@
                 type="button"
                 icon="pi pi-book"
                 class="w-15rem p-button-secondary"
-                [raised]="true"
-                severity="secondary"
                 label="Solicitud examen de valoración"
                 [disabled]="
                     !!this.solicitudId ? !!this.solicitudId : isActiveIndex()
@@ -46,7 +44,6 @@
                 type="button"
                 icon="pi pi-envelope"
                 class="w-15rem p-button-secondary"
-                [raised]="true"
                 label="Respuesta al examen de valoración"
                 [disabled]="!this.isSolicitudValid"
                 (click)="redirectToRespuesta(this.respuestaId)"
@@ -56,8 +53,6 @@
                 type="button"
                 icon="pi pi-paperclip"
                 class="w-15rem p-button-secondary"
-                [raised]="true"
-                severity="secondary"
                 label="Generacion de resolucion"
                 [disabled]="!this.isSolicitudValid"
                 (click)="redirectToResolucion(this.resolucionId)"
@@ -131,11 +126,17 @@
                                         maxFileSize="2000000"
                                         (onSelect)="onFileSelectFirst($event)"
                                         chooseLabel="Buscar documento"
+                                        [disabled]="
+                                            solicitudForm.get(
+                                                'doc_solicitud_valoracion'
+                                            ).value
+                                        "
                                     >
                                     </p-fileUpload>
                                     <button
                                         *ngIf="selectedFileFirst"
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
@@ -154,6 +155,7 @@
                             <button
                                 *ngIf="selectedFileFirst"
                                 pButton
+                                class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
                                 (click)="
@@ -205,11 +207,17 @@
                                         maxFileSize="5000000"
                                         (onSelect)="onFileSelectSecond($event)"
                                         chooseLabel="Buscar documento"
+                                        [disabled]="
+                                            solicitudForm.get(
+                                                'doc_anteproyecto_examen'
+                                            ).value
+                                        "
                                     >
                                     </p-fileUpload>
                                     <button
                                         *ngIf="selectedFileSecond"
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
@@ -228,6 +236,7 @@
                             <button
                                 *ngIf="selectedFileSecond"
                                 pButton
+                                class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
                                 (click)="
@@ -269,10 +278,16 @@
                                         maxFileSize="5000000"
                                         (onSelect)="onFileSelectThird($event)"
                                         chooseLabel="Buscar documento"
+                                        [disabled]="
+                                            solicitudForm.get(
+                                                'doc_examen_valoracion'
+                                            ).value
+                                        "
                                     ></p-fileUpload>
                                     <button
                                         *ngIf="selectedFileThird"
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
@@ -289,6 +304,7 @@
                             <button
                                 *ngIf="selectedFileThird"
                                 pButton
+                                class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
                                 (click)="
@@ -321,8 +337,8 @@
                                     >
                                     <button
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
-                                        style="border: none; font-size: 1.2rem"
                                         (click)="limpiarExperto()"
                                     ></button>
                                 </div>
@@ -377,8 +393,8 @@
                                     >
                                     <button
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
-                                        style="border: none; font-size: 1.2rem"
                                         (click)="limpiarDocente()"
                                     ></button>
                                 </div>
@@ -423,11 +439,6 @@
                         <p-inputNumber
                             inputId="integeronly"
                             formControlName="numero_acta"
-                            [ngClass]="{
-                                'ng-invalid ng-dirty':
-                                    getFormControl('numero_acta').invalid &&
-                                    getFormControl('numero_acta').touched
-                            }"
                         ></p-inputNumber>
                     </div>
                 </div>
@@ -471,11 +482,17 @@
                                         maxFileSize="2000000"
                                         (onSelect)="onFileSelectFourth($event)"
                                         chooseLabel="Buscar documento"
+                                        [disabled]="
+                                            solicitudForm.get(
+                                                'doc_oficio_jurados'
+                                            ).value
+                                        "
                                     >
                                     </p-fileUpload>
                                     <button
                                         *ngIf="selectedFileFourth"
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
@@ -493,6 +510,7 @@
                                 *ngIf="selectedFileFourth"
                                 pButton
                                 type="button"
+                                class="p-button-secondary"
                                 icon="pi pi-download"
                                 (click)="
                                     getFileAndSetValue('doc_oficio_jurados')

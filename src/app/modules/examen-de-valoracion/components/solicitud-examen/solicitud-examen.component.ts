@@ -58,6 +58,7 @@ export class SolicitudExamenComponent implements OnInit {
 
     solicitudId: number;
     respuestaId: number;
+    resolucionId: number;
 
     isLoading: boolean;
     editMode: boolean = false;
@@ -74,15 +75,15 @@ export class SolicitudExamenComponent implements OnInit {
     selectedFileFourth: File | null;
 
     constructor(
+        private fb: FormBuilder,
+        private router: Router,
+        private route: ActivatedRoute,
         private breadcrumbService: BreadcrumbService,
         private messageService: MessageService,
         private dialogService: DialogService,
         private solicitudService: SolicitudService,
         private docenteService: DocenteService,
-        private expertoService: ExpertoService,
-        private route: ActivatedRoute,
-        private fb: FormBuilder,
-        private router: Router
+        private expertoService: ExpertoService
     ) {}
 
     get docente(): FormControl {
@@ -131,6 +132,35 @@ export class SolicitudExamenComponent implements OnInit {
         this.formReady.emit(this.solicitudForm);
     }
 
+    subscribeToObservers() {
+        this.solicitudService.estudianteSeleccionado$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.estudianteSeleccionado = response;
+                    this.estudiante.setValue(response.id);
+                } else {
+                    this.router.navigate(['examen-de-valoracion']);
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+        this.solicitudService.respuestaSeleccionadaSubject$.subscribe(
+            (response) => {
+                if (response) {
+                    this.respuestaId = response.id;
+                }
+            }
+        );
+        this.solicitudService.resolucionSeleccionadaSubject$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.resolucionId = response.id;
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+    }
+
     loadData(): void {
         if (!this.editMode) {
             this.isLoading = true;
@@ -166,7 +196,7 @@ export class SolicitudExamenComponent implements OnInit {
             this.solicitudId
         ) {
             this.solicitudService
-                .getFile(this.solicitudId, true, fieldName)
+                .getFile(this.solicitudId, 'solicitudId', fieldName)
                 .subscribe({
                     next: (response: any) => {
                         if (response) {
@@ -218,6 +248,12 @@ export class SolicitudExamenComponent implements OnInit {
     loadEditMode() {
         this.editMode = true;
         this.loadSolicitud();
+    }
+
+    setValuesForm(solicitud: Solicitud) {
+        this.solicitudForm.patchValue({
+            ...solicitud,
+        });
     }
 
     loadSolicitud() {
@@ -294,33 +330,6 @@ export class SolicitudExamenComponent implements OnInit {
         this.unsubscribe$.complete();
     }
 
-    setValuesForm(solicitud: Solicitud) {
-        this.solicitudForm.patchValue({
-            ...solicitud,
-        });
-    }
-
-    subscribeToObservers() {
-        this.solicitudService.estudianteSeleccionado$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.estudianteSeleccionado = response;
-                    this.estudiante.setValue(response.id);
-                } else {
-                    this.router.navigate(['examen-de-valoracion']);
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.respuestaSeleccionadaSubject$.subscribe(
-            (response) => {
-                if (response) {
-                    this.respuestaId = response.id;
-                }
-            }
-        );
-    }
-
     onFileSelectFirst(event: any) {
         this.selectedFileFirst = this.uploadFileAndSetValue(
             'doc_solicitud_valoracion',
@@ -354,12 +363,16 @@ export class SolicitudExamenComponent implements OnInit {
             this.selectedFileFirst = null;
             this.fileUpload1.clear();
             this.solicitudService
-                .deleteFile(this.solicitudId, true, field)
+                .deleteFile(this.solicitudId, 'solicitudId', field)
                 .subscribe({
-                    next: () =>
+                    next: () => {
+                        this.solicitudForm
+                            .get('doc_solicitud_valoracion')
+                            .reset();
                         this.messageService.add(
                             infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
-                        ),
+                        );
+                    },
                     error: (e) => this.handlerResponseException(e),
                 });
         }
@@ -367,12 +380,16 @@ export class SolicitudExamenComponent implements OnInit {
             this.selectedFileSecond = null;
             this.fileUpload2.clear();
             this.solicitudService
-                .deleteFile(this.solicitudId, true, field)
+                .deleteFile(this.solicitudId, 'solicitudId', field)
                 .subscribe({
-                    next: () =>
+                    next: () => {
+                        this.solicitudForm
+                            .get('doc_anteproyecto_examen')
+                            .reset();
                         this.messageService.add(
                             infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
-                        ),
+                        );
+                    },
                     error: (e) => this.handlerResponseException(e),
                 });
         }
@@ -380,12 +397,14 @@ export class SolicitudExamenComponent implements OnInit {
             this.selectedFileThird = null;
             this.fileUpload3.clear();
             this.solicitudService
-                .deleteFile(this.solicitudId, true, field)
+                .deleteFile(this.solicitudId, 'solicitudId', field)
                 .subscribe({
-                    next: () =>
+                    next: () => {
+                        this.solicitudForm.get('doc_examen_valoracion').reset();
                         this.messageService.add(
                             infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
-                        ),
+                        );
+                    },
                     error: (e) => this.handlerResponseException(e),
                 });
         }
@@ -393,18 +412,20 @@ export class SolicitudExamenComponent implements OnInit {
             this.selectedFileFourth = null;
             this.fileUpload4.clear();
             this.solicitudService
-                .deleteFile(this.solicitudId, true, field)
+                .deleteFile(this.solicitudId, 'solicitudId', field)
                 .subscribe({
-                    next: () =>
+                    next: () => {
+                        this.solicitudForm.get('doc_oficio_jurados').reset();
                         this.messageService.add(
                             infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
-                        ),
+                        );
+                    },
                     error: (e) => this.handlerResponseException(e),
                 });
         }
     }
 
-    private uploadFileAndSetValue(fileControlName: string, event: any) {
+    uploadFileAndSetValue(fileControlName: string, event: any) {
         const selectedFiles: FileList = event.files;
 
         if (selectedFiles && selectedFiles.length > 0) {
@@ -413,7 +434,7 @@ export class SolicitudExamenComponent implements OnInit {
             this.solicitudService
                 .uploadFile(
                     this.solicitudId,
-                    true,
+                    'solicitudId',
                     selectedFile,
                     fileControlName
                 )
@@ -429,10 +450,7 @@ export class SolicitudExamenComponent implements OnInit {
                             this.handlerResponseException(e);
                     },
                 });
-
-            console.log(selectedFile);
-            this.solicitudForm.get(fileControlName).setValue(selectedFile);
-
+            this.solicitudForm.get(fileControlName).setValue(fileControlName);
             return selectedFile;
         }
 
@@ -440,9 +458,9 @@ export class SolicitudExamenComponent implements OnInit {
     }
 
     getFileAndSetValue(fieldName: string) {
-        this.solicitudForm.get(fieldName).setValue(fieldName); // para simular
+        // this.solicitudForm.get(fieldName).setValue(fieldName);
         this.solicitudService
-            .getFile(this.solicitudId, true, fieldName)
+            .getFile(this.solicitudId, 'solicitudId', fieldName)
             .subscribe({
                 next: (response: any) => {
                     const url = window.URL.createObjectURL(response.body);
@@ -511,23 +529,6 @@ export class SolicitudExamenComponent implements OnInit {
         });
     }
 
-    mapRequest(): any {
-        const value = this.solicitudForm.getRawValue();
-        return {
-            titulo: value.titulo,
-            doc_solicitud_valoracion: value.doc_solicitud_valoracion,
-            doc_anteproyecto_examen: value.doc_anteproyecto_examen,
-            doc_examen_valoracion: value.doc_examen_valoracion,
-            estudiante: value.estudiante?.id,
-            docente: value.docente?.id,
-            experto: value.experto?.id,
-            numero_acta: value.numero_acta,
-            fecha_acta: value.fecha_acta,
-            doc_oficio_jurados: value.doc_oficio_jurados,
-            fecha_maxima_evaluacion: value.fecha_maxima_evaluacion,
-        };
-    }
-
     onCrearDocumento() {
         this.router.navigate(['examen-de-valoracion/solicitud/crear']);
     }
@@ -540,12 +541,6 @@ export class SolicitudExamenComponent implements OnInit {
     limpiarDocente() {
         this.docente.setValue(null);
         this.docenteSeleccionado = null;
-    }
-
-    onEdit(solicitudId: number) {
-        this.router.navigate([
-            `examen-de-valoracion/solicitud/editar/${solicitudId}`,
-        ]);
     }
 
     redirectToRespuesta(respuestaId: number) {

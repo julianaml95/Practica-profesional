@@ -74,10 +74,4 @@ export class RespuestaService {
             headers: getHeaders(),
         });
     }
-
-    getRespuesta(id: number) {
-        return this.http.get<any>(backend(`respuesta/${id}`), {
-            headers: getHeaders(),
-        });
-    }
 }

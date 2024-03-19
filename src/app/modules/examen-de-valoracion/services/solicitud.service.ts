@@ -1,14 +1,12 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { backend } from 'src/app/core/constants/api-url';
 import { getHeaders } from 'src/app/core/constants/header';
 import { Solicitud } from '../models/solicitud';
 import { Estudiante } from '../../gestion-estudiantes/models/estudiante';
-import { FormGroup } from '@angular/forms';
 import { Docente } from '../../gestion-docentes/models/docente';
 import { Experto } from '../models/experto';
-import { Respuesta } from '../models/respuesta';
 
 @Injectable({
     providedIn: 'root',
@@ -19,6 +17,7 @@ export class SolicitudService {
     private estudianteSeleccionadoSubject = new BehaviorSubject<Estudiante>(
         null
     );
+    private resolucionSeleccionadaSubject = new BehaviorSubject<any>(null);
     private evaluacionSeleccionadaSubject = new BehaviorSubject<any>(null);
     private respuestaSeleccionadaSubject = new BehaviorSubject<any>(null);
     private solicitudSeleccionadaSubject = new BehaviorSubject<any>(null);
@@ -32,6 +31,9 @@ export class SolicitudService {
 
     estudianteSeleccionado$: Observable<Estudiante> =
         this.estudianteSeleccionadoSubject.asObservable();
+
+    resolucionSeleccionadaSubject$: Observable<any> =
+        this.resolucionSeleccionadaSubject.asObservable();
 
     solicitudSeleccionadaSubject$: Observable<any> =
         this.solicitudSeleccionadaSubject.asObservable();
@@ -53,6 +55,10 @@ export class SolicitudService {
 
     setEstudianteSeleccionado(estudiante: Estudiante) {
         this.estudianteSeleccionadoSubject.next(estudiante);
+    }
+
+    setResolucionSeleccionada(resolucion: any) {
+        this.resolucionSeleccionadaSubject.next(resolucion);
     }
 
     setSolicitudSeleccionada(solicitud: any) {
@@ -119,16 +125,13 @@ export class SolicitudService {
 
     uploadFile(
         id: number,
-        isSolicitud: boolean,
+        paramId: string,
         document: File,
         tipoDocumento: string
     ) {
         const formData: FormData = new FormData();
         formData.append('document', document);
-        formData.append(
-            isSolicitud ? 'solicitudId' : 'evaluacionId',
-            id?.toString()
-        );
+        formData.append(paramId, id.toString());
         formData.append('tipoDocumento', tipoDocumento);
 
         return this.http.post<any>(backend('files/upload'), formData);
@@ -136,11 +139,11 @@ export class SolicitudService {
 
     getFile(
         id: number,
-        isSolicitud: boolean,
+        paramId: string,
         tipoDocumento: string
     ): Observable<any> {
         const params = new HttpParams()
-            .set(isSolicitud ? 'solicitudId' : 'evaluacionId', id?.toString())
+            .set(paramId, id)
             .set('tipoDocumento', tipoDocumento);
 
         return this.http.get(backend('files/download'), {
@@ -153,16 +156,16 @@ export class SolicitudService {
     deleteAllFiles(evaluacionId: number) {
         const params = new HttpParams().set(
             'evaluacionId',
-            evaluacionId?.toString()
+            evaluacionId
         );
         return this.http.delete(backend('files/delete/all'), {
             params,
         });
     }
 
-    deleteFile(id: number, isSolicitud: boolean, tipoDocumento: string) {
+    deleteFile(id: number, paramId: string, tipoDocumento: string) {
         const params = new HttpParams()
-            .set(isSolicitud ? 'solicitudId' : 'evaluacionId', id?.toString())
+            .set(paramId, id)
             .set('tipoDocumento', tipoDocumento);
 
         return this.http.delete(backend('files/delete'), {

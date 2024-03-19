@@ -34,7 +34,6 @@
                 type="button"
                 icon="pi pi-book"
                 class="w-15rem p-button-secondary"
-                [raised]="true"
                 severity="secondary"
                 label="Solicitud examen de valoración"
                 (click)="redirectToSolicitud(this.solicitudId)"
@@ -44,7 +43,6 @@
                 type="button"
                 icon="pi pi-envelope"
                 class="w-15rem p-button-secondary"
-                [raised]="true"
                 label="Respuesta al examen de valoración"
                 [disabled]="
                     !!this.respuestaId ? !!this.respuestaId : isActiveIndex()
@@ -55,8 +53,6 @@
                 type="button"
                 icon="pi pi-paperclip"
                 class="w-15rem p-button-secondary"
-                [raised]="true"
-                severity="secondary"
                 label="Generacion de resolucion"
                 (click)="redirectToResolucion(this.resolucionId)"
             ></button>
@@ -113,10 +109,10 @@
                 </div>
                 <div class="field grid">
                     <div style="max-width: 90%" class="col-12 flex m-auto">
-                        <div formArrayName="evaluaciones" class="w-full">
+                        <div formArrayName="expertoEvaluaciones" class="w-full">
                             <div
                                 *ngFor="
-                                    let evaluacion of evaluaciones.controls;
+                                    let evaluacion of expertoEvaluaciones.controls;
                                     let i = index
                                 "
                             >
@@ -125,14 +121,20 @@
                                 >
                                     <button
                                         pButton
+                                        class="p-button-danger"
                                         type="button"
                                         icon="pi pi-trash"
-                                        (click)="eliminarEvaluacion(i)"
+                                        (click)="
+                                            eliminarEvaluacion(
+                                                'expertoEvaluaciones',
+                                                i
+                                            )
+                                        "
                                     ></button>
                                 </div>
                                 <p-fieldset
                                     legend="Evaluacion {{ i + 1 }}"
-                                    formGroupName="{{ i }}"
+                                    [formGroupName]="i"
                                 >
                                     <div class="grid column-gap-4 mb-6">
                                         <label
@@ -144,11 +146,14 @@
                                                 class="flex flex-wrap gap-2 max-w-30rem align-items-start"
                                             >
                                                 <div
-                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start"
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
                                                             'docFormatoB' + i
+                                                        "
+                                                        [arrayName]="
+                                                            'expertoEvaluaciones'
                                                         "
                                                         [filename]="
                                                             'docFormatoB' + i
@@ -157,7 +162,8 @@
                                                             selectedFiles
                                                         "
                                                         [evaluacionId]="
-                                                            this.evaluacionIds[
+                                                            this
+                                                                .evaluacionExpertoIds[
                                                                 i
                                                             ]
                                                         "
@@ -174,21 +180,21 @@
                                                         class="mt-2"
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'docFormatoB' +
+                                                                'expertoEvaluaciones.docFormatoB' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "docFormatoB" +
+                                                                "expertoEvaluaciones.docFormatoB" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "docFormatoB" +
+                                                                "expertoEvaluaciones.docFormatoB" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -198,14 +204,17 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'docFormatoB' + i
+                                                            'expertoEvaluaciones.docFormatoB' +
+                                                                i
                                                         ]
                                                     "
                                                     pButton
+                                                    class="p-button-secondary"
                                                     type="button"
                                                     icon="pi pi-download"
                                                     (click)="
                                                         getFileAndSetValue(
+                                                            'expertoEvaluaciones',
                                                             'docFormatoB',
                                                             i
                                                         )
@@ -216,7 +225,8 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'docFormatoB' + i
+                                                        'expertoEvaluaciones.docFormatoB' +
+                                                            i
                                                     ]
                                                 "
                                             >
@@ -237,11 +247,14 @@
                                                 class="flex flex-wrap gap-2 max-w-30rem align-items-start"
                                             >
                                                 <div
-                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start"
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
                                                             'docFormatoC' + i
+                                                        "
+                                                        [arrayName]="
+                                                            'expertoEvaluaciones'
                                                         "
                                                         [filename]="
                                                             'docFormatoC' + i
@@ -250,7 +263,8 @@
                                                             selectedFiles
                                                         "
                                                         [evaluacionId]="
-                                                            this.evaluacionIds[
+                                                            this
+                                                                .evaluacionExpertoIds[
                                                                 i
                                                             ]
                                                         "
@@ -267,21 +281,21 @@
                                                         class="mt-2"
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'docFormatoC' +
+                                                                'expertoEvaluaciones.docFormatoC' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "docFormatoC" +
+                                                                "expertoEvaluaciones.docFormatoC" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "docFormatoC" +
+                                                                "expertoEvaluaciones.docFormatoC" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -291,14 +305,17 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'docFormatoC' + i
+                                                            'expertoEvaluaciones.docFormatoC' +
+                                                                i
                                                         ]
                                                     "
                                                     pButton
+                                                    class="p-button-secondary"
                                                     type="button"
                                                     icon="pi pi-download"
                                                     (click)="
                                                         getFileAndSetValue(
+                                                            'expertoEvaluaciones',
                                                             'docFormatoC',
                                                             i
                                                         )
@@ -309,7 +326,8 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'docFormatoC' + i
+                                                        'expertoEvaluaciones.docFormatoC' +
+                                                            i
                                                     ]
                                                 "
                                             >
@@ -330,12 +348,15 @@
                                                 class="flex flex-wrap gap-2 max-w-30rem align-items-start"
                                             >
                                                 <div
-                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start"
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
                                                             'docObservaciones' +
                                                             i
+                                                        "
+                                                        [arrayName]="
+                                                            'expertoEvaluaciones'
                                                         "
                                                         [filename]="
                                                             'docObservaciones' +
@@ -345,7 +366,8 @@
                                                             selectedFiles
                                                         "
                                                         [evaluacionId]="
-                                                            this.evaluacionIds[
+                                                            this
+                                                                .evaluacionExpertoIds[
                                                                 i
                                                             ]
                                                         "
@@ -362,21 +384,21 @@
                                                         class="mt-2"
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'docObservaciones' +
+                                                                'expertoEvaluaciones.docObservaciones' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "docObservaciones" +
+                                                                "expertoEvaluaciones.docObservaciones" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "docObservaciones" +
+                                                                "expertoEvaluaciones.docObservaciones" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -386,15 +408,17 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'docObservaciones' +
+                                                            'expertoEvaluaciones.docObservaciones' +
                                                                 i
                                                         ]
                                                     "
                                                     pButton
+                                                    class="p-button-secondary"
                                                     type="button"
                                                     icon="pi pi-download"
                                                     (click)="
                                                         getFileAndSetValue(
+                                                            'expertoEvaluaciones',
                                                             'docObservaciones',
                                                             i
                                                         )
@@ -405,7 +429,8 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'docObservaciones' + i
+                                                        'expertoEvaluaciones.docObservaciones' +
+                                                            i
                                                     ]
                                                 "
                                             >
@@ -423,29 +448,58 @@
                                         </label>
                                         <div class="col-9 flex column-gap-4">
                                             <div
-                                                *ngFor="
-                                                    let estado of estados;
-                                                    let j = index
-                                                "
+                                                *ngFor="let estado of estados"
                                                 class="field-checkbox"
                                             >
                                                 <p-radioButton
                                                     [inputId]="
-                                                        'estadoRespuesta' + i
+                                                        'estadoRespuestaExperto' +
+                                                        i
                                                     "
-                                                    [value]="estado.name"
+                                                    [value]="estado"
                                                     [formControlName]="
-                                                        'estadoRespuesta' + i
+                                                        'estadoRespuestaExperto' +
+                                                        i
                                                     "
                                                 ></p-radioButton>
                                                 <label
                                                     [for]="
-                                                        'estadoRespuesta' + i
+                                                        'estadoRespuestaExperto' +
+                                                        i
                                                     "
                                                     class="ml-2"
-                                                    >{{ estado.name }}</label
+                                                    >{{ estado }}</label
                                                 >
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid column-gap-4 mb-6">
+                                        <div
+                                            class="label-required col-2 text-right"
+                                        >
+                                            <label
+                                                >Fecha Maxima Entrega de
+                                                Correciones</label
+                                            >
+                                        </div>
+                                        <div
+                                            class="col-9 flex column-gap-4"
+                                            *ngIf="
+                                                expertoEvaluaciones.at(i).get(
+                                                    'estadoRespuestaExperto' + i
+                                                )?.value == 'Aplazado' ||
+                                                expertoEvaluaciones.at(i).get(
+                                                    'estadoRespuestaExperto' + i
+                                                )?.value == 'No Aprobado'
+                                            "
+                                        >
+                                            <p-calendar
+                                                [formControlName]="
+                                                    'fechaCorrecciones' + i
+                                                "
+                                                [showIcon]="true"
+                                                dateFormat="dd.mm.yy"
+                                            ></p-calendar>
                                         </div>
                                     </div>
                                 </p-fieldset>
@@ -458,13 +512,17 @@
                     >
                         <button
                             pButton
+                            class="p-button-secondary"
                             type="button"
                             icon="pi pi-plus"
                             label="Agregar Evaluacion"
-                            (click)="agregarEvaluacion()"
+                            (click)="agregarEvaluacion('expertoEvaluaciones')"
                         ></button>
                     </div>
                 </div>
+                <p-divider layout="horizontal" [align]="'center'"
+                    ><b>||</b></p-divider
+                >
                 <div class="field grid">
                     <div
                         class="col-2 col-label flex flex-column row-gap-4 text-right align-self-center"
@@ -482,12 +540,12 @@
                         >
                     </div>
                 </div>
-                <!-- <div class="field grid">
+                <div class="field grid">
                     <div style="max-width: 90%" class="col-12 flex m-auto">
-                        <div formArrayName="evaluaciones" class="w-full">
+                        <div formArrayName="docenteEvaluaciones" class="w-full">
                             <div
                                 *ngFor="
-                                    let evaluacion of evaluaciones.controls;
+                                    let evaluacion of docenteEvaluaciones.controls;
                                     let i = index
                                 "
                             >
@@ -496,9 +554,15 @@
                                 >
                                     <button
                                         pButton
+                                        class="p-button-danger"
                                         type="button"
                                         icon="pi pi-trash"
-                                        (click)="eliminarEvaluacion(i)"
+                                        (click)="
+                                            eliminarEvaluacion(
+                                                'docenteEvaluaciones',
+                                                i
+                                            )
+                                        "
                                     ></button>
                                 </div>
                                 <p-fieldset
@@ -515,11 +579,14 @@
                                                 class="flex flex-wrap gap-2 max-w-30rem align-items-start"
                                             >
                                                 <div
-                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start"
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
                                                             'docFormatoB' + i
+                                                        "
+                                                        [arrayName]="
+                                                            'docenteEvaluaciones'
                                                         "
                                                         [filename]="
                                                             'docFormatoB' + i
@@ -528,7 +595,8 @@
                                                             selectedFiles
                                                         "
                                                         [evaluacionId]="
-                                                            this.evaluacionIds[
+                                                            this
+                                                                .evaluacionDocenteIds[
                                                                 i
                                                             ]
                                                         "
@@ -545,21 +613,21 @@
                                                         class="mt-2"
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'docFormatoB' +
+                                                                'docenteEvaluaciones.docFormatoB' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "docFormatoB" +
+                                                                "docenteEvaluaciones.docFormatoB" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "docFormatoB" +
+                                                                "docenteEvaluaciones.docFormatoB" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -569,14 +637,17 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'docFormatoB' + i
+                                                            'docenteEvaluaciones.docFormatoB' +
+                                                                i
                                                         ]
                                                     "
                                                     pButton
+                                                    class="p-button-secondary"
                                                     type="button"
                                                     icon="pi pi-download"
                                                     (click)="
                                                         getFileAndSetValue(
+                                                            'docenteEvaluaciones',
                                                             'docFormatoB',
                                                             i
                                                         )
@@ -587,7 +658,8 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'docFormatoB' + i
+                                                        'docenteEvaluaciones.docFormatoB' +
+                                                            i
                                                     ]
                                                 "
                                             >
@@ -608,11 +680,14 @@
                                                 class="flex flex-wrap gap-2 max-w-30rem align-items-start"
                                             >
                                                 <div
-                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start"
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
                                                             'docFormatoC' + i
+                                                        "
+                                                        [arrayName]="
+                                                            'docenteEvaluaciones'
                                                         "
                                                         [filename]="
                                                             'docFormatoC' + i
@@ -621,7 +696,8 @@
                                                             selectedFiles
                                                         "
                                                         [evaluacionId]="
-                                                            this.evaluacionIds[
+                                                            this
+                                                                .evaluacionDocenteIds[
                                                                 i
                                                             ]
                                                         "
@@ -638,21 +714,21 @@
                                                         class="mt-2"
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'docFormatoC' +
+                                                                'docenteEvaluaciones.docFormatoC' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "docFormatoC" +
+                                                                "docenteEvaluaciones.docFormatoC" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "docFormatoC" +
+                                                                "docenteEvaluaciones.docFormatoC" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -662,14 +738,17 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'docFormatoC' + i
+                                                            'docenteEvaluaciones.docFormatoC' +
+                                                                i
                                                         ]
                                                     "
                                                     pButton
+                                                    class="p-button-secondary"
                                                     type="button"
                                                     icon="pi pi-download"
                                                     (click)="
                                                         getFileAndSetValue(
+                                                            'docenteEvaluaciones',
                                                             'docFormatoC',
                                                             i
                                                         )
@@ -680,7 +759,8 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'docFormatoC' + i
+                                                        'docenteEvaluaciones.docFormatoC' +
+                                                            i
                                                     ]
                                                 "
                                             >
@@ -701,12 +781,15 @@
                                                 class="flex flex-wrap gap-2 max-w-30rem align-items-start"
                                             >
                                                 <div
-                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                                    class="flex flex-column row-gap-2 align-items-start justify-content-start"
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
                                                             'docObservaciones' +
                                                             i
+                                                        "
+                                                        [arrayName]="
+                                                            'docenteEvaluaciones'
                                                         "
                                                         [filename]="
                                                             'docObservaciones' +
@@ -716,7 +799,8 @@
                                                             selectedFiles
                                                         "
                                                         [evaluacionId]="
-                                                            this.evaluacionIds[
+                                                            this
+                                                                .evaluacionDocenteIds[
                                                                 i
                                                             ]
                                                         "
@@ -733,21 +817,21 @@
                                                         class="mt-2"
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'docObservaciones' +
+                                                                'docenteEvaluaciones.docObservaciones' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "docObservaciones" +
+                                                                "docenteEvaluaciones.docObservaciones" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "docObservaciones" +
+                                                                "docenteEvaluaciones.docObservaciones" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -757,15 +841,17 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'docObservaciones' +
+                                                            'docenteEvaluaciones.docObservaciones' +
                                                                 i
                                                         ]
                                                     "
                                                     pButton
+                                                    class="p-button-secondary"
                                                     type="button"
                                                     icon="pi pi-download"
                                                     (click)="
                                                         getFileAndSetValue(
+                                                            'docenteEvaluaciones',
                                                             'docObservaciones',
                                                             i
                                                         )
@@ -776,7 +862,8 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'docObservaciones' + i
+                                                        'docenteEvaluaciones.docObservaciones' +
+                                                            i
                                                     ]
                                                 "
                                             >
@@ -794,29 +881,64 @@
                                         </label>
                                         <div class="col-9 flex column-gap-4">
                                             <div
-                                                *ngFor="
-                                                    let estado of estados;
-                                                    let j = index
-                                                "
+                                                *ngFor="let estado of estados"
                                                 class="field-checkbox"
                                             >
                                                 <p-radioButton
                                                     [inputId]="
-                                                        'estadoRespuesta' + i
+                                                        'estadoRespuestaDocente' +
+                                                        i
                                                     "
-                                                    [value]="estado.name"
+                                                    [value]="estado"
                                                     [formControlName]="
-                                                        'estadoRespuesta' + i
+                                                        'estadoRespuestaDocente' +
+                                                        i
                                                     "
                                                 ></p-radioButton>
                                                 <label
                                                     [for]="
-                                                        'estadoRespuesta' + i
+                                                        'estadoRespuestaDocente' +
+                                                        i
                                                     "
                                                     class="ml-2"
-                                                    >{{ estado.name }}</label
+                                                    >{{ estado }}</label
                                                 >
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid column-gap-4 mb-6">
+                                        <div
+                                            class="label-required col-2 text-right"
+                                        >
+                                            <label
+                                                >Fecha Maxima Entrega de
+                                                Correciones</label
+                                            >
+                                        </div>
+                                        <div
+                                            class="col-9 flex column-gap-4"
+                                            *ngIf="
+                                                docenteEvaluaciones
+                                                    .at(i)
+                                                    .get(
+                                                        'estadoRespuestaDocente' +
+                                                            i
+                                                    )?.value == 'Aplazado' ||
+                                                docenteEvaluaciones
+                                                    .at(i)
+                                                    .get(
+                                                        'estadoRespuestaDocente' +
+                                                            i
+                                                    )?.value == 'No Aprobado'
+                                            "
+                                        >
+                                            <p-calendar
+                                                [formControlName]="
+                                                    'fechaCorrecciones' + i
+                                                "
+                                                [showIcon]="true"
+                                                dateFormat="dd.mm.yy"
+                                            ></p-calendar>
                                         </div>
                                     </div>
                                 </p-fieldset>
@@ -829,29 +951,18 @@
                     >
                         <button
                             pButton
+                            class="p-button-secondary"
                             type="button"
                             icon="pi pi-plus"
                             label="Agregar Evaluacion"
-                            (click)="agregarEvaluacion()"
+                            (click)="agregarEvaluacion('docenteEvaluaciones')"
                         ></button>
                     </div>
-                </div> -->
-                <div class="field grid mt-4">
-                    <div
-                        class="col-6 w-19rem col-label text-right align-self-center"
-                    >
-                        <label class="label-required"
-                            >Fecha Maxima Entrega de Correciones</label
-                        >
-                    </div>
-                    <div class="col-6 col-input">
-                        <p-calendar
-                            formControlName="fecha_correcciones"
-                            [showIcon]="true"
-                            dateFormat="dd.mm.yy"
-                        ></p-calendar>
-                    </div>
                 </div>
+                <p-divider layout="horizontal" [align]="'center'"
+                    ><b></b
+                ></p-divider>
+                <textarea name="" id="" cols="30" rows="10"></textarea>
             </div>
         </form>
     </ng-template>

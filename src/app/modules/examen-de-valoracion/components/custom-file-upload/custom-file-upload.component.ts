@@ -32,10 +32,11 @@ export class CustomFileUploadComponent implements ControlValueAccessor {
     @ViewChild('fileUpload') fileUpload!: FileUpload;
     @Input() evaluacionId: number;
     @Input() filename: string;
+    @Input() arrayName: string;
     @Input() selected: any;
     @Output() archivoSeleccionado: EventEmitter<any> = new EventEmitter<any>();
-    @Output() archivoDeseleccionado: EventEmitter<string> =
-        new EventEmitter<string>();
+    @Output() archivoDeseleccionado: EventEmitter<any> =
+        new EventEmitter<any>();
     value: File | any = null;
     onChange: any = () => {};
     onTouched: any = () => {};
@@ -66,12 +67,11 @@ export class CustomFileUploadComponent implements ControlValueAccessor {
 
         if (selectedFiles && selectedFiles.length > 0) {
             const selectedFile = selectedFiles[0];
-            this.selected = selectedFile;
             const formatFilename = this.filename.slice(0, -1);
             this.solicitudService
                 .uploadFile(
                     this.evaluacionId,
-                    false,
+                    "evaluacionId",
                     selectedFile,
                     formatFilename
                 )
@@ -82,8 +82,12 @@ export class CustomFileUploadComponent implements ControlValueAccessor {
                         ),
                     error: (e) => this.handlerResponseException(e),
                 });
-
-            this.archivoSeleccionado.emit([this.filename, selectedFile]);
+            this.selected[`${this.arrayName}.${this.filename}`] = selectedFile;
+            this.archivoSeleccionado.emit([
+                this.filename,
+                selectedFile,
+                this.arrayName,
+            ]);
             this.onChange(selectedFile);
             this.onTouched();
             return selectedFile;
@@ -94,9 +98,8 @@ export class CustomFileUploadComponent implements ControlValueAccessor {
 
     clearFile(): void {
         const formatFilename = this.filename.slice(0, -1);
-        this.selected = null;
         this.solicitudService
-            .deleteFile(this.evaluacionId, false, formatFilename)
+            .deleteFile(this.evaluacionId, "evaluacionId", formatFilename)
             .subscribe({
                 next: () =>
                     this.messageService.add(
@@ -104,7 +107,8 @@ export class CustomFileUploadComponent implements ControlValueAccessor {
                     ),
                 error: (e) => this.handlerResponseException(e),
             });
-        this.archivoDeseleccionado.emit(this.filename);
+        this.selected[`${this.arrayName}.${this.filename}`] = null;
+        this.archivoDeseleccionado.emit([this.filename, this.arrayName]);
         this.value = null;
         this.fileUpload.clear();
         this.onChange(null);
