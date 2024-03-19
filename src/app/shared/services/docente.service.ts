@@ -19,7 +19,8 @@ export class DocenteService {
     }
 
     listDocentes(): Observable<Docente[]> {
-        return this.http.get<Docente[]>(backend('docentes'), {
+        return this.http.get<Docente[]>(backend('fake'), {
+            // change later
             headers: getHeaders(),
         });
     }

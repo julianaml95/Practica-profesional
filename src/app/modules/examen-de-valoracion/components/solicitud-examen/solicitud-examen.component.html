@@ -32,31 +32,33 @@
             <button
                 pButton
                 type="button"
-                (click)="redirectToBandeja()"
+                icon="pi pi-book"
+                class="w-15rem p-button-secondary"
+                label="Solicitud examen de valoración"
                 [disabled]="
                     !!this.solicitudId ? !!this.solicitudId : isActiveIndex()
                 "
-            >
-                SOLICITUD
-            </button>
+            ></button>
             <button
                 pButton
                 type="button"
+                icon="pi pi-envelope"
+                class="w-15rem p-button-secondary"
+                label="Respuesta al examen de valoración"
                 [disabled]="!this.isSolicitudValid"
-                (click)="rediectToRespuesta(this.respuestaId)"
-            >
-                RESPUESTA
-            </button>
+                (click)="redirectToRespuesta(this.respuestaId)"
+            ></button>
+            <button
+                pButton
+                type="button"
+                icon="pi pi-paperclip"
+                class="w-15rem p-button-secondary"
+                label="Generacion de resolucion"
+                [disabled]="!this.isSolicitudValid"
+                (click)="redirectToResolucion(this.resolucionId)"
+            ></button>
         </div>
         <div class="flex align-items-center">
-            <button
-                *ngIf="!editMode"
-                pButton
-                type="button"
-                icon="pi pi-save"
-                label="Modificar Informacion"
-                (click)="onEdit(this.solicitudId)"
-            ></button>
             <button
                 *ngIf="editMode"
                 pButton
@@ -122,14 +124,19 @@
                                         chooseIcon="pi pi-file"
                                         class="w-full max-w-30rem"
                                         maxFileSize="2000000"
-                                        invalidFileSizeMessage="El tamaño del archivo supera el límite de 2 MB"
                                         (onSelect)="onFileSelectFirst($event)"
                                         chooseLabel="Buscar documento"
+                                        [disabled]="
+                                            solicitudForm.get(
+                                                'doc_solicitud_valoracion'
+                                            ).value
+                                        "
                                     >
                                     </p-fileUpload>
                                     <button
                                         *ngIf="selectedFileFirst"
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
@@ -140,7 +147,7 @@
                                     ></button>
                                 </div>
                                 <div class="mt-2" *ngIf="selectedFileFirst">
-                                    {{ selectedFileFirst.name }}.pdf -
+                                    {{ selectedFileFirst.name }} -
                                     {{ selectedFileFirst.size | bytesToKb }}
                                     KB
                                 </div>
@@ -148,6 +155,7 @@
                             <button
                                 *ngIf="selectedFileFirst"
                                 pButton
+                                class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
                                 (click)="
@@ -199,11 +207,17 @@
                                         maxFileSize="5000000"
                                         (onSelect)="onFileSelectSecond($event)"
                                         chooseLabel="Buscar documento"
+                                        [disabled]="
+                                            solicitudForm.get(
+                                                'doc_anteproyecto_examen'
+                                            ).value
+                                        "
                                     >
                                     </p-fileUpload>
                                     <button
                                         *ngIf="selectedFileSecond"
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
@@ -214,7 +228,7 @@
                                     ></button>
                                 </div>
                                 <div class="mt-2" *ngIf="selectedFileSecond">
-                                    {{ selectedFileSecond.name }}.pdf -
+                                    {{ selectedFileSecond.name }} -
                                     {{ selectedFileSecond.size | bytesToKb }}
                                     KB
                                 </div>
@@ -222,6 +236,7 @@
                             <button
                                 *ngIf="selectedFileSecond"
                                 pButton
+                                class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
                                 (click)="
@@ -263,10 +278,16 @@
                                         maxFileSize="5000000"
                                         (onSelect)="onFileSelectThird($event)"
                                         chooseLabel="Buscar documento"
+                                        [disabled]="
+                                            solicitudForm.get(
+                                                'doc_examen_valoracion'
+                                            ).value
+                                        "
                                     ></p-fileUpload>
                                     <button
                                         *ngIf="selectedFileThird"
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
@@ -275,7 +296,7 @@
                                     ></button>
                                 </div>
                                 <div class="mt-2" *ngIf="selectedFileThird">
-                                    {{ selectedFileThird.name }}.pdf -
+                                    {{ selectedFileThird.name }} -
                                     {{ selectedFileThird.size | bytesToKb }}
                                     KB
                                 </div>
@@ -283,6 +304,7 @@
                             <button
                                 *ngIf="selectedFileThird"
                                 pButton
+                                class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
                                 (click)="
@@ -315,8 +337,8 @@
                                     >
                                     <button
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
-                                        style="border: none; font-size: 1.2rem"
                                         (click)="limpiarExperto()"
                                     ></button>
                                 </div>
@@ -371,8 +393,8 @@
                                     >
                                     <button
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
-                                        style="border: none; font-size: 1.2rem"
                                         (click)="limpiarDocente()"
                                     ></button>
                                 </div>
@@ -417,11 +439,6 @@
                         <p-inputNumber
                             inputId="integeronly"
                             formControlName="numero_acta"
-                            [ngClass]="{
-                                'ng-invalid ng-dirty':
-                                    getFormControl('numero_acta').invalid &&
-                                    getFormControl('numero_acta').touched
-                            }"
                         ></p-inputNumber>
                     </div>
                 </div>
@@ -465,11 +482,17 @@
                                         maxFileSize="2000000"
                                         (onSelect)="onFileSelectFourth($event)"
                                         chooseLabel="Buscar documento"
+                                        [disabled]="
+                                            solicitudForm.get(
+                                                'doc_oficio_jurados'
+                                            ).value
+                                        "
                                     >
                                     </p-fileUpload>
                                     <button
                                         *ngIf="selectedFileFourth"
                                         pButton
+                                        class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
@@ -478,7 +501,7 @@
                                     ></button>
                                 </div>
                                 <div class="mt-2" *ngIf="selectedFileFourth">
-                                    {{ selectedFileFourth.name }}.pdf -
+                                    {{ selectedFileFourth.name }} -
                                     {{ selectedFileFourth.size | bytesToKb }}
                                     KB
                                 </div>
@@ -487,6 +510,7 @@
                                 *ngIf="selectedFileFourth"
                                 pButton
                                 type="button"
+                                class="p-button-secondary"
                                 icon="pi pi-download"
                                 (click)="
                                     getFileAndSetValue('doc_oficio_jurados')
