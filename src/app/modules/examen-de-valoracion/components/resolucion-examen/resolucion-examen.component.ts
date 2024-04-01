@@ -65,6 +65,7 @@ export class ResolucionExamenComponent implements OnInit {
     solicitudId: number;
     respuestaId: number;
     resolucionId: number;
+    sustentacionId: number;
 
     resolucionForm: FormGroup;
 
@@ -171,6 +172,14 @@ export class ResolucionExamenComponent implements OnInit {
             next: (response) => {
                 if (response) {
                     this.resolucionId = response.id;
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+        this.solicitudService.sustentacionSeleccionadaSubject$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.sustentacionId = response.id;
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -556,16 +565,26 @@ export class ResolucionExamenComponent implements OnInit {
         this.directorSeleccionado = null;
     }
 
-    redirectToRespuesta(respuestaId: number) {
-        this.router.navigate([
-            `examen-de-valoracion/respuesta/editar/${respuestaId}`,
-        ]);
-    }
-
     redirectToSolicitud(solicitudId: number) {
         this.router.navigate([
             `examen-de-valoracion/solicitud/editar/${solicitudId}`,
         ]);
+    }
+
+    redirectToRespuesta(respuestaId: number) {
+        respuestaId
+            ? this.router.navigate([
+                  `examen-de-valoracion/respuesta/editar/${respuestaId}`,
+              ])
+            : this.router.navigate(['examen-de-valoracion/respuesta']);
+    }
+
+    redirectToSustentacion(sustentacionId: number) {
+        sustentacionId
+            ? this.router.navigate([
+                  `examen-de-valoracion/sustentacion/editar/${sustentacionId}`,
+              ])
+            : this.router.navigate(['examen-de-valoracion/sustentacion']);
     }
 
     redirectToBandeja() {

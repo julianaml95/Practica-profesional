@@ -1,0 +1,18 @@
+::ng-deep.p-inputnumber-input {
+    width: 5rem !important;
+}
+
+::ng-deep.p-calendar input {
+    width: 100% !important;
+}
+
+::ng-deep.p-card-content {
+    padding: 0 0 !important;
+}
+
+.spinner {
+    transform: translate(-50%, 50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}

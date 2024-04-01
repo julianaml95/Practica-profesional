@@ -43,6 +43,7 @@ export class RespuestaExamenComponent implements OnInit {
     solicitudId: number;
     respuestaId: number;
     resolucionId: number;
+    sustentacionId: number;
 
     respuestaForm: FormGroup;
 
@@ -169,6 +170,14 @@ export class RespuestaExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
+        this.solicitudService.sustentacionSeleccionadaSubject$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.sustentacionId = response.id;
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
         this.solicitudService.evaluadorExternoSeleccionadoSubject$.subscribe({
             next: (response) => {
                 if (response) {
@@ -192,7 +201,7 @@ export class RespuestaExamenComponent implements OnInit {
             this.evaluacionExpertoIds.forEach(
                 (evaluacionId: number, index: number) => {
                     this.solicitudService
-                        .getFile(evaluacionId, "evaluacionId", fieldName)
+                        .getFile(evaluacionId, 'evaluacionId', fieldName)
                         .subscribe({
                             next: (response: any) => {
                                 if (response) {
@@ -231,7 +240,7 @@ export class RespuestaExamenComponent implements OnInit {
             this.evaluacionDocenteIds.forEach(
                 (evaluacionId: number, index: number) => {
                     this.solicitudService
-                        .getFile(evaluacionId, "evaluacionId", fieldName)
+                        .getFile(evaluacionId, 'evaluacionId', fieldName)
                         .subscribe({
                             next: (response: any) => {
                                 if (response) {
@@ -681,7 +690,7 @@ export class RespuestaExamenComponent implements OnInit {
                 formArrayName == 'expertoEvaluaciones'
                     ? this.evaluacionExpertoIds[index]
                     : this.evaluacionDocenteIds[index],
-                "evaluacionId",
+                'evaluacionId',
                 fieldName
             )
             .subscribe({
@@ -714,6 +723,14 @@ export class RespuestaExamenComponent implements OnInit {
                   `examen-de-valoracion/resolucion/editar/${resolucionId}`,
               ])
             : this.router.navigate(['examen-de-valoracion/resolucion']);
+    }
+
+    redirectToSustentacion(sustentacionId: number) {
+        sustentacionId
+            ? this.router.navigate([
+                  `examen-de-valoracion/sustentacion/editar/${sustentacionId}`,
+              ])
+            : this.router.navigate(['examen-de-valoracion/sustentacion']);
     }
 
     redirectToBandeja() {

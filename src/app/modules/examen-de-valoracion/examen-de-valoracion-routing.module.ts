@@ -6,6 +6,7 @@ import { PrincipalExamenDeValoracionComponent } from './pages/principal-examen-d
 import { CrearSolicitudExamenComponent } from './components/crear-solicitud-examen/crear-solicitud-examen.component';
 import { RespuestaExamenComponent } from './components/respuesta-examen/respuesta-examen.component';
 import { ResolucionExamenComponent } from './components/resolucion-examen/resolucion-examen.component';
+import { SustentacionExamenComponent } from './components/sustentacion-examen/sustentacion-examen.component';
 
 const routes: Routes = [
     {
@@ -43,6 +44,14 @@ const routes: Routes = [
             {
                 path: 'resolucion/editar/:id',
                 component: ResolucionExamenComponent,
+            },
+            {
+                path: 'sustentacion',
+                component: SustentacionExamenComponent,
+            },
+            {
+                path: 'sustentacion/editar/:id',
+                component: SustentacionExamenComponent,
             },
         ],
     },

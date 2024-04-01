@@ -15,6 +15,7 @@ import { RespuestaExamenComponent } from './components/respuesta-examen/respuest
 import { SharedModule } from 'src/app/shared/shared.module';
 import { CustomFileUploadComponent } from './components/custom-file-upload/custom-file-upload.component';
 import { ResolucionExamenComponent } from './components/resolucion-examen/resolucion-examen.component';
+import { SustentacionExamenComponent } from './components/sustentacion-examen/sustentacion-examen.component';
 
 @NgModule({
     declarations: [
@@ -25,6 +26,7 @@ import { ResolucionExamenComponent } from './components/resolucion-examen/resolu
         CustomFileUploadComponent,
         RespuestaExamenComponent,
         ResolucionExamenComponent,
+        SustentacionExamenComponent,
     ],
     imports: [
         CommonModule,

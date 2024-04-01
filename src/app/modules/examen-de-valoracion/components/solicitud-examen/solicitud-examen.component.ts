@@ -59,6 +59,7 @@ export class SolicitudExamenComponent implements OnInit {
     solicitudId: number;
     respuestaId: number;
     resolucionId: number;
+    sustentacionId: number;
 
     isLoading: boolean;
     editMode: boolean = false;
@@ -155,6 +156,14 @@ export class SolicitudExamenComponent implements OnInit {
             next: (response) => {
                 if (response) {
                     this.resolucionId = response.id;
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+        this.solicitudService.sustentacionSeleccionadaSubject$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.sustentacionId = response.id;
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -557,6 +566,14 @@ export class SolicitudExamenComponent implements OnInit {
                   `examen-de-valoracion/resolucion/editar/${resolucionId}`,
               ])
             : this.router.navigate(['examen-de-valoracion/resolucion']);
+    }
+
+    redirectToSustentacion(sustentacionId: number) {
+        sustentacionId
+            ? this.router.navigate([
+                  `examen-de-valoracion/sustentacion/editar/${sustentacionId}`,
+              ])
+            : this.router.navigate(['examen-de-valoracion/sustentacion']);
     }
 
     redirectToBandeja() {

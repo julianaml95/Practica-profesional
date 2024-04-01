@@ -17,6 +17,7 @@ export class SolicitudService {
     private estudianteSeleccionadoSubject = new BehaviorSubject<Estudiante>(
         null
     );
+    private sustentacionSeleccionadaSubject = new BehaviorSubject<any>(null);
     private resolucionSeleccionadaSubject = new BehaviorSubject<any>(null);
     private evaluacionSeleccionadaSubject = new BehaviorSubject<any>(null);
     private respuestaSeleccionadaSubject = new BehaviorSubject<any>(null);
@@ -31,6 +32,9 @@ export class SolicitudService {
 
     estudianteSeleccionado$: Observable<Estudiante> =
         this.estudianteSeleccionadoSubject.asObservable();
+
+    sustentacionSeleccionadaSubject$: Observable<any> =
+        this.sustentacionSeleccionadaSubject.asObservable();
 
     resolucionSeleccionadaSubject$: Observable<any> =
         this.resolucionSeleccionadaSubject.asObservable();
@@ -55,6 +59,10 @@ export class SolicitudService {
 
     setEstudianteSeleccionado(estudiante: Estudiante) {
         this.estudianteSeleccionadoSubject.next(estudiante);
+    }
+
+    setSustentacionSeleccionada(sustentacion: any) {
+        this.sustentacionSeleccionadaSubject.next(sustentacion);
     }
 
     setResolucionSeleccionada(resolucion: any) {
@@ -154,10 +162,7 @@ export class SolicitudService {
     }
 
     deleteAllFiles(evaluacionId: number) {
-        const params = new HttpParams().set(
-            'evaluacionId',
-            evaluacionId
-        );
+        const params = new HttpParams().set('evaluacionId', evaluacionId);
         return this.http.delete(backend('files/delete/all'), {
             params,
         });

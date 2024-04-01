@@ -56,6 +56,14 @@
                 label="Generacion de resolucion"
                 (click)="redirectToResolucion(this.resolucionId)"
             ></button>
+            <button
+                pButton
+                type="button"
+                icon="pi pi-paperclip"
+                class="w-20rem p-button-secondary"
+                label="Sustentación del proyecto de investigación"
+                (click)="redirectToSustentacion(this.sustentacionId)"
+            ></button>
         </div>
         <div class="flex align-items-center">
             <button
@@ -178,6 +186,9 @@
                                                     ></app-custom-file-upload>
                                                     <div
                                                         class="mt-2"
+                                                        style="
+                                                            word-break: break-word;
+                                                        "
                                                         *ngIf="
                                                             selectedFiles[
                                                                 'expertoEvaluaciones.docFormatoB' +
@@ -279,6 +290,9 @@
                                                     ></app-custom-file-upload>
                                                     <div
                                                         class="mt-2"
+                                                        style="
+                                                            word-break: break-word;
+                                                        "
                                                         *ngIf="
                                                             selectedFiles[
                                                                 'expertoEvaluaciones.docFormatoC' +
@@ -382,6 +396,9 @@
                                                     ></app-custom-file-upload>
                                                     <div
                                                         class="mt-2"
+                                                        style="
+                                                            word-break: break-word;
+                                                        "
                                                         *ngIf="
                                                             selectedFiles[
                                                                 'expertoEvaluaciones.docObservaciones' +
@@ -485,12 +502,18 @@
                                         <div
                                             class="col-9 flex column-gap-4"
                                             *ngIf="
-                                                expertoEvaluaciones.at(i).get(
-                                                    'estadoRespuestaExperto' + i
-                                                )?.value == 'Aplazado' ||
-                                                expertoEvaluaciones.at(i).get(
-                                                    'estadoRespuestaExperto' + i
-                                                )?.value == 'No Aprobado'
+                                                expertoEvaluaciones
+                                                    .at(i)
+                                                    .get(
+                                                        'estadoRespuestaExperto' +
+                                                            i
+                                                    )?.value == 'Aplazado' ||
+                                                expertoEvaluaciones
+                                                    .at(i)
+                                                    .get(
+                                                        'estadoRespuestaExperto' +
+                                                            i
+                                                    )?.value == 'No Aprobado'
                                             "
                                         >
                                             <p-calendar
@@ -611,6 +634,9 @@
                                                     ></app-custom-file-upload>
                                                     <div
                                                         class="mt-2"
+                                                        style="
+                                                            word-break: break-word;
+                                                        "
                                                         *ngIf="
                                                             selectedFiles[
                                                                 'docenteEvaluaciones.docFormatoB' +
@@ -712,6 +738,9 @@
                                                     ></app-custom-file-upload>
                                                     <div
                                                         class="mt-2"
+                                                        style="
+                                                            word-break: break-word;
+                                                        "
                                                         *ngIf="
                                                             selectedFiles[
                                                                 'docenteEvaluaciones.docFormatoC' +
@@ -815,6 +844,9 @@
                                                     ></app-custom-file-upload>
                                                     <div
                                                         class="mt-2"
+                                                        style="
+                                                            word-break: break-word;
+                                                        "
                                                         *ngIf="
                                                             selectedFiles[
                                                                 'docenteEvaluaciones.docObservaciones' +

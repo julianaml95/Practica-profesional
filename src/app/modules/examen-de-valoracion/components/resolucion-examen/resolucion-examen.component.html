@@ -55,6 +55,14 @@
                     !!this.resolucionId ? !!this.resolucionId : isActiveIndex()
                 "
             ></button>
+            <button
+                pButton
+                type="button"
+                icon="pi pi-paperclip"
+                class="w-20rem p-button-secondary"
+                label="Sustentación del proyecto de investigación"
+                (click)="redirectToSustentacion(this.sustentacionId)"
+            ></button>
         </div>
         <div class="flex align-items-center">
             <button
@@ -97,7 +105,9 @@
                     <div class="col-8" *ngIf="directorSeleccionado">
                         <div class="flex align-items-center">
                             <p-card class="w-full max-w-30rem m-0">
-                                <div class="flex justify-content-between align-items-center">
+                                <div
+                                    class="flex justify-content-between align-items-center"
+                                >
                                     <span
                                         >{{ directorSeleccionado.nombre }}
                                         {{
@@ -191,9 +201,7 @@
                             <div
                                 class="flex flex-column row-gap-2 align-items-start justify-content-start"
                             >
-                                <div
-                                    class="flex flex-row w-full"
-                                >
+                                <div class="flex flex-row w-full">
                                     <p-fileUpload
                                         #AnteproyectoAprobado
                                         name="anteproyectoAprobado"
@@ -224,7 +232,8 @@
                                     ></button>
                                 </div>
                                 <div
-                                    class="mt-2" style="width: '200px';"
+                                    class="mt-2"
+                                    style="word-break: break-word"
                                     *ngIf="FileAnteproyectoAprobado"
                                 >
                                     {{ FileAnteproyectoAprobado.name }} -
@@ -265,9 +274,7 @@
                             <div
                                 class="flex flex-column row-gap-2 align-items-start justify-content-start"
                             >
-                                <div
-                                    class="flex flex-row w-full"
-                                >
+                                <div class="flex flex-row w-full">
                                     <p-fileUpload
                                         #SolicitudComite
                                         name="solicitudComite"
@@ -295,7 +302,11 @@
                                         (click)="onFileClear('solicitudComite')"
                                     ></button>
                                 </div>
-                                <div class="mt-2" style="width: '200px';" *ngIf="FileSolicitudComite">
+                                <div
+                                    class="mt-2"
+                                    style="word-break: break-word"
+                                    *ngIf="FileSolicitudComite"
+                                >
                                     {{ FileSolicitudComite.name }} -
                                     {{ FileSolicitudComite.size | bytesToKb }}
                                     KB
@@ -329,9 +340,7 @@
                             <div
                                 class="flex flex-column row-gap-2 align-items-start justify-content-start"
                             >
-                                <div
-                                    class="flex flex-row w-full"
-                                >
+                                <div class="flex flex-row w-full">
                                     <p-fileUpload
                                         #SolicitudConcejo
                                         name="solicitudConcejo"
@@ -361,7 +370,11 @@
                                         "
                                     ></button>
                                 </div>
-                                <div class="mt-2" style="width: '200px';" *ngIf="FileSolicitudConcejo">
+                                <div
+                                    class="mt-2"
+                                    style="word-break: break-word"
+                                    *ngIf="FileSolicitudConcejo"
+                                >
                                     {{ FileSolicitudConcejo.name }} -
                                     {{ FileSolicitudConcejo.size | bytesToKb }}
                                     KB
@@ -418,9 +431,7 @@
                             <div
                                 class="flex flex-column row-gap-2 align-items-start justify-content-start"
                             >
-                                <div
-                                    class="flex flex-row w-full"
-                                >
+                                <div class="flex flex-row w-full">
                                     <p-fileUpload
                                         #ResolucionConcejo
                                         name="resolucionConcejo"
@@ -450,7 +461,11 @@
                                         "
                                     ></button>
                                 </div>
-                                <div class="mt-2" style="width: '200px';" *ngIf="FileResolucionConcejo">
+                                <div
+                                    class="mt-2"
+                                    style="word-break: break-word"
+                                    *ngIf="FileResolucionConcejo"
+                                >
                                     {{ FileResolucionConcejo.name }} -
                                     {{ FileResolucionConcejo.size | bytesToKb }}
                                     KB

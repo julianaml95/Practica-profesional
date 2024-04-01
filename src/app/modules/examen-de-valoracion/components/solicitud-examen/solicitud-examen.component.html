@@ -57,6 +57,15 @@
                 [disabled]="!this.isSolicitudValid"
                 (click)="redirectToResolucion(this.resolucionId)"
             ></button>
+            <button
+                pButton
+                type="button"
+                icon="pi pi-paperclip"
+                class="w-20rem p-button-secondary"
+                label="Sustentación del proyecto de investigación"
+                [disabled]="!this.isSolicitudValid"
+                (click)="redirectToSustentacion(this.sustentacionId)"
+            ></button>
         </div>
         <div class="flex align-items-center">
             <button
@@ -146,7 +155,11 @@
                                         "
                                     ></button>
                                 </div>
-                                <div class="mt-2" *ngIf="selectedFileFirst">
+                                <div
+                                    class="mt-2"
+                                    *ngIf="selectedFileFirst"
+                                    style="word-break: break-word"
+                                >
                                     {{ selectedFileFirst.name }} -
                                     {{ selectedFileFirst.size | bytesToKb }}
                                     KB
@@ -227,7 +240,11 @@
                                         "
                                     ></button>
                                 </div>
-                                <div class="mt-2" *ngIf="selectedFileSecond">
+                                <div
+                                    class="mt-2"
+                                    *ngIf="selectedFileSecond"
+                                    style="word-break: break-word"
+                                >
                                     {{ selectedFileSecond.name }} -
                                     {{ selectedFileSecond.size | bytesToKb }}
                                     KB
@@ -295,7 +312,11 @@
                                         "
                                     ></button>
                                 </div>
-                                <div class="mt-2" *ngIf="selectedFileThird">
+                                <div
+                                    class="mt-2"
+                                    *ngIf="selectedFileThird"
+                                    style="word-break: break-word"
+                                >
                                     {{ selectedFileThird.name }} -
                                     {{ selectedFileThird.size | bytesToKb }}
                                     KB
@@ -500,7 +521,11 @@
                                         "
                                     ></button>
                                 </div>
-                                <div class="mt-2" *ngIf="selectedFileFourth">
+                                <div
+                                    class="mt-2"
+                                    *ngIf="selectedFileFourth"
+                                    style="word-break: break-word"
+                                >
                                     {{ selectedFileFourth.name }} -
                                     {{ selectedFileFourth.size | bytesToKb }}
                                     KB

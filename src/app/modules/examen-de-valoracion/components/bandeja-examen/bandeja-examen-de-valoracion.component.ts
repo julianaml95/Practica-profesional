@@ -12,6 +12,7 @@ import { Solicitud } from '../../models/solicitud';
 import { RespuestaService } from '../../services/respuesta.service';
 import { LocalStorageService } from '../../services/localstorage.service';
 import { ResolucionService } from '../../services/resolucion.service';
+import { SustentacionService } from '../../services/sustentacion.service';
 
 @Component({
     selector: 'app-bandeja-examen-de-valoracion',
@@ -56,6 +57,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         private solicitudService: SolicitudService,
         private respuestaService: RespuestaService,
         private resolucionService: ResolucionService,
+        private sustentacionService: SustentacionService,
         private messageService: MessageService,
         private dialogService: DialogService,
         private localStorageService: LocalStorageService,
@@ -91,6 +93,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                 },
             })
             .add(() => (this.loading = false));
+        this.solicitudService.setSustentacionSeleccionada(null);
         this.solicitudService.setResolucionSeleccionada(null);
         this.solicitudService.setRespuestaSeleccionada(null);
         this.solicitudService.setSolicitudSeleccionada(null);
@@ -117,6 +120,11 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                 this.solicitudService.setResolucionSeleccionada(response);
             },
         });
+        this.sustentacionService.getSustentacionBySolicitud(id).subscribe({
+            next: (response) => {
+                this.solicitudService.setSustentacionSeleccionada(response);
+            },
+        });
         this.router.navigate(['examen-de-valoracion/solicitud/editar', id]);
     }
 
@@ -132,6 +140,9 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                     error: (e) => console.log(e),
                 });
                 this.resolucionService.deleteResolucion(id).subscribe({
+                    error: (e) => console.log(e),
+                });
+                this.sustentacionService.deleteSustentacion(id).subscribe({
                     error: (e) => console.log(e),
                 });
                 this.listSolicitudes(this.estudianteSeleccionado.id);
