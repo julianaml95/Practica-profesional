@@ -14,9 +14,10 @@ export enum Mensaje {
     // Empresas
     EMPRESA_ELIMINADA_CORRECTAMENTE = 'Empresa eliminada correctamente',
 
-    // Evaluaciones
-    EVALUACION_ELIMINADA_CORRECTAMENTE = 'Evaluacion eliminada correctamente',
-    REGISTRO_EVALUACION_EXITOSO = 'Evaluacion cargada exitosamente',
+    // Respuestas
+    RESPUESTA_ELIMINADA_CORRECTAMENTE = 'Respuesta eliminada correctamente',
+    RESPUESTA_GUARDADA_CORRECTAMENTE = 'Respuesta cargada correctamente',
+    RESPUESTA_ACTUALIZADA_CORRECTAMENTE = 'Respuesta actualizada correctamente',
 
     //Solicitud
     CONFIRMAR_MODIFICAR_SOLICITUD = 'Selecciona modificar informacion (*)',

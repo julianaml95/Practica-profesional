@@ -92,6 +92,14 @@ export class CrearSolicitudExamenComponent implements OnInit {
         this.initForm();
         this.fechaActual = new Date();
 
+        this.solicitudService.tituloSeleccionadoSubject$.subscribe(
+            (response) => {
+                if (response) {
+                    this.crearSolicitudForm.get('titulo').setValue(response);
+                }
+            }
+        );
+
         this.solicitudService.estudianteSeleccionado$.subscribe((response) => {
             this.estudianteSeleccionado = response;
             if (response) {

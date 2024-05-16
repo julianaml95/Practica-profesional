@@ -7,6 +7,26 @@ export const environment = {
   api_url: "http://localhost:8080/api/"
 };
 
+export const gestion_expertos = {
+    production: false,
+    api_url: 'http://localhost:8085/api/',
+};
+
+export const gestion_egresados = {
+    production: false,
+    api_url: 'http://localhost:8084/api/',
+};
+
+export const gestion_trabajo_grado = {
+    production: false,
+    api_url: 'http://localhost:8083/api/',
+};
+
+export const gestion_docentes_estudiantes = {
+    production: false,
+    api_url: 'http://localhost:8082/api/',
+};
+
 /*
  * For easier debugging in development mode, you can import the following file
  * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.

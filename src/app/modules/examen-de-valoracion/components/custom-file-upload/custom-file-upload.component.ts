@@ -8,12 +8,8 @@ import {
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
-import { errorMessage, infoMessage } from 'src/app/core/utils/message-util';
-import { SolicitudService } from '../../services/solicitud.service';
-import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
+import { errorMessage } from 'src/app/core/utils/message-util';
 import { MessageService } from 'primeng/api';
-import { RespuestaService } from '../../services/respuesta.service';
-import { Mensaje } from 'src/app/core/enums/enums';
 import { FileUpload } from 'primeng/fileupload';
 
 @Component({
@@ -41,10 +37,7 @@ export class CustomFileUploadComponent implements ControlValueAccessor {
     onChange: any = () => {};
     onTouched: any = () => {};
 
-    constructor(
-        private messageService: MessageService,
-        private solicitudService: SolicitudService
-    ) {}
+    constructor(private messageService: MessageService) {}
 
     writeValue(value: any): void {
         this.value = value;
@@ -62,32 +55,43 @@ export class CustomFileUploadComponent implements ControlValueAccessor {
         // Implementar según sea necesario
     }
 
+    convertFileToBase64(file: File): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64String = reader.result as string;
+                const base64 = base64String.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = (error) => {
+                reject(error);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
     onFileChange(event: any) {
         const selectedFiles: FileList = event.files;
-
         if (selectedFiles && selectedFiles.length > 0) {
             const selectedFile = selectedFiles[0];
-            const formatFilename = this.filename.slice(0, -1);
-            this.solicitudService
-                .uploadFile(
-                    this.evaluacionId,
-                    "evaluacionId",
-                    selectedFile,
-                    formatFilename
-                )
-                .subscribe({
-                    next: () =>
-                        this.messageService.add(
-                            infoMessage(Mensaje.GUARDADO_EXITOSO)
-                        ),
-                    error: (e) => this.handlerResponseException(e),
+            const fileType = selectedFile.type.split('/')[1];
+            this.convertFileToBase64(selectedFile)
+                .then((base64) => {
+                    this.selected[`${this.arrayName}.${this.filename}`] =
+                        selectedFile;
+                    this.archivoSeleccionado.emit([
+                        this.filename,
+                        selectedFile,
+                        this.arrayName,
+                        `${this.filename.slice(0, -1)}.${fileType}-${base64}`,
+                    ]);
+                })
+                .catch((error) => {
+                    console.error(
+                        'Error al convertir el archivo a base64:',
+                        error
+                    );
                 });
-            this.selected[`${this.arrayName}.${this.filename}`] = selectedFile;
-            this.archivoSeleccionado.emit([
-                this.filename,
-                selectedFile,
-                this.arrayName,
-            ]);
             this.onChange(selectedFile);
             this.onTouched();
             return selectedFile;
@@ -97,16 +101,6 @@ export class CustomFileUploadComponent implements ControlValueAccessor {
     }
 
     clearFile(): void {
-        const formatFilename = this.filename.slice(0, -1);
-        this.solicitudService
-            .deleteFile(this.evaluacionId, "evaluacionId", formatFilename)
-            .subscribe({
-                next: () =>
-                    this.messageService.add(
-                        infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
-                    ),
-                error: (e) => this.handlerResponseException(e),
-            });
         this.selected[`${this.arrayName}.${this.filename}`] = null;
         this.archivoDeseleccionado.emit([this.filename, this.arrayName]);
         this.value = null;
@@ -116,7 +110,6 @@ export class CustomFileUploadComponent implements ControlValueAccessor {
     }
 
     handlerResponseException(response: any) {
-        if (response.status != 501) return;
         const mapException = mapResponseException(response.error);
         mapException.forEach((value, _) => {
             this.messageService.add(errorMessage(value));

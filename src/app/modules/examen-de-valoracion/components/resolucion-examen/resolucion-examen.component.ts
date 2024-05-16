@@ -11,20 +11,13 @@ import {
     FormGroup,
     Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { Experto } from '../../models/experto';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
-import {
-    Subject,
-    debounceTime,
-    distinctUntilChanged,
-    switchMap,
-    takeUntil,
-    timer,
-} from 'rxjs';
+import { Subject, timer } from 'rxjs';
 import { SolicitudService } from '../../services/solicitud.service';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {
@@ -62,7 +55,7 @@ export class ResolucionExamenComponent implements OnInit {
     isLoading: boolean = false;
     editMode: boolean = false;
 
-    solicitudId: number;
+    trabajoDeGradoId: number;
     respuestaId: number;
     resolucionId: number;
     sustentacionId: number;
@@ -77,6 +70,7 @@ export class ResolucionExamenComponent implements OnInit {
     constructor(
         private fb: FormBuilder,
         private router: Router,
+        private route: ActivatedRoute,
         private resolucionService: ResolucionService,
         private solicitudService: SolicitudService,
         private breadcrumbService: BreadcrumbService,
@@ -98,12 +92,7 @@ export class ResolucionExamenComponent implements OnInit {
         if (this.router.url.includes('editar')) {
             this.loadEditMode();
         }
-        this.loadData();
         this.setBreadcrumb();
-        this.setup('anteproyectoAprobado');
-        this.setup('solicitudComite');
-        this.setup('solicitudConcejo');
-        this.setup('resolucionConcejo');
     }
 
     loadEditMode() {
@@ -113,18 +102,18 @@ export class ResolucionExamenComponent implements OnInit {
 
     initForm(): void {
         this.resolucionForm = this.fb.group({
-            titulo: [null, Validators.required],
-            solicitud: [null, Validators.required],
-            director: [null],
-            codirector: [null],
-            numeroActaRevision: [null],
-            fechaActa: [null],
-            anteproyectoAprobado: [null],
-            solicitudComite: [null],
-            solicitudConcejo: [null],
-            numeroResolucion: [null],
-            fechaResolucion: [null],
-            resolucionConcejo: [null],
+            idTrabajoGrados: [null, Validators.required],
+            titulo: ['', Validators.required],
+            director: ['', Validators.required],
+            codirector: ['', Validators.required],
+            numeroActaRevision: ['', Validators.required],
+            fechaActa: [null, Validators.required],
+            linkAnteproyectoAprobado: ['', Validators.required],
+            linkSolicitudComite: ['', Validators.required],
+            linkSolicitudConcejoFacultad: ['', Validators.required],
+            numeroResolucionGeneradaCF: ['', Validators.required],
+            fechaResolucion: [null, Validators.required],
+            linkResolucionGeneradaCF: ['', Validators.required],
         });
 
         this.formReady.emit(this.resolucionForm);
@@ -145,25 +134,20 @@ export class ResolucionExamenComponent implements OnInit {
             next: (response) => {
                 if (response) {
                     this.tituloSeleccionado = response;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.respuestaSeleccionadaSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.respuestaId = response.id;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.solicitudSeleccionadaSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.solicitudId = response.solicitudId;
                     this.resolucionForm
-                        .get('solicitud')
-                        .setValue(response.solicitudId);
+                        .get('titulo')
+                        .setValue(this.tituloSeleccionado);
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+        this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.resolucionForm
+                        .get('idTrabajoGrados')
+                        .setValue(response.id);
+                    this.trabajoDeGradoId = response.id;
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -171,7 +155,7 @@ export class ResolucionExamenComponent implements OnInit {
         this.solicitudService.resolucionSeleccionadaSubject$.subscribe({
             next: (response) => {
                 if (response) {
-                    this.resolucionId = response.id;
+                    this.resolucionId = response.idGeneracionResolucion;
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -179,93 +163,46 @@ export class ResolucionExamenComponent implements OnInit {
         this.solicitudService.sustentacionSeleccionadaSubject$.subscribe({
             next: (response) => {
                 if (response) {
-                    this.sustentacionId = response.id;
+                    this.sustentacionId = response.idSustentacionTI;
                 }
             },
             error: (e) => this.handlerResponseException(e),
         });
     }
 
-    loadData(): void {
-        if (!this.editMode) {
-            this.isLoading = true;
-            this.resolucionService
-                .createResolucion(this.resolucionForm.value)
-                .subscribe({
-                    next: (response) => {
-                        if (response) {
-                            console.log(
-                                'Datos guardados en el backend-resolucion:',
-                                response
-                            );
-                            this.resolucionId = response.id;
-                            this.solicitudService.setResolucionSeleccionada(
-                                response
-                            );
-                            timer(2000).subscribe(() => {
-                                this.isLoading = false;
-                                this.router.navigate([
-                                    'examen-de-valoracion/resolucion/editar',
-                                    response.id,
-                                ]);
-                            });
-                        }
-                    },
-                    error: () => {
-                        console.error(
-                            'Error al guardar los datos en el backend:'
-                        );
-                    },
-                });
-        }
-    }
-
     setup(fieldName: string) {
-        if (
-            Object.keys(this.estudianteSeleccionado).length > 0 &&
-            this.resolucionId
-        ) {
+        if (Object.keys(this.estudianteSeleccionado).length > 0) {
             this.solicitudService
-                .getFile(this.resolucionId, 'resolucionId', fieldName)
+                .getFile(this.resolucionForm.get(fieldName).value)
                 .subscribe({
                     next: (response: any) => {
                         if (response) {
-                            this.resolucionForm
-                                .get(fieldName)
-                                .setValue(fieldName);
-                            const regex =
-                                /resolucionId=(\d+)&tipoDocumento=(\w+)/;
-                            const match = response.url.match(regex);
-
-                            if (match) {
-                                const resolucionId = match[1];
-                                const tipoDocumento = match[2];
-                                const combined = `${resolucionId}_${tipoDocumento}`;
-
-                                const file = new File(
-                                    [response.body],
-                                    combined,
-                                    {
-                                        type: response.type,
-                                    }
-                                );
-
-                                switch (fieldName) {
-                                    case 'anteproyectoAprobado':
-                                        this.FileAnteproyectoAprobado = file;
-                                        break;
-                                    case 'solicitudComite':
-                                        this.FileSolicitudComite = file;
-                                        break;
-                                    case 'solicitudConcejo':
-                                        this.FileSolicitudConcejo = file;
-                                        break;
-                                    case 'resolucionConcejo':
-                                        this.FileResolucionConcejo = file;
-                                        break;
-                                    default:
-                                        break;
-                                }
+                            const byteCharacters = atob(response);
+                            const byteNumbers = new Array(
+                                byteCharacters.length
+                            );
+                            for (let i = 0; i < byteCharacters.length; i++) {
+                                byteNumbers[i] = byteCharacters.charCodeAt(i);
+                            }
+                            const byteArray = new Uint8Array(byteNumbers);
+                            const file = new File([byteArray], fieldName, {
+                                type: response.type,
+                            });
+                            switch (fieldName) {
+                                case 'linkAnteproyectoAprobado':
+                                    this.FileAnteproyectoAprobado = file;
+                                    break;
+                                case 'linkSolicitudComite':
+                                    this.FileSolicitudComite = file;
+                                    break;
+                                case 'linkSolicitudConcejoFacultad':
+                                    this.FileSolicitudConcejo = file;
+                                    break;
+                                case 'linkResolucionGeneradaCF':
+                                    this.FileResolucionConcejo = file;
+                                    break;
+                                default:
+                                    break;
                             }
                         }
                     },
@@ -281,59 +218,101 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     loadResolucion() {
+        this.isLoading = true;
         this.resolucionService
-            .getResolucionBySolicitud(this.solicitudId)
+            .getResolucionByTrabajo(this.trabajoDeGradoId)
             .subscribe({
                 next: (response) => {
                     if (response) {
-                        this.setValuesForm(response);
+                        const data = response;
+                        this.setValuesForm(data);
                         this.resolucionForm
-                            .get('titulo')
-                            .setValue(this.tituloSeleccionado);
+                            .get('idTrabajoGrados')
+                            .setValue(this.trabajoDeGradoId);
+                        this.resolucionForm
+                            .get('numeroActaRevision')
+                            .setValue(Number(data?.numeroActaRevision));
+                        this.resolucionForm
+                            .get('numeroResolucionGeneradaCF')
+                            .setValue(Number(data?.numeroResolucionGeneradaCF));
                         this.resolucionForm
                             .get('fechaActa')
                             .setValue(
-                                response?.fechaActa
-                                    ? new Date(response.fechaActa)
+                                data?.fechaActa
+                                    ? new Date(data.fechaActa)
                                     : null
                             );
                         this.resolucionForm
                             .get('fechaResolucion')
                             .setValue(
-                                response?.fechaResolucion
-                                    ? new Date(response.fechaResolucion)
+                                data?.fechaActa
+                                    ? new Date(data.fechaResolucion)
                                     : null
                             );
                     }
                 },
+                error: (e) => this.handlerResponseException(e),
+                complete: () => {
+                    this.setup('linkAnteproyectoAprobado');
+                    this.setup('linkSolicitudComite');
+                    this.setup('linkSolicitudConcejoFacultad');
+                    this.setup('linkResolucionGeneradaCF');
+                    this.isLoading = false;
+                },
             });
-        this.resolucionForm.valueChanges
-            .pipe(
-                debounceTime(300),
-                distinctUntilChanged(),
-                takeUntil(this.unsubscribe_resolucion$),
-                switchMap(() =>
-                    this.resolucionService.updateResolucion(
-                        this.resolucionForm.value,
-                        this.solicitudId
-                    )
-                )
-            )
+    }
+
+    updateResolucion(): void {
+        const id = Number(this.route.snapshot.paramMap.get('id'));
+        this.resolucionId = id;
+        this.isLoading = true;
+        this.resolucionService
+            .updateResolucion(this.resolucionForm.value, this.resolucionId)
+            .subscribe({
+                next: (_) => {},
+                error: (e) => this.handlerResponseException(e),
+                complete: () => {
+                    timer(2000).subscribe(() => {
+                        this.isLoading = false;
+                    });
+                },
+            });
+    }
+
+    createResolucion(): void {
+        this.isLoading = true;
+        this.resolucionService
+            .createResolucion(this.resolucionForm.value)
             .subscribe({
                 next: (response) => {
                     if (response) {
-                        console.log(
-                            'Datos actualizados en el backend: resolucion',
+                        this.solicitudService.setResolucionSeleccionada(
                             response
                         );
+                        timer(2000).subscribe(() => {
+                            this.isLoading = false;
+                            this.router.navigate([
+                                `examen-de-valoracion/resolucion/editar/${response.idGeneracionResolucion}`,
+                            ]);
+                        });
                     }
                 },
-                error: () => {
-                    console.error(
-                        'Error al actualizar los datos en el backend:'
-                    );
-                },
+                error: (e) => this.handlerResponseException(e),
             });
+    }
+
+    createOrUpdateResolucion() {
+        if (this.resolucionForm.invalid) {
+            this.messageService.clear();
+            this.messageService.add(
+                warnMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS)
+            );
+            return;
+        }
+
+        this.router.url.includes('editar')
+            ? this.updateResolucion()
+            : this.createResolucion();
     }
 
     ngOnDestroy() {
@@ -343,144 +322,127 @@ export class ResolucionExamenComponent implements OnInit {
 
     onFileSelectFirst(event: any) {
         this.FileAnteproyectoAprobado = this.uploadFileAndSetValue(
-            'anteproyectoAprobado',
+            'linkAnteproyectoAprobado',
             event
         );
     }
 
     onFileSelectSecond(event: any) {
         this.FileSolicitudComite = this.uploadFileAndSetValue(
-            'solicitudComite',
+            'linkSolicitudComite',
             event
         );
     }
 
     onFileSelectThird(event: any) {
         this.FileSolicitudConcejo = this.uploadFileAndSetValue(
-            'solicitudConcejo',
+            'linkSolicitudConcejoFacultad',
             event
         );
     }
 
     onFileSelectFourth(event: any) {
         this.FileResolucionConcejo = this.uploadFileAndSetValue(
-            'resolucionConcejo',
+            'linkResolucionGeneradaCF',
             event
         );
     }
 
     onFileClear(field: string) {
-        if (field == 'anteproyectoAprobado') {
+        if (field == 'linkAnteproyectoAprobado') {
             this.FileAnteproyectoAprobado = null;
             this.AnteproyectoAprobado.clear();
-            this.solicitudService
-                .deleteFile(this.resolucionId, 'resolucionId', field)
-                .subscribe({
-                    next: () => {
-                        this.resolucionForm.get('anteproyectoAprobado').reset();
-                        this.messageService.add(
-                            infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
-                        );
-                    },
-                    error: (e) => this.handlerResponseException(e),
-                });
+            this.resolucionForm.get('linkAnteproyectoAprobado').reset();
         }
-        if (field == 'solicitudComite') {
+        if (field == 'linkSolicitudComite') {
             this.FileSolicitudComite = null;
             this.SolicitudComite.clear();
-            this.solicitudService
-                .deleteFile(this.resolucionId, 'resolucionId', field)
-                .subscribe({
-                    next: () => {
-                        this.resolucionForm.get('solicitudComite').reset();
-                        this.messageService.add(
-                            infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
-                        );
-                    },
-                    error: (e) => this.handlerResponseException(e),
-                });
+            this.resolucionForm.get('linkSolicitudComite').reset();
         }
-        if (field == 'solicitudConcejo') {
+        if (field == 'linkSolicitudConcejoFacultad') {
             this.FileSolicitudConcejo = null;
             this.SolicitudConcejo.clear();
-            this.solicitudService
-                .deleteFile(this.resolucionId, 'resolucionId', field)
-                .subscribe({
-                    next: () => {
-                        this.resolucionForm.get('solicitudConcejo').reset();
-                        this.messageService.add(
-                            infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
-                        );
-                    },
-                    error: (e) => this.handlerResponseException(e),
-                });
+            this.resolucionForm.get('linkSolicitudConcejoFacultad').reset();
         }
-        if (field == 'resolucionConcejo') {
+        if (field == 'linkResolucionGeneradaCF') {
             this.FileResolucionConcejo = null;
             this.ResolucionConcejo.clear();
-            this.solicitudService
-                .deleteFile(this.resolucionId, 'resolucionId', field)
-                .subscribe({
-                    next: () => {
-                        this.resolucionForm.get('resolucionConcejo').reset();
-                        this.messageService.add(
-                            infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
-                        );
-                    },
-                    error: (e) => this.handlerResponseException(e),
-                });
+            this.resolucionForm.get('linkResolucionGeneradaCF').reset();
         }
+    }
+
+    convertFileToBase64(file: File): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64String = reader.result as string;
+                const base64 = base64String.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = (error) => {
+                reject(error);
+            };
+            reader.readAsDataURL(file);
+        });
     }
 
     uploadFileAndSetValue(fileControlName: string, event: any) {
         const selectedFiles: FileList = event.files;
-
         if (selectedFiles && selectedFiles.length > 0) {
             const selectedFile = selectedFiles[0];
-
-            this.solicitudService
-                .uploadFile(
-                    this.resolucionId,
-                    'resolucionId',
-                    selectedFile,
-                    fileControlName
-                )
-                .subscribe({
-                    next: () =>
-                        this.messageService.add(
-                            infoMessage(Mensaje.GUARDADO_EXITOSO)
-                        ),
-                    error: (e) => {
-                        this.messageService.add(
-                            warnMessage(Mensaje.ARCHIVO_DEMASIADO_GRANDE)
-                        ),
-                            this.handlerResponseException(e);
-                    },
+            const fileType = selectedFile.type.split('/')[1];
+            this.convertFileToBase64(selectedFile)
+                .then((base64) => {
+                    this.resolucionForm
+                        .get(fileControlName)
+                        .setValue(`${fileControlName}.${fileType}-${base64}`);
+                })
+                .catch((error) => {
+                    console.error(
+                        'Error al convertir el archivo a base64:',
+                        error
+                    );
                 });
-            this.resolucionForm.get(fileControlName).setValue(fileControlName);
             return selectedFile;
         }
         return null;
     }
 
     getFileAndSetValue(fieldName: string) {
-        // this.resolucionForm.get(fieldName).setValue(fieldName);
         this.solicitudService
-            .getFile(this.resolucionId, 'resolucionId', fieldName)
+            .getFile(this.resolucionForm.get(fieldName).value)
             .subscribe({
-                next: (response: any) => {
-                    const url = window.URL.createObjectURL(response.body);
+                next: (response: string) => {
+                    const rutaArchivo =
+                        this.resolucionForm.get(fieldName).value;
+                    const byteCharacters = atob(response);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray]);
+                    const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
+                    const extension = rutaArchivo.slice(
+                        rutaArchivo.lastIndexOf('.') + 1
+                    );
                     document.body.appendChild(a);
                     a.style.display = 'none';
                     a.href = url;
-                    a.download = fieldName;
+                    a.download = fieldName + `.${extension}`;
                     a.click();
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
                 },
-                error: (error: any) => {
-                    this.handlerResponseException(error);
+                error: (response) => {
+                    if (response) {
+                        this.messageService.add(
+                            warnMessage(
+                                'Modifica la informacion para ver los cambios.'
+                            )
+                        );
+                    }
                 },
             });
     }
@@ -499,7 +461,7 @@ export class ResolucionExamenComponent implements OnInit {
         });
     }
 
-    mapDocenteLabel(docente: Docente) {
+    mapDirectorLabel(docente: Docente) {
         const ultimaUniversidad =
             docente.titulos.length > 0
                 ? docente.titulos[docente.titulos.length - 1].universidad
@@ -514,18 +476,13 @@ export class ResolucionExamenComponent implements OnInit {
         };
     }
 
-    mapExpertoLabel(experto: Experto) {
-        const ultimaUniversidad =
-            experto.titulos.length > 0
-                ? experto.titulos[experto.titulos.length - 1].universidad
-                : 'Sin título universitario';
-
+    mapCodirector(experto: any) {
         return {
             id: experto.id,
-            nombre: experto.persona.nombre,
-            apellido: experto.persona.apellido,
-            correo: experto.persona.correoElectronico,
-            universidad: ultimaUniversidad,
+            nombre: experto.nombre,
+            apellido: experto.apellido,
+            correo: experto.correo,
+            universidad: experto.universidad,
         };
     }
 
@@ -534,9 +491,9 @@ export class ResolucionExamenComponent implements OnInit {
         ref.onClose.subscribe({
             next: (response) => {
                 if (response) {
-                    const docente = this.mapDocenteLabel(response);
-                    this.directorSeleccionado = docente;
-                    this.director.setValue(docente.id);
+                    const director = this.mapDirectorLabel(response);
+                    this.directorSeleccionado = director;
+                    this.director.setValue(director.id);
                 }
             },
         });
@@ -547,9 +504,9 @@ export class ResolucionExamenComponent implements OnInit {
         ref.onClose.subscribe({
             next: (response) => {
                 if (response) {
-                    const experto = this.mapExpertoLabel(response);
-                    this.codirectorSeleccionado = experto;
-                    this.codirector.setValue(experto.id);
+                    const coodirector = this.mapCodirector(response);
+                    this.codirectorSeleccionado = coodirector;
+                    this.codirector.setValue(coodirector.id);
                 }
             },
         });
@@ -565,9 +522,9 @@ export class ResolucionExamenComponent implements OnInit {
         this.directorSeleccionado = null;
     }
 
-    redirectToSolicitud(solicitudId: number) {
+    redirectToSolicitud(trabajoDeGradoId: number) {
         this.router.navigate([
-            `examen-de-valoracion/solicitud/editar/${solicitudId}`,
+            `examen-de-valoracion/solicitud/editar/${trabajoDeGradoId}`,
         ]);
     }
 
@@ -592,15 +549,18 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        if (response.status != 501) return;
-        const mapException = mapResponseException(response.error);
-        mapException.forEach((value, _) => {
-            this.messageService.add(errorMessage(value));
-        });
+        // if (response.status != 501) return;
+        // const mapException = mapResponseException(response.error);
+        // mapException.forEach((value, _) => {
+        //     this.messageService.add(errorMessage(value));
+        // });
+        this.messageService.add(
+            errorMessage(response.error ? response.error : response)
+        );
     }
 
     isActiveIndex(): Boolean {
-        if (this.router.url.includes('editar')) {
+        if (this.router.url.includes('resolucion')) {
             return true;
         }
         return false;

@@ -32,7 +32,6 @@ export class EmpresaEgresadoComponent implements OnInit {
     loading = false;
     estados: SelectItem[] = enumToSelectItems(EstadoEmpresa);
 
-
     constructor(
         private fb: FormBuilder,
         private ref: DynamicDialogRef,
@@ -43,14 +42,14 @@ export class EmpresaEgresadoComponent implements OnInit {
 
     ngOnInit() {
         this.initForm();
-        if (this.config.data?.id) {
+        if (this.config.data?.empresaId) {
             this.extractEmpresaIdFromData();
         }
     }
 
     extractEmpresaIdFromData(): void {
         this.editMode = true;
-        this.empresaId = Number(this.config.data.id);
+        this.empresaId = Number(this.config.data.empresaId);
         this.loadDataForEdit(this.empresaId);
     }
 
@@ -60,50 +59,29 @@ export class EmpresaEgresadoComponent implements OnInit {
             ubicacion: [null, Validators.required],
             cargo: [null, Validators.required],
             jefeDirecto: [null, Validators.required],
-            telefonoEmpresa: [null, Validators.required],
-            correoEmpresa: [null, [Validators.required, Validators.email]],
+            telefono: [null, Validators.required],
+            correo: [null, [Validators.required, Validators.email]],
             estado: [null, Validators.required],
+            idEstudiante: [this.config.data?.estudianteId, Validators.required],
         });
 
         this.formReady.emit(this.empresaForm);
+    }
+
+    setValuesForm(empresa: Empresa) {
+        this.empresaForm.patchValue({
+            ...empresa,
+        });
     }
 
     getFormControl(formControlName: string): FormControl {
         return this.empresaForm.get(formControlName) as FormControl;
     }
 
-    handlerResponseException(response: any) {
-        if (response.status !== 501) return;
-
-        const mapException = mapResponseException(response.error);
-        mapException.forEach((value) => {
-            this.messageService.add(errorMessage(value));
-        });
-    }
-
-    onCancel() {
-        this.ref.close();
-    }
-
-    mapRequest(): any {
-        const value = this.empresaForm.getRawValue();
-        return {
-            nombre: value.nombre,
-            ubicacion: value.ubicacion,
-            cargo: value.cargo,
-            jefeDirecto: value.jefeDirecto,
-            telefono: value.telefonoEmpresa,
-            correo: value.correoEmpresa,
-            estado: value.estado,
-        };
-    }
-
     addEmpresa() {
-        const request = this.mapRequest();
         this.loading = true;
-
         this.empresaService
-            .addEmpresa(request)
+            .addEmpresa(this.empresaForm.value)
             .subscribe({
                 next: () => this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO),
                 error: (e) => this.handleErrorResponse(e),
@@ -119,17 +97,10 @@ export class EmpresaEgresadoComponent implements OnInit {
         });
     }
 
-    setValuesForm(empresa: Empresa) {
-        this.empresaForm.patchValue({
-            ...empresa,
-        });
-    }
-
     updateEmpresa() {
-        const request = this.mapRequest();
         this.loading = true;
         this.empresaService
-            .updateEmpresa(this.empresaId, request)
+            .updateEmpresa(this.empresaId, this.empresaForm.value)
             .subscribe({
                 next: () =>
                     this.handleSuccessMessage(Mensaje.ACTUALIZACION_EXITOSA),
@@ -145,6 +116,15 @@ export class EmpresaEgresadoComponent implements OnInit {
             return;
         }
         this.editMode ? this.updateEmpresa() : this.addEmpresa();
+    }
+
+    handlerResponseException(response: any) {
+        if (response.status !== 501) return;
+
+        const mapException = mapResponseException(response.error);
+        mapException.forEach((value) => {
+            this.messageService.add(errorMessage(value));
+        });
     }
 
     private handleSuccessMessage(message: string) {

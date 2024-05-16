@@ -29,6 +29,14 @@
     </div>
     <div class="flex mt-4 justify-content-between">
         <div class="flex align-items-center column-gap-4">
+            <div class="flex align-items-center">
+                <button
+                    pButton
+                    icon="pi pi-chevron-left"
+                    label="Salir"
+                    (click)="redirectToBandeja()"
+                ></button>
+            </div>
             <button
                 pButton
                 type="button"
@@ -36,7 +44,7 @@
                 class="w-15rem p-button-secondary"
                 severity="secondary"
                 label="Solicitud examen de valoración"
-                (click)="redirectToSolicitud(this.solicitudId)"
+                (click)="redirectToSolicitud(this.trabajoDeGradoId)"
             ></button>
             <button
                 pButton
@@ -44,9 +52,7 @@
                 icon="pi pi-envelope"
                 class="w-15rem p-button-secondary"
                 label="Respuesta al examen de valoración"
-                [disabled]="
-                    !!this.respuestaId ? !!this.respuestaId : isActiveIndex()
-                "
+                [disabled]="isActiveIndex()"
             ></button>
             <button
                 pButton
@@ -65,15 +71,6 @@
                 (click)="redirectToSustentacion(this.sustentacionId)"
             ></button>
         </div>
-        <div class="flex align-items-center">
-            <button
-                *ngIf="editMode"
-                pButton
-                icon="pi pi-save"
-                label="Guardar"
-                (click)="redirectToBandeja()"
-            ></button>
-        </div>
     </div>
     <ng-template class="w-full" pTemplate="footer">
         <form [formGroup]="respuestaForm" enctype="multipart/form-data">
@@ -90,12 +87,9 @@
                         >
                     </div>
                     <div class="col-10 col-input">
-                        <input
-                            pInputText
-                            [maxLength]="250"
-                            class="p-inputtext-md w-full"
-                            formControlName="titulo"
-                        />
+                        <span class="p-inputtext-md w-full">{{
+                            tituloSeleccionado
+                        }}</span>
                     </div>
                 </div>
                 <div class="field grid">
@@ -115,6 +109,7 @@
                         >
                     </div>
                 </div>
+
                 <div class="field grid">
                     <div style="max-width: 90%" class="col-12 flex m-auto">
                         <div formArrayName="expertoEvaluaciones" class="w-full">
@@ -125,15 +120,57 @@
                                 "
                             >
                                 <div
-                                    class="flex align-items-center justify-content-end mt-4"
+                                    class="flex align-items-center justify-content-end mt-4 column-gap-2"
                                 >
                                     <button
+                                        *ngIf="
+                                            isExamenCreado(
+                                                'expertoEvaluaciones',
+                                                i
+                                            )
+                                        "
                                         pButton
                                         class="p-button-danger"
                                         type="button"
                                         icon="pi pi-trash"
                                         (click)="
-                                            eliminarEvaluacion(
+                                            eliminarRespuestaExamen(
+                                                'expertoEvaluaciones',
+                                                i
+                                            )
+                                        "
+                                    ></button>
+                                    <button
+                                        *ngIf="
+                                            !isExamenCreado(
+                                                'expertoEvaluaciones',
+                                                i
+                                            )
+                                        "
+                                        pButton
+                                        class="p-button-secondary"
+                                        type="button"
+                                        icon="pi pi-save"
+                                        (click)="
+                                            createRespuestaExamen(
+                                                'expertoEvaluaciones',
+                                                i
+                                            )
+                                        "
+                                    ></button>
+                                    <button
+                                        *ngIf="
+                                            isExamenCreado(
+                                                'expertoEvaluaciones',
+                                                i
+                                            )
+                                        "
+                                        pButton
+                                        class="p-button-secondary"
+                                        type="button"
+                                        icon="pi pi-pencil"
+                                        (click)="
+                                            updateRespuestaExamen(
                                                 'expertoEvaluaciones',
                                                 i
                                             )
@@ -158,13 +195,13 @@
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
-                                                            'docFormatoB' + i
+                                                            'linkFormatoB' + i
                                                         "
                                                         [arrayName]="
                                                             'expertoEvaluaciones'
                                                         "
                                                         [filename]="
-                                                            'docFormatoB' + i
+                                                            'linkFormatoB' + i
                                                         "
                                                         [selected]="
                                                             selectedFiles
@@ -191,21 +228,21 @@
                                                         "
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'expertoEvaluaciones.docFormatoB' +
+                                                                'expertoEvaluaciones.linkFormatoB' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "expertoEvaluaciones.docFormatoB" +
+                                                                "expertoEvaluaciones.linkFormatoB" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "expertoEvaluaciones.docFormatoB" +
+                                                                "expertoEvaluaciones.linkFormatoB" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -215,9 +252,13 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'expertoEvaluaciones.docFormatoB' +
+                                                            'expertoEvaluaciones.linkFormatoB' +
                                                                 i
-                                                        ]
+                                                        ] &&
+                                                        isExamenCreado(
+                                                            'expertoEvaluaciones',
+                                                            i
+                                                        )
                                                     "
                                                     pButton
                                                     class="p-button-secondary"
@@ -226,7 +267,7 @@
                                                     (click)="
                                                         getFileAndSetValue(
                                                             'expertoEvaluaciones',
-                                                            'docFormatoB',
+                                                            'linkFormatoB',
                                                             i
                                                         )
                                                     "
@@ -236,7 +277,7 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'expertoEvaluaciones.docFormatoB' +
+                                                        'expertoEvaluaciones.linkFormatoB' +
                                                             i
                                                     ]
                                                 "
@@ -262,13 +303,13 @@
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
-                                                            'docFormatoC' + i
+                                                            'linkFormatoC' + i
                                                         "
                                                         [arrayName]="
                                                             'expertoEvaluaciones'
                                                         "
                                                         [filename]="
-                                                            'docFormatoC' + i
+                                                            'linkFormatoC' + i
                                                         "
                                                         [selected]="
                                                             selectedFiles
@@ -295,21 +336,21 @@
                                                         "
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'expertoEvaluaciones.docFormatoC' +
+                                                                'expertoEvaluaciones.linkFormatoC' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "expertoEvaluaciones.docFormatoC" +
+                                                                "expertoEvaluaciones.linkFormatoC" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "expertoEvaluaciones.docFormatoC" +
+                                                                "expertoEvaluaciones.linkFormatoC" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -319,9 +360,13 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'expertoEvaluaciones.docFormatoC' +
+                                                            'expertoEvaluaciones.linkFormatoC' +
                                                                 i
-                                                        ]
+                                                        ] &&
+                                                        isExamenCreado(
+                                                            'expertoEvaluaciones',
+                                                            i
+                                                        )
                                                     "
                                                     pButton
                                                     class="p-button-secondary"
@@ -330,7 +375,7 @@
                                                     (click)="
                                                         getFileAndSetValue(
                                                             'expertoEvaluaciones',
-                                                            'docFormatoC',
+                                                            'linkFormatoC',
                                                             i
                                                         )
                                                     "
@@ -340,7 +385,7 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'expertoEvaluaciones.docFormatoC' +
+                                                        'expertoEvaluaciones.linkFormatoC' +
                                                             i
                                                     ]
                                                 "
@@ -366,14 +411,14 @@
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
-                                                            'docObservaciones' +
+                                                            'linkObservaciones' +
                                                             i
                                                         "
                                                         [arrayName]="
                                                             'expertoEvaluaciones'
                                                         "
                                                         [filename]="
-                                                            'docObservaciones' +
+                                                            'linkObservaciones' +
                                                             i
                                                         "
                                                         [selected]="
@@ -401,21 +446,21 @@
                                                         "
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'expertoEvaluaciones.docObservaciones' +
+                                                                'expertoEvaluaciones.linkObservaciones' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "expertoEvaluaciones.docObservaciones" +
+                                                                "expertoEvaluaciones.linkObservaciones" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "expertoEvaluaciones.docObservaciones" +
+                                                                "expertoEvaluaciones.linkObservaciones" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -425,9 +470,13 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'expertoEvaluaciones.docObservaciones' +
+                                                            'expertoEvaluaciones.linkObservaciones' +
                                                                 i
-                                                        ]
+                                                        ] &&
+                                                        isExamenCreado(
+                                                            'expertoEvaluaciones',
+                                                            i
+                                                        )
                                                     "
                                                     pButton
                                                     class="p-button-secondary"
@@ -436,7 +485,7 @@
                                                     (click)="
                                                         getFileAndSetValue(
                                                             'expertoEvaluaciones',
-                                                            'docObservaciones',
+                                                            'linkObservaciones',
                                                             i
                                                         )
                                                     "
@@ -446,7 +495,7 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'expertoEvaluaciones.docObservaciones' +
+                                                        'expertoEvaluaciones.linkObservaciones' +
                                                             i
                                                     ]
                                                 "
@@ -470,18 +519,18 @@
                                             >
                                                 <p-radioButton
                                                     [inputId]="
-                                                        'estadoRespuestaExperto' +
+                                                        'respuestaExamenValoracionExperto' +
                                                         i
                                                     "
                                                     [value]="estado"
                                                     [formControlName]="
-                                                        'estadoRespuestaExperto' +
+                                                        'respuestaExamenValoracionExperto' +
                                                         i
                                                     "
                                                 ></p-radioButton>
                                                 <label
                                                     [for]="
-                                                        'estadoRespuestaExperto' +
+                                                        'respuestaExamenValoracionExperto' +
                                                         i
                                                     "
                                                     class="ml-2"
@@ -505,20 +554,20 @@
                                                 expertoEvaluaciones
                                                     .at(i)
                                                     .get(
-                                                        'estadoRespuestaExperto' +
+                                                        'respuestaExamenValoracionExperto' +
                                                             i
                                                     )?.value == 'Aplazado' ||
                                                 expertoEvaluaciones
                                                     .at(i)
                                                     .get(
-                                                        'estadoRespuestaExperto' +
+                                                        'respuestaExamenValoracionExperto' +
                                                             i
                                                     )?.value == 'No Aprobado'
                                             "
                                         >
                                             <p-calendar
                                                 [formControlName]="
-                                                    'fechaCorrecciones' + i
+                                                    'fechaMaximaEntrega' + i
                                                 "
                                                 [showIcon]="true"
                                                 dateFormat="dd.mm.yy"
@@ -573,15 +622,57 @@
                                 "
                             >
                                 <div
-                                    class="flex align-items-center justify-content-end mt-4"
+                                    class="flex align-items-center justify-content-end mt-4 column-gap-2"
                                 >
                                     <button
+                                        *ngIf="
+                                            isExamenCreado(
+                                                'docenteEvaluaciones',
+                                                i
+                                            )
+                                        "
                                         pButton
                                         class="p-button-danger"
                                         type="button"
                                         icon="pi pi-trash"
                                         (click)="
-                                            eliminarEvaluacion(
+                                            eliminarRespuestaExamen(
+                                                'docenteEvaluaciones',
+                                                i
+                                            )
+                                        "
+                                    ></button>
+                                    <button
+                                        *ngIf="
+                                            !isExamenCreado(
+                                                'docenteEvaluaciones',
+                                                i
+                                            )
+                                        "
+                                        pButton
+                                        class="p-button-secondary"
+                                        type="button"
+                                        icon="pi pi-save"
+                                        (click)="
+                                            createRespuestaExamen(
+                                                'docenteEvaluaciones',
+                                                i
+                                            )
+                                        "
+                                    ></button>
+                                    <button
+                                        *ngIf="
+                                            isExamenCreado(
+                                                'docenteEvaluaciones',
+                                                i
+                                            )
+                                        "
+                                        pButton
+                                        class="p-button-secondary"
+                                        type="button"
+                                        icon="pi pi-pencil"
+                                        (click)="
+                                            updateRespuestaExamen(
                                                 'docenteEvaluaciones',
                                                 i
                                             )
@@ -606,13 +697,13 @@
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
-                                                            'docFormatoB' + i
+                                                            'linkFormatoB' + i
                                                         "
                                                         [arrayName]="
                                                             'docenteEvaluaciones'
                                                         "
                                                         [filename]="
-                                                            'docFormatoB' + i
+                                                            'linkFormatoB' + i
                                                         "
                                                         [selected]="
                                                             selectedFiles
@@ -639,21 +730,21 @@
                                                         "
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'docenteEvaluaciones.docFormatoB' +
+                                                                'docenteEvaluaciones.linkFormatoB' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "docenteEvaluaciones.docFormatoB" +
+                                                                "docenteEvaluaciones.linkFormatoB" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "docenteEvaluaciones.docFormatoB" +
+                                                                "docenteEvaluaciones.linkFormatoB" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -663,9 +754,13 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'docenteEvaluaciones.docFormatoB' +
+                                                            'docenteEvaluaciones.linkFormatoB' +
                                                                 i
-                                                        ]
+                                                        ] &&
+                                                        isExamenCreado(
+                                                            'docenteEvaluaciones',
+                                                            i
+                                                        )
                                                     "
                                                     pButton
                                                     class="p-button-secondary"
@@ -674,7 +769,7 @@
                                                     (click)="
                                                         getFileAndSetValue(
                                                             'docenteEvaluaciones',
-                                                            'docFormatoB',
+                                                            'linkFormatoB',
                                                             i
                                                         )
                                                     "
@@ -684,7 +779,7 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'docenteEvaluaciones.docFormatoB' +
+                                                        'docenteEvaluaciones.linkFormatoB' +
                                                             i
                                                     ]
                                                 "
@@ -710,13 +805,13 @@
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
-                                                            'docFormatoC' + i
+                                                            'linkFormatoC' + i
                                                         "
                                                         [arrayName]="
                                                             'docenteEvaluaciones'
                                                         "
                                                         [filename]="
-                                                            'docFormatoC' + i
+                                                            'linkFormatoC' + i
                                                         "
                                                         [selected]="
                                                             selectedFiles
@@ -743,21 +838,21 @@
                                                         "
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'docenteEvaluaciones.docFormatoC' +
+                                                                'docenteEvaluaciones.linkFormatoC' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "docenteEvaluaciones.docFormatoC" +
+                                                                "docenteEvaluaciones.linkFormatoC" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "docenteEvaluaciones.docFormatoC" +
+                                                                "docenteEvaluaciones.linkFormatoC" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -767,9 +862,13 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'docenteEvaluaciones.docFormatoC' +
+                                                            'docenteEvaluaciones.linkFormatoC' +
                                                                 i
-                                                        ]
+                                                        ] &&
+                                                        isExamenCreado(
+                                                            'docenteEvaluaciones',
+                                                            i
+                                                        )
                                                     "
                                                     pButton
                                                     class="p-button-secondary"
@@ -778,7 +877,7 @@
                                                     (click)="
                                                         getFileAndSetValue(
                                                             'docenteEvaluaciones',
-                                                            'docFormatoC',
+                                                            'linkFormatoC',
                                                             i
                                                         )
                                                     "
@@ -788,7 +887,7 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'docenteEvaluaciones.docFormatoC' +
+                                                        'docenteEvaluaciones.linkFormatoC' +
                                                             i
                                                     ]
                                                 "
@@ -814,14 +913,14 @@
                                                 >
                                                     <app-custom-file-upload
                                                         [formControlName]="
-                                                            'docObservaciones' +
+                                                            'linkObservaciones' +
                                                             i
                                                         "
                                                         [arrayName]="
                                                             'docenteEvaluaciones'
                                                         "
                                                         [filename]="
-                                                            'docObservaciones' +
+                                                            'linkObservaciones' +
                                                             i
                                                         "
                                                         [selected]="
@@ -849,21 +948,21 @@
                                                         "
                                                         *ngIf="
                                                             selectedFiles[
-                                                                'docenteEvaluaciones.docObservaciones' +
+                                                                'docenteEvaluaciones.linkObservaciones' +
                                                                     i
                                                             ]
                                                         "
                                                     >
                                                         {{
                                                             selectedFiles[
-                                                                "docenteEvaluaciones.docObservaciones" +
+                                                                "docenteEvaluaciones.linkObservaciones" +
                                                                     i
                                                             ].name
                                                         }}
                                                         -
                                                         {{
                                                             selectedFiles[
-                                                                "docenteEvaluaciones.docObservaciones" +
+                                                                "docenteEvaluaciones.linkObservaciones" +
                                                                     i
                                                             ].size | bytesToKb
                                                         }}
@@ -873,9 +972,13 @@
                                                 <button
                                                     *ngIf="
                                                         selectedFiles[
-                                                            'docenteEvaluaciones.docObservaciones' +
+                                                            'docenteEvaluaciones.linkObservaciones' +
                                                                 i
-                                                        ]
+                                                        ] &&
+                                                        isExamenCreado(
+                                                            'docenteEvaluaciones',
+                                                            i
+                                                        )
                                                     "
                                                     pButton
                                                     class="p-button-secondary"
@@ -884,7 +987,7 @@
                                                     (click)="
                                                         getFileAndSetValue(
                                                             'docenteEvaluaciones',
-                                                            'docObservaciones',
+                                                            'linkObservaciones',
                                                             i
                                                         )
                                                     "
@@ -894,7 +997,7 @@
                                                 class="mt-2"
                                                 *ngIf="
                                                     !selectedFiles[
-                                                        'docenteEvaluaciones.docObservaciones' +
+                                                        'docenteEvaluaciones.linkObservaciones' +
                                                             i
                                                     ]
                                                 "
@@ -918,18 +1021,18 @@
                                             >
                                                 <p-radioButton
                                                     [inputId]="
-                                                        'estadoRespuestaDocente' +
+                                                        'respuestaExamenValoracionDocente' +
                                                         i
                                                     "
                                                     [value]="estado"
                                                     [formControlName]="
-                                                        'estadoRespuestaDocente' +
+                                                        'respuestaExamenValoracionDocente' +
                                                         i
                                                     "
                                                 ></p-radioButton>
                                                 <label
                                                     [for]="
-                                                        'estadoRespuestaDocente' +
+                                                        'respuestaExamenValoracionDocente' +
                                                         i
                                                     "
                                                     class="ml-2"
@@ -953,20 +1056,20 @@
                                                 docenteEvaluaciones
                                                     .at(i)
                                                     .get(
-                                                        'estadoRespuestaDocente' +
+                                                        'respuestaExamenValoracionDocente' +
                                                             i
                                                     )?.value == 'Aplazado' ||
                                                 docenteEvaluaciones
                                                     .at(i)
                                                     .get(
-                                                        'estadoRespuestaDocente' +
+                                                        'respuestaExamenValoracionDocente' +
                                                             i
                                                     )?.value == 'No Aprobado'
                                             "
                                         >
                                             <p-calendar
                                                 [formControlName]="
-                                                    'fechaCorrecciones' + i
+                                                    'fechaMaximaEntrega' + i
                                                 "
                                                 [showIcon]="true"
                                                 dateFormat="dd.mm.yy"
@@ -994,7 +1097,28 @@
                 <p-divider layout="horizontal" [align]="'center'"
                     ><b></b
                 ></p-divider>
-                <textarea name="" id="" cols="30" rows="10"></textarea>
+                <div class="flex mt-4 align-items-center">
+                    <div class="flex-grow-0">
+                        <p-checkbox
+                            label="Estado del examen de valoración"
+                            [binary]="true"
+                            [formControl]="
+                                respuestaForm.controls['estadoFinalizado']
+                            "
+                        ></p-checkbox>
+                    </div>
+                    <span class="p-float-label ml-4">
+                        <textarea
+                            id="float-input"
+                            rows="5"
+                            cols="30"
+                            pInputTextarea
+                            [autoResize]="true"
+                            formControlName="observacion"
+                        ></textarea>
+                        <label for="float-input">Observación</label>
+                    </span>
+                </div>
             </div>
         </form>
     </ng-template>

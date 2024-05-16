@@ -3,9 +3,6 @@ import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { DocenteService } from '../../services/docente.service';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { Router } from '@angular/router';
-import { mapResponseException } from 'src/app/core/utils/exception-util';
-import { errorMessage } from 'src/app/core/utils/message-util';
-import { MessageService } from 'primeng/api';
 
 @Component({
     selector: 'app-buscador-docentes',
@@ -13,63 +10,14 @@ import { MessageService } from 'primeng/api';
     styleUrls: ['./buscador-docentes.component.scss'],
 })
 export class BuscadorDocentesComponent implements OnInit {
-    docentes: Docente[] = [
-        {
-            id: 1,
-            estado: 'Activo',
-            persona: {
-                id: 101,
-                identificacion: 123456789,
-                nombre: 'Juan',
-                apellido: 'Pérez',
-                correoElectronico: 'juan.perez@example.com',
-                telefono: '123-456-7890',
-                genero: 'Masculino',
-                tipoIdentificacion: 'Cédula',
-            },
-            codigo: 'DOC001',
-            facultad: 'Facultad de Ciencias',
-            departamento: 'Departamento de Física',
-            escalafon: 'Profesor Asociado',
-            observacion: 'Docente destacado en investigación',
-            lineasInvestigacion: [
-                {
-                    id: 201,
-                    titulo: 'Física de partículas',
-                    categoria: 'Investigación Básica',
-                },
-                {
-                    id: 202,
-                    titulo: 'Física cuántica',
-                    categoria: 'Investigación Básica',
-                },
-            ],
-            tipoVinculacion: 'Planta',
-            titulos: [
-                {
-                    id: 301,
-                    abreviatura: 'Ph.D.',
-                    universidad: 'Universidad XYZ',
-                    categoriaMinCiencia: 'Doctor',
-                },
-                {
-                    id: 302,
-                    abreviatura: 'M.Sc.',
-                    universidad: 'Universidad ABC',
-                    categoriaMinCiencia: 'Maestría',
-                },
-            ],
-        },
-        // Otros cinco docentes con datos ficticios similares...
-    ];
+    docentes: Docente[];
     docenteSeleccionado: Docente;
     loading: boolean;
 
     constructor(
         private docenteService: DocenteService,
         private ref: DynamicDialogRef,
-        private router: Router,
-        private messageService: MessageService
+        private router: Router
     ) {}
 
     ngOnInit(): void {
@@ -83,23 +31,16 @@ export class BuscadorDocentesComponent implements OnInit {
             .subscribe({
                 next: (response) =>
                     (this.docentes = this.getDocentesActivos(response)),
-                error: (error: any) => {
-                    this.handlerResponseException(error);
-                },
             })
             .add(() => (this.loading = false));
     }
 
     filterDocentes(filter: string) {
         if (filter?.trim()) {
-            this.loading = true;
-            this.docenteService
-                .filterDocentes(filter)
-                .subscribe({
-                    next: (response) =>
-                        (this.docentes = this.getDocentesActivos(response)),
-                })
-                .add(() => (this.loading = false));
+            this.docenteService.filterDocentes(filter).subscribe({
+                next: (response) =>
+                    (this.docentes = this.getDocentesActivos(response)),
+            });
         } else {
             this.listDocentes();
         }
@@ -123,13 +64,5 @@ export class BuscadorDocentesComponent implements OnInit {
     onRegistrar() {
         this.ref.close();
         this.router.navigate(['docentes/registrar']);
-    }
-
-    handlerResponseException(response: any) {
-        if (response.status != 501) return;
-        const mapException = mapResponseException(response.error);
-        mapException.forEach((value, _) => {
-            this.messageService.add(errorMessage(value));
-        });
     }
 }

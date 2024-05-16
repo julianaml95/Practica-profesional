@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { backend } from 'src/app/core/constants/api-url';
+import { backendGestionTrabajoDeGrado } from 'src/app/core/constants/api-url';
 import { getHeaders } from 'src/app/core/constants/header';
 import { Solicitud } from '../models/solicitud';
 import { Estudiante } from '../../gestion-estudiantes/models/estudiante';
@@ -17,6 +17,7 @@ export class SolicitudService {
     private estudianteSeleccionadoSubject = new BehaviorSubject<Estudiante>(
         null
     );
+    private trabajoSeleccionadoSubject = new BehaviorSubject<any>(null);
     private sustentacionSeleccionadaSubject = new BehaviorSubject<any>(null);
     private resolucionSeleccionadaSubject = new BehaviorSubject<any>(null);
     private evaluacionSeleccionadaSubject = new BehaviorSubject<any>(null);
@@ -32,6 +33,9 @@ export class SolicitudService {
 
     estudianteSeleccionado$: Observable<Estudiante> =
         this.estudianteSeleccionadoSubject.asObservable();
+
+    trabajoSeleccionadoSubject$: Observable<any> =
+        this.trabajoSeleccionadoSubject.asObservable();
 
     sustentacionSeleccionadaSubject$: Observable<any> =
         this.sustentacionSeleccionadaSubject.asObservable();
@@ -59,6 +63,10 @@ export class SolicitudService {
 
     setEstudianteSeleccionado(estudiante: Estudiante) {
         this.estudianteSeleccionadoSubject.next(estudiante);
+    }
+
+    setTrabajoSeleccionado(sustentacion: any) {
+        this.trabajoSeleccionadoSubject.next(sustentacion);
     }
 
     setSustentacionSeleccionada(sustentacion: any) {
@@ -92,89 +100,88 @@ export class SolicitudService {
         this.evaluadorExternoSeleccionadoSubject.next(experto);
     }
 
-    createSolicitud(solicitud: Solicitud) {
-        return this.http.post<any>(backend('solicitud'), solicitud, {
-            headers: getHeaders(),
-        });
+    getEstudiantes() {
+        return this.http.get<Estudiante[]>(
+            backendGestionTrabajoDeGrado(`inicio_trabajo_grado`),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+    createTrabajoDeGrado(id: number) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado(`inicio_trabajo_grado/${id}`),
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
-    updateSolicitud(solicitud: Solicitud, id: number) {
-        return this.http.patch<any>(backend(`solicitud/${id}`), solicitud, {
-            headers: getHeaders(),
-        });
+    getTrabajoDeGrado(id: number) {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `inicio_trabajo_grado/trabajo_grado/${id}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
-    listSolicitudes(id: number): Observable<Solicitud[]> {
-        return this.http.get<Solicitud[]>(backend(`solicitud`), {
-            headers: getHeaders(),
-            params: {
-                estudianteId: id,
-            },
-        });
+    listTrabajosDeGrado(id: number) {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(`inicio_trabajo_grado/${id}`),
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
-    deleteSolicitud(id: number) {
-        return this.http.delete<any>(backend(`solicitud/${id}`), {
-            headers: getHeaders(),
-        });
+    deleteTrabajoDeGrado(id: number) {
+        return this.http.delete<any>(
+            backendGestionTrabajoDeGrado(`inicio_trabajo_grado/${id}`),
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
-    updateEstudiante(id: number, solicitud: Solicitud) {
-        return this.http.put<any>(backend(`solicitud/${id}`), solicitud, {
-            headers: getHeaders(),
-        });
+    createSolicitudExamenValoracion(solicitud: Solicitud) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado('solicitud_examen_valoracion'),
+            solicitud,
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
-    getSolicitud(id: number) {
-        return this.http.get<any>(backend(`solicitud/${id}`), {
-            headers: getHeaders(),
-        });
+    getSolicitudExamenValoracion(id: number) {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(`solicitud_examen_valoracion/${id}`),
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
-    uploadFile(
-        id: number,
-        paramId: string,
-        document: File,
-        tipoDocumento: string
-    ) {
-        const formData: FormData = new FormData();
-        formData.append('document', document);
-        formData.append(paramId, id.toString());
-        formData.append('tipoDocumento', tipoDocumento);
-
-        return this.http.post<any>(backend('files/upload'), formData);
+    updateSolicitudExamenValoracion(solicitud: Solicitud, id: number) {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(`solicitud_examen_valoracion/${id}`),
+            solicitud,
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
-    getFile(
-        id: number,
-        paramId: string,
-        tipoDocumento: string
-    ): Observable<any> {
-        const params = new HttpParams()
-            .set(paramId, id)
-            .set('tipoDocumento', tipoDocumento);
-
-        return this.http.get(backend('files/download'), {
-            params,
-            observe: 'response',
-            responseType: 'blob',
-        });
-    }
-
-    deleteAllFiles(evaluacionId: number) {
-        const params = new HttpParams().set('evaluacionId', evaluacionId);
-        return this.http.delete(backend('files/delete/all'), {
-            params,
-        });
-    }
-
-    deleteFile(id: number, paramId: string, tipoDocumento: string) {
-        const params = new HttpParams()
-            .set(paramId, id)
-            .set('tipoDocumento', tipoDocumento);
-
-        return this.http.delete(backend('files/delete'), {
-            params,
-        });
+    getFile(rutaArchivo: string): Observable<any> {
+        return this.http.post(
+            backendGestionTrabajoDeGrado(
+                'solicitud_examen_valoracion/descargarDocumento'
+            ),
+            { rutaArchivo },
+            { responseType: 'text' }
+        );
     }
 }

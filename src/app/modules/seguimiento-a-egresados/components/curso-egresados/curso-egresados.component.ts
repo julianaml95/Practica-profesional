@@ -39,14 +39,14 @@ export class CursoEgresadoComponent implements OnInit {
 
     ngOnInit() {
         this.initForm();
-        if (this.config.data?.id) {
+        if (this.config.data?.cursoId) {
             this.extractCursoIdFromData();
         }
     }
 
     extractCursoIdFromData(): void {
         this.editMode = true;
-        this.cursoId = Number(this.config.data.id);
+        this.cursoId = Number(this.config.data.cursoId);
         this.loadDataForEdit(this.cursoId);
     }
 
@@ -61,39 +61,20 @@ export class CursoEgresadoComponent implements OnInit {
         this.formReady.emit(this.cursoForm);
     }
 
+    setValuesForm(curso: Curso) {
+        this.cursoForm.patchValue({
+            ...curso,
+        });
+    }
+
     getFormControl(formControlName: string): FormControl {
         return this.cursoForm.get(formControlName) as FormControl;
     }
 
-    handlerResponseException(response: any) {
-        if (response.status !== 501) return;
-
-        const mapException = mapResponseException(response.error);
-        mapException.forEach((value) => {
-            this.messageService.add(errorMessage(value));
-        });
-    }
-
-    onCancel() {
-        this.ref.close();
-    }
-
-    mapRequest(): any {
-        const value = this.cursoForm.getRawValue();
-        return {
-            nombre: value.nombre,
-            orientadoA: value.orientadoA,
-            fechaInicio: value.fechaInicio,
-            fechaFin: value.fechaFin,
-        };
-    }
-
     addCurso() {
-        const request = this.mapRequest();
         this.loading = true;
-
         this.cursoService
-            .addCurso(request)
+            .addCurso(this.cursoForm.value)
             .subscribe({
                 next: () => this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO),
                 error: (e) => this.handleErrorResponse(e),
@@ -109,17 +90,10 @@ export class CursoEgresadoComponent implements OnInit {
         });
     }
 
-    setValuesForm(curso: Curso) {
-        this.cursoForm.patchValue({
-            ...curso,
-        });
-    }
-
     updateCurso() {
-        const request = this.mapRequest();
         this.loading = true;
         this.cursoService
-            .updateCurso(this.cursoId, request)
+            .updateCurso(this.cursoId, this.cursoForm.value)
             .subscribe({
                 next: () =>
                     this.handleSuccessMessage(Mensaje.ACTUALIZACION_EXITOSA),
@@ -135,6 +109,15 @@ export class CursoEgresadoComponent implements OnInit {
             return;
         }
         this.editMode ? this.updateCurso() : this.addCurso();
+    }
+
+    handlerResponseException(response: any) {
+        if (response.status !== 501) return;
+
+        const mapException = mapResponseException(response.error);
+        mapException.forEach((value) => {
+            this.messageService.add(errorMessage(value));
+        });
     }
 
     private handleSuccessMessage(message: string) {

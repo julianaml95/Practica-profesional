@@ -1,14 +1,15 @@
 export interface Resolucion {
-    id?: number;
+    idGeneracionResolucion?: number;
     titulo?: string;
-    director?: number;
-    codirector?: number;
+    director?: string;
+    codirector?: string;
     numeroActaRevision?: string;
     fechaActa?: string;
-    anteproyectoAprobado?: string;
-    solicitudComite?: string;
-    solicitudConcejo?: string;
-    numeroResolucion?: string;
+    linkAnteproyectoAprobado?: string;
+    linkSolicitudComite?: string;
+    linkSolicitudConcejoFacultad?: string;
+    numeroResolucionGeneradaCF?: string;
     fechaResolucion?: string;
-    resolucionConcejo?: string;
+    linkResolucionGeneradaCF?: string;
+    resolucionConcejoFacultad?: string;
 }

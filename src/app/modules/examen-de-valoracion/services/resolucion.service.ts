@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { backend } from 'src/app/core/constants/api-url';
+import { backendGestionTrabajoDeGrado } from 'src/app/core/constants/api-url';
 import { getHeaders } from 'src/app/core/constants/header';
 import { Resolucion } from '../models/resolucion';
 
@@ -12,14 +12,8 @@ export class ResolucionService {
     constructor(private http: HttpClient) {}
 
     createResolucion(resolucion: Resolucion) {
-        return this.http.post<any>(backend('resolucion'), resolucion, {
-            headers: getHeaders(),
-        });
-    }
-
-    updateResolucion(resolucion: Resolucion, solicitudId: number) {
-        return this.http.patch<any>(
-            backend(`resolucion/${solicitudId}`),
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado('generacion_resolucion'),
             resolucion,
             {
                 headers: getHeaders(),
@@ -27,15 +21,26 @@ export class ResolucionService {
         );
     }
 
-    getResolucionBySolicitud(solicitudId: number): Observable<Resolucion> {
-        return this.http.get<Resolucion>(backend(`resolucion/${solicitudId}`), {
-            headers: getHeaders(),
-        });
+    updateResolucion(resolucion: Resolucion, resolucionId: number) {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `generacion_resolucion/${resolucionId}`
+            ),
+            resolucion,
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
-    deleteResolucion(solicitudId: number) {
-        return this.http.delete<any>(backend(`resolucion/${solicitudId}`), {
-            headers: getHeaders(),
-        });
+    getResolucionByTrabajo(trabajoDeGradoId: number): Observable<Resolucion> {
+        return this.http.get<Resolucion>(
+            backendGestionTrabajoDeGrado(
+                `generacion_resolucion/${trabajoDeGradoId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 }

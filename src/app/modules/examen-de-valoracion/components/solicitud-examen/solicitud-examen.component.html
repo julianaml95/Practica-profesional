@@ -29,15 +29,21 @@
     </div>
     <div class="flex mt-4 justify-content-between">
         <div class="flex align-items-center column-gap-4">
+            <div class="flex align-items-center">
+                <button
+                    pButton
+                    icon="pi pi-chevron-left"
+                    label="Salir"
+                    (click)="redirectToBandeja()"
+                ></button>
+            </div>
             <button
                 pButton
                 type="button"
                 icon="pi pi-book"
                 class="w-15rem p-button-secondary"
                 label="Solicitud examen de valoración"
-                [disabled]="
-                    !!this.solicitudId ? !!this.solicitudId : isActiveIndex()
-                "
+                [disabled]="isActiveIndex()"
             ></button>
             <button
                 pButton
@@ -67,13 +73,21 @@
                 (click)="redirectToSustentacion(this.sustentacionId)"
             ></button>
         </div>
+
         <div class="flex align-items-center">
             <button
-                *ngIf="editMode"
+                *ngIf="!editMode"
                 pButton
                 icon="pi pi-save"
                 label="Guardar"
-                (click)="redirectToBandeja()"
+                (click)="createSolicitudExamen()"
+            ></button>
+            <button
+                *ngIf="editMode"
+                pButton
+                icon="pi pi-pencil"
+                label="Modificar Informacion"
+                (click)="updateSolicitudExamen()"
             ></button>
         </div>
     </div>
@@ -100,11 +114,6 @@
                             [maxLength]="250"
                             class="p-inputtext-md w-full max-w-30rem"
                             formControlName="titulo"
-                            [ngClass]="{
-                                'ng-invalid ng-dirty':
-                                    getFormControl('titulo').invalid &&
-                                    getFormControl('titulo').touched
-                            }"
                         />
                     </div>
                 </div>
@@ -126,7 +135,7 @@
                                 >
                                     <p-fileUpload
                                         #fileUpload1
-                                        name="doc_solicitud_valoracion"
+                                        name="linkFormatoA"
                                         mode="basic"
                                         [auto]="true"
                                         accept=".pdf"
@@ -136,9 +145,8 @@
                                         (onSelect)="onFileSelectFirst($event)"
                                         chooseLabel="Buscar documento"
                                         [disabled]="
-                                            solicitudForm.get(
-                                                'doc_solicitud_valoracion'
-                                            ).value
+                                            solicitudForm.get('linkFormatoA')
+                                                .value
                                         "
                                     >
                                     </p-fileUpload>
@@ -148,11 +156,7 @@
                                         class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
-                                        (click)="
-                                            onFileClear(
-                                                'doc_solicitud_valoracion'
-                                            )
-                                        "
+                                        (click)="onFileClear('linkFormatoA')"
                                     ></button>
                                 </div>
                                 <div
@@ -166,16 +170,12 @@
                                 </div>
                             </div>
                             <button
-                                *ngIf="selectedFileFirst"
+                                *ngIf="editMode && selectedFileFirst"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
-                                (click)="
-                                    getFileAndSetValue(
-                                        'doc_solicitud_valoracion'
-                                    )
-                                "
+                                (click)="getFileAndSetValue('linkFormatoA')"
                             ></button>
                             <button
                                 *ngIf="!selectedFileFirst"
@@ -211,7 +211,7 @@
                                 >
                                     <p-fileUpload
                                         #fileUpload2
-                                        name="doc_anteproyecto_examen"
+                                        name="linkFormatoD"
                                         mode="basic"
                                         [auto]="true"
                                         accept=".pdf,.zip,.rar"
@@ -221,9 +221,8 @@
                                         (onSelect)="onFileSelectSecond($event)"
                                         chooseLabel="Buscar documento"
                                         [disabled]="
-                                            solicitudForm.get(
-                                                'doc_anteproyecto_examen'
-                                            ).value
+                                            solicitudForm.get('linkFormatoD')
+                                                .value
                                         "
                                     >
                                     </p-fileUpload>
@@ -233,11 +232,7 @@
                                         class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
-                                        (click)="
-                                            onFileClear(
-                                                'doc_anteproyecto_examen'
-                                            )
-                                        "
+                                        (click)="onFileClear('linkFormatoD')"
                                     ></button>
                                 </div>
                                 <div
@@ -251,16 +246,12 @@
                                 </div>
                             </div>
                             <button
-                                *ngIf="selectedFileSecond"
+                                *ngIf="editMode && selectedFileSecond"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
-                                (click)="
-                                    getFileAndSetValue(
-                                        'doc_anteproyecto_examen'
-                                    )
-                                "
+                                (click)="getFileAndSetValue('linkFormatoD')"
                             ></button>
                         </div>
                         <div class="mt-2" *ngIf="!selectedFileSecond">
@@ -270,7 +261,7 @@
                 </div>
                 <div class="field grid">
                     <div class="col-5 col-label text-right align-self-center">
-                        <label
+                        <label class="label-required"
                             >Examen de valoración (Formato E, .pdf, .rar, .zip)
                         </label>
                     </div>
@@ -288,7 +279,7 @@
                                         #fileUpload3
                                         mode="basic"
                                         [auto]="true"
-                                        name="doc_examen_valoracion"
+                                        name="linkFormatoE"
                                         chooseIcon="pi pi-file"
                                         accept=".pdf,.zip,.rar"
                                         class="w-full max-w-30rem"
@@ -296,9 +287,8 @@
                                         (onSelect)="onFileSelectThird($event)"
                                         chooseLabel="Buscar documento"
                                         [disabled]="
-                                            solicitudForm.get(
-                                                'doc_examen_valoracion'
-                                            ).value
+                                            solicitudForm.get('linkFormatoE')
+                                                .value
                                         "
                                     ></p-fileUpload>
                                     <button
@@ -307,9 +297,7 @@
                                         class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
-                                        (click)="
-                                            onFileClear('doc_examen_valoracion')
-                                        "
+                                        (click)="onFileClear('linkFormatoE')"
                                     ></button>
                                 </div>
                                 <div
@@ -323,14 +311,12 @@
                                 </div>
                             </div>
                             <button
-                                *ngIf="selectedFileThird"
+                                *ngIf="editMode && selectedFileThird"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
-                                (click)="
-                                    getFileAndSetValue('doc_examen_valoracion')
-                                "
+                                (click)="getFileAndSetValue('linkFormatoE')"
                             ></button>
                         </div>
                         <div class="mt-2" *ngIf="!selectedFileThird">
@@ -344,7 +330,10 @@
                     </div>
                     <div
                         class="col-7 col-input"
-                        *ngIf="expertoSeleccionado; else noEvaluadorSelected"
+                        *ngIf="
+                            evaluadorExternoSeleccionado;
+                            else noEvaluadorSelected
+                        "
                     >
                         <div class="flex align-items-center">
                             <p-card class="w-full max-w-30rem m-0">
@@ -360,37 +349,44 @@
                                         pButton
                                         class="p-button-secondary"
                                         icon="pi pi-times"
-                                        (click)="limpiarExperto()"
+                                        (click)="limpiarEvaluadorExterno()"
                                     ></button>
                                 </div>
                                 <div class="mt-2 flex justify-content-between">
                                     <span>Nombres y Apellidos</span>
                                     <span
-                                        >{{ expertoSeleccionado.nombre }}
-                                        {{ expertoSeleccionado.apellido }}</span
+                                        >{{
+                                            evaluadorExternoSeleccionado.nombre
+                                        }}
+                                        {{
+                                            evaluadorExternoSeleccionado.apellido
+                                        }}</span
                                     >
                                 </div>
                                 <div class="mt-2 flex justify-content-between">
                                     <span>Universidad</span>
                                     <span>{{
-                                        expertoSeleccionado.universidad
+                                        evaluadorExternoSeleccionado.universidad
                                     }}</span>
                                 </div>
                                 <div class="mt-2 flex justify-content-between">
                                     <span>Correo</span>
                                     <span>{{
-                                        expertoSeleccionado.correo
+                                        evaluadorExternoSeleccionado.correo
                                     }}</span>
                                 </div>
                             </p-card>
                         </div>
                     </div>
-                    <div class="align-self-center" *ngIf="!expertoSeleccionado">
+                    <div
+                        class="align-self-center"
+                        *ngIf="!evaluadorExternoSeleccionado"
+                    >
                         <button
                             pButton
                             icon="pi pi-plus"
                             label="Seleccionar Evaluador"
-                            (click)="onSeleccionarExperto()"
+                            (click)="onSeleccionarEvaluadorExterno()"
                         ></button>
                     </div>
                 </div>
@@ -400,7 +396,10 @@
                     </div>
                     <div
                         class="col-7 col-input"
-                        *ngIf="docenteSeleccionado; else noEvaluadorSelected"
+                        *ngIf="
+                            evaluadorInternoSeleccionado;
+                            else noEvaluadorSelected
+                        "
                     >
                         <div class="flex align-items-center">
                             <p-card class="w-full max-w-30rem m-0">
@@ -416,37 +415,44 @@
                                         pButton
                                         class="p-button-secondary"
                                         icon="pi pi-times"
-                                        (click)="limpiarDocente()"
+                                        (click)="limpiarEvaluadorInterno()"
                                     ></button>
                                 </div>
                                 <div class="mt-2 flex justify-content-between">
                                     <span>Nombres y Apellidos</span>
                                     <span
-                                        >{{ docenteSeleccionado.nombre }}
-                                        {{ docenteSeleccionado.apellido }}</span
+                                        >{{
+                                            evaluadorInternoSeleccionado.nombre
+                                        }}
+                                        {{
+                                            evaluadorInternoSeleccionado.apellido
+                                        }}</span
                                     >
                                 </div>
                                 <div class="mt-2 flex justify-content-between">
                                     <span>Universidad</span>
                                     <span>{{
-                                        docenteSeleccionado.universidad
+                                        evaluadorInternoSeleccionado.universidad
                                     }}</span>
                                 </div>
                                 <div class="mt-2 flex justify-content-between">
                                     <span>Correo</span>
                                     <span>{{
-                                        docenteSeleccionado.correo
+                                        evaluadorInternoSeleccionado.correo
                                     }}</span>
                                 </div>
                             </p-card>
                         </div>
                     </div>
-                    <div class="align-self-center" *ngIf="!docenteSeleccionado">
+                    <div
+                        class="align-self-center"
+                        *ngIf="!evaluadorInternoSeleccionado"
+                    >
                         <button
                             pButton
                             icon="pi pi-plus"
                             label="Seleccionar Evaluador"
-                            (click)="onSeleccionarDocente()"
+                            (click)="onSeleccionarEvaluadorInterno()"
                         ></button>
                     </div>
                 </div>
@@ -459,17 +465,17 @@
                     <div class="col-7 col-input">
                         <p-inputNumber
                             inputId="integeronly"
-                            formControlName="numero_acta"
+                            formControlName="actaAprobacionExamen"
                         ></p-inputNumber>
                     </div>
                 </div>
                 <div class="field grid">
                     <div class="col-5 col-label text-right align-self-center">
-                        <label>Fecha del Acta</label>
+                        <label class="label-required">Fecha del Acta</label>
                     </div>
                     <div class="col-7 col-input">
                         <p-calendar
-                            formControlName="fecha_acta"
+                            formControlName="fechaActa"
                             [showIcon]="true"
                             dateFormat="dd.mm.yy"
                         ></p-calendar>
@@ -477,7 +483,7 @@
                 </div>
                 <div class="field grid">
                     <div class="col-5 col-label text-right align-self-center">
-                        <label
+                        <label class="label-required"
                             >Ofcio dirigido a jurados sobre instrucciones para
                             el examen de valoración (.pdf)
                         </label>
@@ -494,7 +500,7 @@
                                 >
                                     <p-fileUpload
                                         #fileUpload4
-                                        name="doc_oficio_jurados"
+                                        name="linkOficioDirigidoEvaluadores"
                                         mode="basic"
                                         [auto]="true"
                                         accept=".pdf"
@@ -505,7 +511,7 @@
                                         chooseLabel="Buscar documento"
                                         [disabled]="
                                             solicitudForm.get(
-                                                'doc_oficio_jurados'
+                                                'linkOficioDirigidoEvaluadores'
                                             ).value
                                         "
                                     >
@@ -517,7 +523,9 @@
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
-                                            onFileClear('doc_oficio_jurados')
+                                            onFileClear(
+                                                'linkOficioDirigidoEvaluadores'
+                                            )
                                         "
                                     ></button>
                                 </div>
@@ -532,19 +540,35 @@
                                 </div>
                             </div>
                             <button
-                                *ngIf="selectedFileFourth"
+                                *ngIf="editMode && selectedFileFourth"
                                 pButton
                                 type="button"
                                 class="p-button-secondary"
                                 icon="pi pi-download"
                                 (click)="
-                                    getFileAndSetValue('doc_oficio_jurados')
+                                    getFileAndSetValue(
+                                        'linkOficioDirigidoEvaluadores'
+                                    )
                                 "
                             ></button>
                         </div>
                         <div class="mt-2" *ngIf="!selectedFileFourth">
                             <p>No has seleccionado ningún documento.</p>
                         </div>
+                    </div>
+                </div>
+                <div class="field grid">
+                    <div class="col-5 col-label text-right align-self-center">
+                        <label class="label-required"
+                            >Fecha maxima de la evaluación</label
+                        >
+                    </div>
+                    <div class="col-7 col-input">
+                        <p-calendar
+                            formControlName="fechaMaximaEvaluacion"
+                            [showIcon]="true"
+                            dateFormat="dd.mm.yy"
+                        ></p-calendar>
                     </div>
                 </div>
             </div>

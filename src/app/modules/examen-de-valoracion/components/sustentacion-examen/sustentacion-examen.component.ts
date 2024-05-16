@@ -6,16 +6,9 @@ import {
     ViewChild,
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import {
-    Subject,
-    debounceTime,
-    distinctUntilChanged,
-    switchMap,
-    takeUntil,
-    timer,
-} from 'rxjs';
+import { Subject, timer } from 'rxjs';
 import { SolicitudService } from '../../services/solicitud.service';
 import { FileUpload } from 'primeng/fileupload';
 import { Estudiante } from '../../../gestion-estudiantes/models/estudiante';
@@ -40,19 +33,23 @@ export class SustentacionExamenComponent implements OnInit {
     private unsubscribe_sustentacion$ = new Subject<void>();
 
     @ViewChild('RemisionComite') RemisionComite!: FileUpload;
-    // @ViewChild('SolicitudComite') SolicitudComite!: FileUpload;
-    // @ViewChild('SolicitudConcejo') SolicitudConcejo!: FileUpload;
-    // @ViewChild('ResolucionConcejo') ResolucionConcejo!: FileUpload;
+    @ViewChild('RemisionConcejo') RemisionConcejo!: FileUpload;
+    @ViewChild('ConstanciaDocumento') ConstanciaDocumento!: FileUpload;
+    @ViewChild('ActaSustentacion') ActaSustentacion!: FileUpload;
+    @ViewChild('ActaSustentacionP') ActaSustentacionP!: FileUpload;
+    @ViewChild('EstudioHVA') EstudioHVA!: FileUpload;
 
     FileRemisionComite: File | null;
-    // FileSolicitudComite: File | null;
-    // FileSolicitudConcejo: File | null;
-    // FileResolucionConcejo: File | null;
+    FileRemisionConcejo: File | null;
+    FileConstanciaDocumento: File | null;
+    FileActaSustentacion: File | null;
+    FileActaSustentacionP: File | null;
+    FileEstudioHVA: File | null;
 
     isLoading: boolean = false;
     editMode: boolean = false;
 
-    solicitudId: number;
+    trabajoDeGradoId: number;
     respuestaId: number;
     resolucionId: number;
     sustentacionId: number;
@@ -62,13 +59,16 @@ export class SustentacionExamenComponent implements OnInit {
     tituloSeleccionado: string;
     estudianteSeleccionado: Estudiante = {};
 
+    estados: string[] = ['Aprobado', 'No Aprobado'];
+
     constructor(
         private fb: FormBuilder,
         private router: Router,
+        private route: ActivatedRoute,
         private solicitudService: SolicitudService,
         private sustentacionService: SustentacionService,
         private breadcrumbService: BreadcrumbService,
-        private messageService: MessageService,
+        private messageService: MessageService
     ) {}
 
     ngOnInit() {
@@ -77,31 +77,27 @@ export class SustentacionExamenComponent implements OnInit {
         if (this.router.url.includes('editar')) {
             this.loadEditMode();
         }
-        this.loadData();
         this.setBreadcrumb();
-        this.setup('remisionComite');
     }
 
     loadEditMode() {
         this.editMode = true;
-        this.loadResolucion();
+        this.loadSustentacion();
     }
 
     initForm(): void {
         this.sustentacionForm = this.fb.group({
-            solicitud: [null, Validators.required],
-            remisionComite: [null],
-            linkDocumentacion: [null],
-            remisionConcejo: [null],
-            constanciaVersion: [null],
-            actaSustentacion: [null],
-            actaPublica: [null],
-            respuestaSustentacion: [null],
-            hojaAcademica: [null],
-            numeroRevision: [null],
-            fechaActa: [null],
-            numeroActaRevision: [null],
-            numeroResolucion: [null],
+            idTrabajoGrados: [null, Validators.required],
+            linkRemisionDocumentoFinal: ['', Validators.required],
+            urlDocumentacion: ['', Validators.required],
+            linkRemisionDocumentoFinalCF: ['', Validators.required],
+            linkConstanciaDocumentoFinal: ['', Validators.required],
+            linkActaSustentacion: [null, Validators.required],
+            linkActaSustentacionPublica: ['', Validators.required],
+            respuestaSustentacion: ['', Validators.required],
+            linkEstudioHojaVidaAcademica: ['', Validators.required],
+            numeroActaTrabajoFinal: ['', Validators.required],
+            fechaActa: ['', Validators.required],
         });
 
         this.formReady.emit(this.sustentacionForm);
@@ -126,21 +122,13 @@ export class SustentacionExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
-        this.solicitudService.respuestaSeleccionadaSubject$.subscribe({
+        this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
             next: (response) => {
                 if (response) {
-                    this.respuestaId = response.id;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.solicitudSeleccionadaSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.solicitudId = response.solicitudId;
                     this.sustentacionForm
-                        .get('solicitud')
-                        .setValue(response.solicitudId);
+                        .get('idTrabajoGrados')
+                        .setValue(response.id);
+                    this.trabajoDeGradoId = response.id;
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -163,77 +151,45 @@ export class SustentacionExamenComponent implements OnInit {
         });
     }
 
-    loadData(): void {
-        if (!this.editMode) {
-            this.isLoading = true;
-            this.sustentacionService
-                .createSustentacion(this.sustentacionForm.value)
-                .subscribe({
-                    next: (response) => {
-                        if (response) {
-                            console.log(
-                                'Datos guardados en el backend-sustentacion:',
-                                response
-                            );
-                            this.sustentacionId = response.id;
-                            this.solicitudService.setSustentacionSeleccionada(
-                                response
-                            );
-                            timer(2000).subscribe(() => {
-                                this.isLoading = false;
-                                this.router.navigate([
-                                    'examen-de-valoracion/sustentacion/editar',
-                                    response.id,
-                                ]);
-                            });
-                        }
-                    },
-                    error: () => {
-                        console.error(
-                            'Error al guardar los datos en el backend:'
-                        );
-                    },
-                });
-        }
-    }
-
     setup(fieldName: string) {
-        if (
-            Object.keys(this.estudianteSeleccionado).length > 0 &&
-            this.sustentacionId
-        ) {
+        if (Object.keys(this.estudianteSeleccionado).length > 0) {
             this.solicitudService
-                .getFile(this.sustentacionId, 'sustentacionId', fieldName)
+                .getFile(this.sustentacionForm.get(fieldName).value)
                 .subscribe({
                     next: (response: any) => {
                         if (response) {
-                            this.sustentacionForm
-                                .get(fieldName)
-                                .setValue(fieldName);
-                            const regex =
-                                /sustentacionId=(\d+)&tipoDocumento=(\w+)/;
-                            const match = response.url.match(regex);
-
-                            if (match) {
-                                const sustentacionId = match[1];
-                                const tipoDocumento = match[2];
-                                const combined = `${sustentacionId}_${tipoDocumento}`;
-
-                                const file = new File(
-                                    [response.body],
-                                    combined,
-                                    {
-                                        type: response.type,
-                                    }
-                                );
-
-                                switch (fieldName) {
-                                    case 'remisionComite':
-                                        this.FileRemisionComite = file;
-                                        break;
-                                    default:
-                                        break;
-                                }
+                            const byteCharacters = atob(response);
+                            const byteNumbers = new Array(
+                                byteCharacters.length
+                            );
+                            for (let i = 0; i < byteCharacters.length; i++) {
+                                byteNumbers[i] = byteCharacters.charCodeAt(i);
+                            }
+                            const byteArray = new Uint8Array(byteNumbers);
+                            const file = new File([byteArray], fieldName, {
+                                type: response.type,
+                            });
+                            switch (fieldName) {
+                                case 'linkRemisionDocumentoFinal':
+                                    this.FileRemisionComite = file;
+                                    break;
+                                case 'linkRemisionDocumentoFinalCF':
+                                    this.FileRemisionConcejo = file;
+                                    break;
+                                case 'linkConstanciaDocumentoFinal':
+                                    this.FileConstanciaDocumento = file;
+                                    break;
+                                case 'linkActaSustentacion':
+                                    this.FileActaSustentacion = file;
+                                    break;
+                                case 'linkActaSustentacionPublica':
+                                    this.FileActaSustentacionP = file;
+                                    break;
+                                case 'linkEstudioHojaVidaAcademica':
+                                    this.FileEstudioHVA = file;
+                                    break;
+                                default:
+                                    break;
                             }
                         }
                     },
@@ -248,50 +204,107 @@ export class SustentacionExamenComponent implements OnInit {
         });
     }
 
-    loadResolucion() {
+    loadSustentacion() {
+        this.isLoading = true;
         this.sustentacionService
-            .getSustentacionBySolicitud(this.solicitudId)
+            .getSustentacionByTrabajo(this.trabajoDeGradoId)
             .subscribe({
                 next: (response) => {
                     if (response) {
-                        this.setValuesForm(response);
+                        const data = response;
+                        this.setValuesForm(data);
+                        this.sustentacionForm
+                            .get('idTrabajoGrados')
+                            .setValue(this.trabajoDeGradoId);
+                        const respuestaSustentacion =
+                            data?.respuestaSustentacion == true
+                                ? 'Aprobado'
+                                : 'No Aprobado';
+                        this.sustentacionForm
+                            .get('respuestaSustentacion')
+                            .setValue(respuestaSustentacion);
+                        this.sustentacionForm
+                            .get('numeroActaTrabajoFinal')
+                            .setValue(Number(data?.numeroActaTrabajoFinal));
                         this.sustentacionForm
                             .get('fechaActa')
                             .setValue(
-                                response?.fechaActa
-                                    ? new Date(response.fechaActa)
+                                data?.fechaActa
+                                    ? new Date(data.fechaActa)
                                     : null
                             );
                     }
                 },
+                error: (e) => this.handlerResponseException(e),
+                complete: () => {
+                    this.setup('linkRemisionDocumentoFinal');
+                    this.setup('linkRemisionDocumentoFinalCF');
+                    this.setup('linkConstanciaDocumentoFinal');
+                    this.setup('linkActaSustentacion');
+                    this.setup('linkActaSustentacionPublica');
+                    this.setup('linkEstudioHojaVidaAcademica');
+                    this.isLoading = false;
+                },
             });
-        this.sustentacionForm.valueChanges
-            .pipe(
-                debounceTime(300),
-                distinctUntilChanged(),
-                takeUntil(this.unsubscribe_sustentacion$),
-                switchMap(() =>
-                    this.sustentacionService.updateSustentacion(
-                        this.sustentacionForm.value,
-                        this.solicitudId
-                    )
-                )
-            )
+    }
+
+    updateSustentacion(): void {
+        const id = Number(this.route.snapshot.paramMap.get('id'));
+        this.sustentacionId = id;
+        this.isLoading = true;
+
+        const formValue = { ...this.sustentacionForm.value };
+        formValue.respuestaSustentacion =
+            formValue.respuestaSustentacion === 'Aprobado' ? 1 : 0;
+
+        this.sustentacionService
+            .updateSustentacion(formValue, this.sustentacionId)
             .subscribe({
-                next: (response) => {
-                    if (response) {
-                        console.log(
-                            'Datos actualizados en el backend: sustentacion',
-                            response
-                        );
-                    }
-                },
-                error: () => {
-                    console.error(
-                        'Error al actualizar los datos en el backend:'
-                    );
+                next: (_) => {},
+                error: (e) => this.handlerResponseException(e),
+                complete: () => {
+                    timer(2000).subscribe(() => {
+                        this.isLoading = false;
+                    });
                 },
             });
+    }
+
+    createSustentacion(): void {
+        this.isLoading = true;
+
+        const formValue = { ...this.sustentacionForm.value };
+        formValue.respuestaSustentacion =
+            formValue.respuestaSustentacion === 'Aprobado' ? 1 : 0;
+
+        this.sustentacionService.createSustentacion(formValue).subscribe({
+            next: (response) => {
+                if (response) {
+                    this.solicitudService.setSustentacionSeleccionada(response);
+                    timer(2000).subscribe(() => {
+                        this.isLoading = false;
+                        this.router.navigate([
+                            `examen-de-valoracion/sustentacion/editar/${response.idSustentacionTI}`,
+                        ]);
+                    });
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+    }
+
+    createOrUpdateSustentacion() {
+        if (this.sustentacionForm.invalid) {
+            this.messageService.clear();
+            this.messageService.add(
+                warnMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS)
+            );
+            return;
+        }
+
+        this.router.url.includes('editar')
+            ? this.updateSustentacion()
+            : this.createSustentacion();
     }
 
     ngOnDestroy() {
@@ -301,57 +314,116 @@ export class SustentacionExamenComponent implements OnInit {
 
     onFileSelectFirst(event: any) {
         this.FileRemisionComite = this.uploadFileAndSetValue(
-            'remisionComite',
+            'linkRemisionDocumentoFinal',
+            event
+        );
+    }
+
+    onFileSelectSecond(event: any) {
+        this.FileRemisionConcejo = this.uploadFileAndSetValue(
+            'linkRemisionDocumentoFinalCF',
+            event
+        );
+    }
+
+    onFileSelectThird(event: any) {
+        this.FileConstanciaDocumento = this.uploadFileAndSetValue(
+            'linkConstanciaDocumentoFinal',
+            event
+        );
+    }
+
+    onFileSelectFourth(event: any) {
+        this.FileActaSustentacion = this.uploadFileAndSetValue(
+            'linkActaSustentacion',
+            event
+        );
+    }
+
+    onFileSelectFifth(event: any) {
+        this.FileActaSustentacionP = this.uploadFileAndSetValue(
+            'linkActaSustentacionPublica',
+            event
+        );
+    }
+
+    onFileSelectSixth(event: any) {
+        this.FileEstudioHVA = this.uploadFileAndSetValue(
+            'linkEstudioHojaVidaAcademica',
             event
         );
     }
 
     onFileClear(field: string) {
-        if (field == 'remisionComite') {
+        if (field == 'linkRemisionDocumentoFinal') {
             this.FileRemisionComite = null;
             this.RemisionComite.clear();
-            this.solicitudService
-                .deleteFile(this.sustentacionId, 'sustentacionId', field)
-                .subscribe({
-                    next: () => {
-                        this.sustentacionForm.get('remisionComite').reset();
-                        this.messageService.add(
-                            infoMessage(Mensaje.ARCHIVO_ELIMINADO_CORRECTAMENTE)
-                        );
-                    },
-                    error: (e) => this.handlerResponseException(e),
-                });
+            this.sustentacionForm.get('linkRemisionDocumentoFinal').reset();
         }
+
+        if (field == 'linkRemisionDocumentoFinalCF') {
+            this.FileRemisionConcejo = null;
+            this.RemisionConcejo.clear();
+            this.sustentacionForm.get('linkRemisionDocumentoFinalCF').reset();
+        }
+
+        if (field == 'linkConstanciaDocumentoFinal') {
+            this.FileConstanciaDocumento = null;
+            this.ConstanciaDocumento.clear();
+            this.sustentacionForm.get('linkConstanciaDocumentoFinal').reset();
+        }
+
+        if (field == 'linkActaSustentacion') {
+            this.FileActaSustentacion = null;
+            this.ActaSustentacion.clear();
+            this.sustentacionForm.get('linkActaSustentacion').reset();
+        }
+
+        if (field == 'linkActaSustentacionPublica') {
+            this.FileActaSustentacionP = null;
+            this.ActaSustentacionP.clear();
+            this.sustentacionForm.get('linkActaSustentacionPublica').reset();
+        }
+
+        if (field == 'linkEstudioHojaVidaAcademica') {
+            this.FileEstudioHVA = null;
+            this.EstudioHVA.clear();
+            this.sustentacionForm.get('linkEstudioHojaVidaAcademica').reset();
+        }
+    }
+
+    convertFileToBase64(file: File): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64String = reader.result as string;
+                const base64 = base64String.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = (error) => {
+                reject(error);
+            };
+            reader.readAsDataURL(file);
+        });
     }
 
     uploadFileAndSetValue(fileControlName: string, event: any) {
         const selectedFiles: FileList = event.files;
-
         if (selectedFiles && selectedFiles.length > 0) {
             const selectedFile = selectedFiles[0];
-
-            this.solicitudService
-                .uploadFile(
-                    this.sustentacionId,
-                    'sustentacionId',
-                    selectedFile,
-                    fileControlName
-                )
-                .subscribe({
-                    next: () =>
-                        this.messageService.add(
-                            infoMessage(Mensaje.GUARDADO_EXITOSO)
-                        ),
-                    error: (e) => {
-                        this.messageService.add(
-                            warnMessage(Mensaje.ARCHIVO_DEMASIADO_GRANDE)
-                        ),
-                            this.handlerResponseException(e);
-                    },
+            const fileType = selectedFile.type.split('/')[1];
+            this.convertFileToBase64(selectedFile)
+                .then((base64) => {
+                    this.sustentacionForm
+                        .get(fileControlName)
+                        .setValue(`${fileControlName}.${fileType}-${base64}`);
+                })
+                .catch((error) => {
+                    console.error(
+                        'Error al convertir el archivo a base64:',
+                        error
+                    );
                 });
-            this.sustentacionForm
-                .get(fileControlName)
-                .setValue(fileControlName);
             return selectedFile;
         }
         return null;
@@ -359,28 +431,46 @@ export class SustentacionExamenComponent implements OnInit {
 
     getFileAndSetValue(fieldName: string) {
         this.solicitudService
-            .getFile(this.sustentacionId, 'sustentacionId', fieldName)
+            .getFile(this.sustentacionForm.get(fieldName).value)
             .subscribe({
-                next: (response: any) => {
-                    const url = window.URL.createObjectURL(response.body);
+                next: (response: string) => {
+                    const rutaArchivo =
+                        this.sustentacionForm.get(fieldName).value;
+                    const byteCharacters = atob(response);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray]);
+                    const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
+                    const extension = rutaArchivo.slice(
+                        rutaArchivo.lastIndexOf('.') + 1
+                    );
                     document.body.appendChild(a);
                     a.style.display = 'none';
                     a.href = url;
-                    a.download = fieldName;
+                    a.download = fieldName + `.${extension}`;
                     a.click();
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
                 },
-                error: (error: any) => {
-                    this.handlerResponseException(error);
+                error: (response) => {
+                    if (response) {
+                        this.messageService.add(
+                            warnMessage(
+                                'Modifica la informacion para ver los cambios.'
+                            )
+                        );
+                    }
                 },
             });
     }
 
-    redirectToSolicitud(solicitudId: number) {
+    redirectToSolicitud(trabajoDeGradoId: number) {
         this.router.navigate([
-            `examen-de-valoracion/solicitud/editar/${solicitudId}`,
+            `examen-de-valoracion/solicitud/editar/${trabajoDeGradoId}`,
         ]);
     }
 
@@ -405,15 +495,18 @@ export class SustentacionExamenComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        if (response.status != 501) return;
-        const mapException = mapResponseException(response.error);
-        mapException.forEach((value, _) => {
-            this.messageService.add(errorMessage(value));
-        });
+        // if (response.status != 501) return;
+        // const mapException = mapResponseException(response.error);
+        // mapException.forEach((value, _) => {
+        //     this.messageService.add(errorMessage(value));
+        // });
+        this.messageService.add(
+            errorMessage(response.error ? response.error : response)
+        );
     }
 
     isActiveIndex(): Boolean {
-        if (this.router.url.includes('editar')) {
+        if (this.router.url.includes('sustentacion')) {
             return true;
         }
         return false;
@@ -426,7 +519,7 @@ export class SustentacionExamenComponent implements OnInit {
                 label: 'Examen de Valoracion',
                 routerLink: 'examen-de-valoracion',
             },
-            { label: 'Resolucion' },
+            { label: 'Sustentacion' },
         ]);
     }
 }

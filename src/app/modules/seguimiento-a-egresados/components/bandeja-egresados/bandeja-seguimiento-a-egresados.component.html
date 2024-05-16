@@ -1,96 +1,149 @@
 <p-panel>
     <ng-template pTemplate="header">
         <div class="flex flex-column w-full">
-            <div class="m-4 text-center">
-                <span class="font-bold uppercase bandeja-title"
+            <div class="text-center">
+                <span
+                    class="font-medium w-full text-center"
+                    *ngIf="!estudianteSeleccionado"
+                    >Por favor, seleccione el estudiante que se encuentra bajo
+                    su dirección</span
+                >
+                <span
+                    class="font-bold w-full text-center"
+                    *ngIf="estudianteSeleccionado"
                     >Seguimiento a egresados</span
                 >
             </div>
-            <div class="field grid">
-                <div class="col-2 card-label"></div>
-                <div class="col-10 card-input text-right align-self-center">
-                    <p-card
-                        header="Datos del Estudiante"
-                        class="m-2 w-full max-w-30rem"
-                        style="display: block"
-                    >
-                        <!-- Agrega los detalles del estudiante aquí -->
-                        <div
-                            class="mt-2 card-data flex justify-content-between"
-                        >
-                            <span>Código</span>
-                            <span>ABC123</span>
-                        </div>
-                        <div
-                            class="mt-2 card-data flex justify-content-between"
-                        >
-                            <span>Nombres y Apellidos</span>
-                            <span>John Doe</span>
-                        </div>
-                        <div
-                            class="mt-2 card-data flex justify-content-between"
-                        >
-                            <span>Cohorte</span>
-                            <span>2023</span>
-                        </div>
-                        <div
-                            class="mt-2 card-data flex justify-content-between"
-                        >
-                            <span>Periodo de Ingreso</span>
-                            <span>2022-2023</span>
-                        </div>
-                    </p-card>
-                </div>
-            </div>
-            <div class="flex flex-column gap-2">
+            <div *ngIf="estudianteSeleccionado">
                 <div class="field grid">
-                    <div class="col-2 col-label text-right align-self-center">
-                        <label>Fecha de grado</label>
+                    <div class="col-2 card-label">
+                        <div
+                            class="flex justify-content-center"
+                            *ngIf="estudianteSeleccionado"
+                        >
+                            <button
+                                pButton
+                                icon="pi pi-plus"
+                                label="Seleccionar Estudiante"
+                                (click)="onSeleccionarEstudiante()"
+                            ></button>
+                        </div>
                     </div>
-                    <div class="col-10 col-input">
-                        <input
-                            pInputText
-                            [maxLength]="250"
-                            class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
-                            value="01/01/2023"
-                            disabled
-                        />
-                    </div>
-                </div>
-                <div class="field grid">
-                    <div class="col-2 col-label text-right align-self-center">
-                        <label>Teléfono de contacto</label>
-                    </div>
-                    <div class="col-10 col-input">
-                        <input
-                            pInputText
-                            [maxLength]="250"
-                            class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
-                            value="123-456-7890"
-                            disabled
-                        />
+                    <div class="col-10 card-input text-right align-self-center">
+                        <div class="flex max-w-30rem w-full">
+                            <p-card
+                                header="Datos del Estudiante"
+                                class="m-2 w-full"
+                            >
+                                <div
+                                    class="mt-2 card-data flex justify-content-between"
+                                >
+                                    <span>Código</span>
+                                    <span>{{
+                                        estudianteSeleccionado.codigo
+                                    }}</span>
+                                </div>
+                                <div
+                                    class="mt-2 card-data flex justify-content-between"
+                                >
+                                    <span>Nombres y Apellidos</span>
+                                    <span
+                                        >{{ estudianteSeleccionado.nombre }}
+                                        {{
+                                            estudianteSeleccionado.apellido
+                                        }}</span
+                                    >
+                                </div>
+                                <!--  <div
+                                    class="mt-2 card-data flex justify-content-between"
+                                >
+                                    <span>Cohorte</span>
+                                    <span>{{
+                                        estudianteSeleccionado.cohorte
+                                    }}</span>
+                                </div>
+                                <div
+                                    class="mt-2 card-data flex justify-content-between"
+                                >
+                                    <span>Periodo de Ingreso</span>
+                                    <span>{{
+                                        estudianteSeleccionado.periodoIngreso
+                                    }}</span> 
+                                </div>
+                                -->
+                            </p-card>
+                        </div>
                     </div>
                 </div>
-                <div class="field grid">
-                    <div class="col-2 col-label text-right align-self-center">
-                        <label>Correo electrónico</label>
+                <div class="flex flex-column gap-2">
+                    <div class="field grid">
+                        <div
+                            class="col-2 col-label text-right align-self-center"
+                        >
+                            <label>Fecha de grado</label>
+                        </div>
+                        <div class="col-10 col-input">
+                            <input
+                                pInputText
+                                [maxLength]="250"
+                                class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
+                                value="01/01/2023"
+                                disabled
+                            />
+                        </div>
                     </div>
-                    <div class="col-10 col-input">
-                        <input
-                            pInputText
-                            [maxLength]="250"
-                            class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
-                            value="correo@example.com"
-                            disabled
-                        />
+                    <div class="field grid">
+                        <div
+                            class="col-2 col-label text-right align-self-center"
+                        >
+                            <label>Teléfono de contacto</label>
+                        </div>
+                        <div class="col-10 col-input">
+                            <input
+                                pInputText
+                                [maxLength]="250"
+                                class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
+                                value="123-456-7890"
+                                disabled
+                            />
+                        </div>
+                    </div>
+                    <div class="field grid">
+                        <div
+                            class="col-2 col-label text-right align-self-center"
+                        >
+                            <label>Correo electrónico</label>
+                        </div>
+                        <div class="col-10 col-input">
+                            <input
+                                pInputText
+                                [maxLength]="250"
+                                class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
+                                value="correo@example.com"
+                                disabled
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </ng-template>
-
     <ng-template pTemplate="content">
-        <div class="flex flex-column gap-2 w-full">
+        <div
+            class="flex justify-content-center"
+            *ngIf="!estudianteSeleccionado"
+        >
+            <button
+                pButton
+                icon="pi pi-plus"
+                label="Seleccionar Estudiante"
+                (click)="onSeleccionarEstudiante()"
+            ></button>
+        </div>
+        <div
+            class="flex flex-column gap-2 w-full"
+            *ngIf="estudianteSeleccionado"
+        >
             <div class="field grid">
                 <div class="col-2 col-label text-right align-self-center">
                     <label class="font-bold">Empresas donde ha laborado</label>
@@ -242,7 +295,10 @@
         </div>
     </ng-template>
     <ng-template pTemplate="footer">
-        <div class="flex flex-column gap-2 w-full">
+        <div
+            class="flex flex-column gap-2 w-full"
+            *ngIf="estudianteSeleccionado"
+        >
             <div class="field grid">
                 <div class="col-2 col-label text-right align-self-center">
                     <label class="font-bold"

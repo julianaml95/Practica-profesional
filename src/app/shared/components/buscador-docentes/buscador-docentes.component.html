@@ -27,23 +27,15 @@
 >
     <ng-template pTemplate="header">
         <tr>
-            <th scope="col" style="min-width: 150px">Identificación</th>
             <th scope="col" style="min-width: 150px">Nombres</th>
             <th scope="col" style="min-width: 150px">Apellidos</th>
-            <th scope="col" style="min-width: 150px">Correo electronico</th>
         </tr>
     </ng-template>
     <!-- Contenido  -->
     <ng-template pTemplate="body" let-docente>
         <tr [pSelectableRow]="docente">
-            <td style="min-width: 150px">
-                {{ docente.persona.identificacion }}
-            </td>
             <td style="min-width: 150px">{{ docente.persona.nombre }}</td>
             <td style="min-width: 150px">{{ docente.persona.apellido }}</td>
-            <td style="min-width: 150px">
-                {{ docente.persona.correoElectronico }}
-            </td>
         </tr>
     </ng-template>
     <!-- Mensaje sin registros -->

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { backend } from 'src/app/core/constants/api-url';
+import { backendGestionTrabajoDeGrado } from 'src/app/core/constants/api-url';
 import { getHeaders } from 'src/app/core/constants/header';
 import { Sustentacion } from '../models/sustentacion';
 
@@ -12,14 +12,8 @@ export class SustentacionService {
     constructor(private http: HttpClient) {}
 
     createSustentacion(sustentacion: Sustentacion) {
-        return this.http.post<any>(backend('sustentacion'), sustentacion, {
-            headers: getHeaders(),
-        });
-    }
-
-    updateSustentacion(sustentacion: Sustentacion, solicitudId: number) {
-        return this.http.patch<any>(
-            backend(`sustentacion/${solicitudId}`),
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado('sustentacion_proyecto_investigacion'),
             sustentacion,
             {
                 headers: getHeaders(),
@@ -27,18 +21,28 @@ export class SustentacionService {
         );
     }
 
-    getSustentacionBySolicitud(solicitudId: number): Observable<Sustentacion> {
-        return this.http.get<Sustentacion>(
-            backend(`sustentacion/${solicitudId}`),
+    updateSustentacion(sustentacion: Sustentacion, sustentacionId: number) {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/${sustentacionId}`
+            ),
+            sustentacion,
             {
                 headers: getHeaders(),
             }
         );
     }
 
-    deleteSustentacion(solicitudId: number) {
-        return this.http.delete<any>(backend(`sustentacion/${solicitudId}`), {
-            headers: getHeaders(),
-        });
+    getSustentacionByTrabajo(
+        trabajoDeGradoId: number
+    ): Observable<Sustentacion> {
+        return this.http.get<Sustentacion>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/${trabajoDeGradoId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 }

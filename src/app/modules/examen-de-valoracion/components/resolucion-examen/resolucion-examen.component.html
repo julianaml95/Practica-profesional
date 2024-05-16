@@ -29,13 +29,21 @@
     </div>
     <div class="flex mt-4 justify-content-between">
         <div class="flex align-items-center column-gap-4">
+            <div class="flex align-items-center">
+                <button
+                    pButton
+                    icon="pi pi-chevron-left"
+                    label="Salir"
+                    (click)="redirectToBandeja()"
+                ></button>
+            </div>
             <button
                 pButton
                 type="button"
                 icon="pi pi-book"
                 class="w-15rem p-button-secondary"
                 label="Solicitud examen de valoración"
-                (click)="redirectToSolicitud(this.solicitudId)"
+                (click)="redirectToSolicitud(this.trabajoDeGradoId)"
             ></button>
             <button
                 pButton
@@ -51,9 +59,7 @@
                 icon="pi pi-paperclip"
                 class="w-15rem p-button-secondary"
                 label="Generacion de resolucion"
-                [disabled]="
-                    !!this.resolucionId ? !!this.resolucionId : isActiveIndex()
-                "
+                [disabled]="isActiveIndex()"
             ></button>
             <button
                 pButton
@@ -64,13 +70,20 @@
                 (click)="redirectToSustentacion(this.sustentacionId)"
             ></button>
         </div>
-        <div class="flex align-items-center">
+        <div class="flex align-items-center column-gap-2">
             <button
-                *ngIf="editMode"
+                *ngIf="!editMode"
                 pButton
                 icon="pi pi-save"
                 label="Guardar"
-                (click)="redirectToBandeja()"
+                (click)="createOrUpdateResolucion()"
+            ></button>
+            <button
+                *ngIf="editMode"
+                pButton
+                icon="pi pi-pencil"
+                label="Modificar Informacion"
+                (click)="createOrUpdateResolucion()"
             ></button>
         </div>
     </div>
@@ -204,7 +217,7 @@
                                 <div class="flex flex-row w-full">
                                     <p-fileUpload
                                         #AnteproyectoAprobado
-                                        name="anteproyectoAprobado"
+                                        name="linkAnteproyectoAprobado"
                                         mode="basic"
                                         [auto]="true"
                                         accept=".pdf"
@@ -215,7 +228,7 @@
                                         chooseLabel="Buscar documento"
                                         [disabled]="
                                             resolucionForm.get(
-                                                'anteproyectoAprobado'
+                                                'linkAnteproyectoAprobado'
                                             ).value
                                         "
                                     >
@@ -227,7 +240,9 @@
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
-                                            onFileClear('anteproyectoAprobado')
+                                            onFileClear(
+                                                'linkAnteproyectoAprobado'
+                                            )
                                         "
                                     ></button>
                                 </div>
@@ -245,13 +260,15 @@
                                 </div>
                             </div>
                             <button
-                                *ngIf="FileAnteproyectoAprobado"
+                                *ngIf="editMode && FileAnteproyectoAprobado"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
                                 (click)="
-                                    getFileAndSetValue('anteproyectoAprobado')
+                                    getFileAndSetValue(
+                                        'linkAnteproyectoAprobado'
+                                    )
                                 "
                             ></button>
                         </div>
@@ -277,7 +294,7 @@
                                 <div class="flex flex-row w-full">
                                     <p-fileUpload
                                         #SolicitudComite
-                                        name="solicitudComite"
+                                        name="linkSolicitudComite"
                                         mode="basic"
                                         [auto]="true"
                                         accept=".pdf"
@@ -288,7 +305,7 @@
                                         chooseLabel="Buscar documento"
                                         [disabled]="
                                             resolucionForm.get(
-                                                'solicitudComite'
+                                                'linkSolicitudComite'
                                             ).value
                                         "
                                     >
@@ -299,7 +316,9 @@
                                         class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
-                                        (click)="onFileClear('solicitudComite')"
+                                        (click)="
+                                            onFileClear('linkSolicitudComite')
+                                        "
                                     ></button>
                                 </div>
                                 <div
@@ -313,12 +332,14 @@
                                 </div>
                             </div>
                             <button
-                                *ngIf="FileSolicitudComite"
+                                *ngIf="editMode && FileSolicitudComite"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
-                                (click)="getFileAndSetValue('solicitudComite')"
+                                (click)="
+                                    getFileAndSetValue('linkSolicitudComite')
+                                "
                             ></button>
                         </div>
                         <div class="mt-2" *ngIf="!FileSolicitudComite">
@@ -343,7 +364,7 @@
                                 <div class="flex flex-row w-full">
                                     <p-fileUpload
                                         #SolicitudConcejo
-                                        name="solicitudConcejo"
+                                        name="linkSolicitudConcejoFacultad"
                                         mode="basic"
                                         [auto]="true"
                                         accept=".pdf"
@@ -354,7 +375,7 @@
                                         chooseLabel="Buscar documento"
                                         [disabled]="
                                             resolucionForm.get(
-                                                'solicitudConcejo'
+                                                'linkSolicitudConcejoFacultad'
                                             ).value
                                         "
                                     >
@@ -366,7 +387,9 @@
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
-                                            onFileClear('solicitudConcejo')
+                                            onFileClear(
+                                                'linkSolicitudConcejoFacultad'
+                                            )
                                         "
                                     ></button>
                                 </div>
@@ -381,12 +404,16 @@
                                 </div>
                             </div>
                             <button
-                                *ngIf="FileSolicitudConcejo"
+                                *ngIf="editMode && FileSolicitudConcejo"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
-                                (click)="getFileAndSetValue('solicitudConcejo')"
+                                (click)="
+                                    getFileAndSetValue(
+                                        'linkSolicitudConcejoFacultad'
+                                    )
+                                "
                             ></button>
                         </div>
                         <div class="mt-2" *ngIf="!FileSolicitudConcejo">
@@ -404,7 +431,7 @@
                         <div class="flex align-items-center column-gap-3">
                             <p-inputNumber
                                 inputId="integeronly"
-                                formControlName="numeroResolucion"
+                                formControlName="numeroResolucionGeneradaCF"
                             ></p-inputNumber>
                             <label class="text-right"
                                 >Fecha de la resolución</label
@@ -434,7 +461,7 @@
                                 <div class="flex flex-row w-full">
                                     <p-fileUpload
                                         #ResolucionConcejo
-                                        name="resolucionConcejo"
+                                        name="linkResolucionGeneradaCF"
                                         mode="basic"
                                         [auto]="true"
                                         accept=".pdf"
@@ -445,7 +472,7 @@
                                         chooseLabel="Buscar documento"
                                         [disabled]="
                                             resolucionForm.get(
-                                                'resolucionConcejo'
+                                                'linkResolucionGeneradaCF'
                                             ).value
                                         "
                                     >
@@ -457,7 +484,9 @@
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
-                                            onFileClear('resolucionConcejo')
+                                            onFileClear(
+                                                'linkResolucionGeneradaCF'
+                                            )
                                         "
                                     ></button>
                                 </div>
@@ -472,13 +501,15 @@
                                 </div>
                             </div>
                             <button
-                                *ngIf="FileResolucionConcejo"
+                                *ngIf="editMode && FileResolucionConcejo"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
                                 (click)="
-                                    getFileAndSetValue('resolucionConcejo')
+                                    getFileAndSetValue(
+                                        'linkResolucionGeneradaCF'
+                                    )
                                 "
                             ></button>
                         </div>

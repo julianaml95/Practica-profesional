@@ -4,17 +4,17 @@ import { Experto } from './experto';
 
 export interface Solicitud {
     id?: number;
-    fecha?: string;
+    fechaCreacion?: string;
     estado?: string;
     titulo?: string;
-    doc_solicitud_valoracion?: string;
-    doc_anteproyecto_examen?: string;
-    doc_examen_valoracion?: string;
+    linkFormatoA?: string;
+    linkFormatoD?: string;
+    linkFormatoE?: string;
     estudiante?: Estudiante;
     docente?: Docente;
     experto?: Experto;
     numero_acta?: string;
     fecha_acta?: string;
-    doc_oficio_jurados?: string;
+    linkOficioDirigidoEvaluadores?: string;
     fecha_maxima_evaluacion?: string;
 }

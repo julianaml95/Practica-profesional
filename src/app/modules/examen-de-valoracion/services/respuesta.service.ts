@@ -1,9 +1,9 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { backend } from 'src/app/core/constants/api-url';
+import { backendGestionTrabajoDeGrado } from 'src/app/core/constants/api-url';
 import { getHeaders } from 'src/app/core/constants/header';
-import { Evaluacion, Respuesta } from '../models/respuesta';
+import { Respuesta } from '../models/respuesta';
 
 @Injectable({
     providedIn: 'root',
@@ -11,48 +11,9 @@ import { Evaluacion, Respuesta } from '../models/respuesta';
 export class RespuestaService {
     constructor(private http: HttpClient) {}
 
-    createRespuesta(respuesta: Respuesta) {
-        return this.http.post<any>(backend('respuesta'), respuesta, {
-            headers: getHeaders(),
-        });
-    }
-
-    getEvaluaciones(respuestaId: number) {
-        return this.http.get<any>(
-            backend(`respuesta/${respuestaId}/evaluaciones`),
-            { headers: getHeaders() }
-        );
-    }
-
-    createEvaluacion(evaluacion: Evaluacion, respuestaId: number) {
+    createRespuestaExamen(respuesta: Respuesta) {
         return this.http.post<any>(
-            backend(`respuesta/${respuestaId}/evaluaciones`),
-            evaluacion,
-            {
-                headers: getHeaders(),
-            }
-        );
-    }
-
-    updateEvaluacion(evaluacion: Evaluacion, evaluacionId: number) {
-        return this.http.patch<any>(
-            backend(`evaluacion/${evaluacionId}`),
-            evaluacion,
-            {
-                headers: getHeaders(),
-            }
-        );
-    }
-
-    deleteEvaluacion(respuestaId: number) {
-        return this.http.delete<any>(backend(`evaluacion/${respuestaId}`), {
-            headers: getHeaders(),
-        });
-    }
-
-    updateRespuesta(respuesta: Respuesta, solicitudId: number) {
-        return this.http.patch<any>(
-            backend(`respuesta/${solicitudId}`),
+            backendGestionTrabajoDeGrado('respuesta_examen_valoracion'),
             respuesta,
             {
                 headers: getHeaders(),
@@ -60,18 +21,45 @@ export class RespuestaService {
         );
     }
 
-    getRespuestaBySolicitud(solicitudId: number): Observable<Respuesta> {
-        return this.http.get<Respuesta>(backend(`respuesta`), {
-            headers: getHeaders(),
-            params: {
-                solicitudId: solicitudId,
-            },
-        });
+    updateRespuestaExamen(respuestaId: number, respuesta: Respuesta) {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `respuesta_examen_valoracion/${respuestaId}`
+            ),
+            respuesta,
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
-    deleteRespuesta(solicitudId: number) {
-        return this.http.delete<any>(backend(`respuesta/${solicitudId}`), {
-            headers: getHeaders(),
-        });
+    deleteRespuestaExamen(respuestaId: number) {
+        return this.http.delete<any>(
+            backendGestionTrabajoDeGrado(
+                `respuesta_examen_valoracion/${respuestaId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    getRespuestasExamen(trabajoDeGradoId: number) {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `respuesta_examen_valoracion/${trabajoDeGradoId}`
+            ),
+            { headers: getHeaders() }
+        );
+    }
+
+    getFile(rutaArchivo: string): Observable<any> {
+        return this.http.post(
+            backendGestionTrabajoDeGrado(
+                'respuesta_examen_valoracion/descargarDocumento'
+            ),
+            { rutaArchivo },
+            { responseType: 'text' }
+        );
     }
 }

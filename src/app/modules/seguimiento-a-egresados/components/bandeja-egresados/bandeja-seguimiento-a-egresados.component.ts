@@ -10,6 +10,8 @@ import { ConfirmationService, MessageService, PrimeIcons } from 'primeng/api';
 import { Mensaje } from 'src/app/core/enums/enums';
 import { infoMessage } from 'src/app/core/utils/message-util';
 import { CursoEgresadoComponent } from '../curso-egresados/curso-egresados.component';
+import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
+import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
 
 @Component({
     selector: 'app-bandeja-seguimiento-a-egresados',
@@ -18,6 +20,9 @@ import { CursoEgresadoComponent } from '../curso-egresados/curso-egresados.compo
 })
 export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     loading: boolean;
+
+    estudianteSeleccionado: Estudiante;
+
     empresas: Empresa[] = [
         {
             id: 1,
@@ -69,8 +74,44 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
 
     ngOnInit(): void {
         this.setBreadcrumb();
-        this.listEmpresas();
-        this.listCursos();
+    }
+
+    mapEstudianteLabel(estudiante: any) {
+        return {
+            id: estudiante.id,
+            codigo: estudiante.codigo,
+            nombre: estudiante.nombre,
+            apellido: estudiante.apellido,
+            // identificacion: estudiante.persona.identificacion,
+            // periodoIngreso: estudiante.informacionMaestria.periodoIngreso,
+            // cohorte: estudiante.informacionMaestria.cohorte,
+        };
+    }
+
+    limpiarEstudiante() {
+        this.estudianteSeleccionado = null;
+    }
+
+    showBuscadorEstudiantes() {
+        return this.dialogService.open(BuscadorEstudiantesComponent, {
+            header: 'Seleccionar estudiante',
+            width: '60%',
+        });
+    }
+
+    onSeleccionarEstudiante() {
+        this.limpiarEstudiante();
+        const ref = this.showBuscadorEstudiantes();
+        ref.onClose.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.estudianteSeleccionado =
+                        this.mapEstudianteLabel(response);
+                    this.listCursos();
+                    this.listEmpresas();
+                }
+            },
+        });
     }
 
     setBreadcrumb() {
@@ -83,12 +124,11 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     listEmpresas() {
         this.loading = true;
         this.empresaService
-            .listEmpresas()
+            .listEmpresas(this.estudianteSeleccionado.id)
             .subscribe({
-                next: (response) =>
-                    (this.empresas = response.filter(
-                        (d) => d.estado === 'ACTIVO'
-                    )),
+                next: (response) => {
+                    this.empresas = response.filter((d) => d.id !== null)
+                },
             })
             .add(() => (this.loading = false));
     }
@@ -109,6 +149,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
             header: 'Agregar empresa',
             height: '60vh',
             width: '40%',
+            data: { estudianteId: this.estudianteSeleccionado.id },
         });
     }
 
@@ -117,7 +158,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
             header: 'Editar empresa',
             height: '60vh',
             width: '40%',
-            data: { id: id },
+            data: { empresaId: id },
         });
     }
 
@@ -126,6 +167,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
             header: 'Agregar curso',
             height: '58vh',
             width: '40%',
+            data: { estudianteId: this.estudianteSeleccionado.id },
         });
     }
 
@@ -134,7 +176,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
             header: 'Editar curso',
             height: '58vh',
             width: '40%',
-            data: { id: id },
+            data: { cursoId: id },
         });
     }
 

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { backend } from 'src/app/core/constants/api-url';
+import { backendGestionEgresados } from 'src/app/core/constants/api-url';
 import { getHeaders } from 'src/app/core/constants/header';
 import { Curso } from '../models/curso';
 
@@ -12,31 +12,31 @@ export class CursoService {
     constructor(private http: HttpClient) {}
 
     getCurso(id: number) {
-        return this.http.get<Curso>(backend(`curso/${id}`), {
+        return this.http.get<Curso>(backendGestionEgresados(`curso/${id}`), {
             headers: getHeaders(),
         });
     }
 
     addCurso(curso: Curso) {
-        return this.http.post<any>(backend('curso'), curso, {
+        return this.http.post<any>(backendGestionEgresados('curso'), curso, {
             headers: getHeaders(),
         });
     }
 
     updateCurso(id: number, curso: Curso) {
-        return this.http.put<any>(backend(`curso/${id}`), curso, {
+        return this.http.put<any>(backendGestionEgresados(`curso/${id}`), curso, {
             headers: getHeaders(),
         });
     }
 
     deleteCurso(id: number) {
-        return this.http.delete<any>(backend(`curso/${id}`), {
+        return this.http.delete<any>(backendGestionEgresados(`curso/${id}`), {
             headers: getHeaders(),
         });
     }
 
     listCursos(): Observable<Curso[]> {
-        return this.http.get<Curso[]>(backend('curso'), {
+        return this.http.get<Curso[]>(backendGestionEgresados('curso'), {
             headers: getHeaders(),
         });
     }
