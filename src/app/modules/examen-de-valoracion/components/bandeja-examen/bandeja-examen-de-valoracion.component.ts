@@ -44,6 +44,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         if (estudiante) {
             this.solicitudService.setEstudianteSeleccionado(estudiante);
             this.estudianteSeleccionado = estudiante;
+            console.log(this.estudianteSeleccionado);
             this.listTrabajosDeGrado(estudiante.id);
         }
     }
@@ -74,7 +75,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
     }
 
     onEditar(id: number) {
-        this.solicitudService.getSolicitudExamenValoracion(id).subscribe({
+        this.solicitudService.getSolicitudDocente(id).subscribe({
             next: (response) => {
                 this.solicitudService.setSolicitudSeleccionada(response);
             },
@@ -84,16 +85,16 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                 this.solicitudService.setTrabajoSeleccionado(response);
             },
         });
-        this.resolucionService.getResolucionByTrabajo(id).subscribe({
-            next: (response) => {
-                this.solicitudService.setResolucionSeleccionada(response);
-            },
-        });
-        this.sustentacionService.getSustentacionByTrabajo(id).subscribe({
-            next: (response) => {
-                this.solicitudService.setSustentacionSeleccionada(response);
-            },
-        });
+        // this.resolucionService.getResolucionByTrabajo(id).subscribe({
+        //     next: (response) => {
+        //         this.solicitudService.setResolucionSeleccionada(response);
+        //     },
+        // });
+        // this.sustentacionService.getSustentacionByTrabajo(id).subscribe({
+        //     next: (response) => {
+        //         this.solicitudService.setSustentacionSeleccionada(response);
+        //     },
+        // });
         this.router.navigate(['examen-de-valoracion/solicitud/editar', id]);
     }
 
@@ -154,6 +155,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                     this.solicitudService.setEstudianteSeleccionado(
                         this.estudianteSeleccionado
                     );
+                    console.log(this.estudianteSeleccionado);
                     this.listTrabajosDeGrado(this.estudianteSeleccionado.id);
                     this.localStorageService.saveLocalStorage(
                         this.mapEstudianteLabel(response),

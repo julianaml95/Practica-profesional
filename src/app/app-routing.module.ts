@@ -5,6 +5,7 @@ import { ErrorComponent } from './core/components/error/error.component';
 import { NotfoundComponent } from './core/components/notfound/notfound.component';
 import { AccessComponent } from './core/components/access/access.component';
 import { HomeComponent } from './core/components/home/home.component';
+import { LoginComponent } from './modules/examen-de-valoracion/components/login/login.component';
 @NgModule({
     imports: [
         RouterModule.forRoot(
@@ -14,6 +15,10 @@ import { HomeComponent } from './core/components/home/home.component';
                     component: AppMainComponent,
                     children: [
                         { path: '', component: HomeComponent },
+                        {
+                            path: 'login',
+                            component: LoginComponent,
+                        },
                         {
                             path: 'estudiantes',
                             loadChildren: () =>

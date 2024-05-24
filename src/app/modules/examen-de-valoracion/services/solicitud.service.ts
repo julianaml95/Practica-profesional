@@ -120,7 +120,7 @@ export class SolicitudService {
     getTrabajoDeGrado(id: number) {
         return this.http.get<any>(
             backendGestionTrabajoDeGrado(
-                `inicio_trabajo_grado/trabajo_grado/${id}`
+                `inicio_trabajo_grado/buscarTrabajoGrado/${id}`
             ),
             {
                 headers: getHeaders(),
@@ -146,9 +146,11 @@ export class SolicitudService {
         );
     }
 
-    createSolicitudExamenValoracion(solicitud: Solicitud) {
+    createSolicitudDocente(solicitud: Solicitud) {
         return this.http.post<any>(
-            backendGestionTrabajoDeGrado('solicitud_examen_valoracion'),
+            backendGestionTrabajoDeGrado(
+                'solicitud_examen_valoracion/insertarInformacionDocente'
+            ),
             solicitud,
             {
                 headers: getHeaders(),
@@ -156,18 +158,57 @@ export class SolicitudService {
         );
     }
 
-    getSolicitudExamenValoracion(id: number) {
-        return this.http.get<any>(
-            backendGestionTrabajoDeGrado(`solicitud_examen_valoracion/${id}`),
+    createSolicitudCoordinador(solicitud: Solicitud) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado(
+                'solicitud_examen_valoracion/insertarInformacionCoordinador'
+            ),
+            solicitud,
             {
                 headers: getHeaders(),
             }
         );
     }
 
-    updateSolicitudExamenValoracion(solicitud: Solicitud, id: number) {
+    getSolicitudDocente(id: number) {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `solicitud_examen_valoracion/listarInformacionDocente/${id}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    getSolicitudCoordinador(id: number) {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `solicitud_examen_valoracion/listarInformacionCoordinador/${id}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    updateSolicitudDocente(solicitud: Solicitud, id: number) {
         return this.http.put<any>(
-            backendGestionTrabajoDeGrado(`solicitud_examen_valoracion/${id}`),
+            backendGestionTrabajoDeGrado(
+                `solicitud_examen_valoracion/actualizarInformacionDocente/${id}`
+            ),
+            solicitud,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    updateSolicitudCoordinador(solicitud: Solicitud, id: number) {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `solicitud_examen_valoracion/actualizarInformacionCoordinador/${id}`
+            ),
             solicitud,
             {
                 headers: getHeaders(),

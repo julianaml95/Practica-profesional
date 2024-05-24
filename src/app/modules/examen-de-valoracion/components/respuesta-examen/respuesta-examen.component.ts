@@ -17,6 +17,7 @@ import { Experto } from '../../models/experto';
 import { Subject } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-respuesta-examen',
@@ -233,12 +234,12 @@ export class RespuestaExamenComponent implements OnInit {
         });
     }
 
-    initializeForm(respuestas: any[]) {
+    initializeForm(respuestas: any) {
         let indexExperto = 0;
         let indexDocente = 0;
 
-        respuestas.forEach((respuesta) => {
-            if (respuesta.rol == 'experto') {
+        respuestas?.evaluador_externo?.forEach((respuesta) => {
+            if (respuesta.tipoEvaluador == 'Externo') {
                 this.evaluacionExpertoIds.push(respuesta.idRtaExamenValoracion);
                 this.respuestaForm.patchValue({
                     observacion: respuesta.observacion,
@@ -263,7 +264,8 @@ export class RespuestaExamenComponent implements OnInit {
                         respuesta.linkObservaciones,
                         Validators.required,
                     ],
-                    ['rol' + indexExperto]: [respuesta.rol],
+                    ['idEvaluador' + indexExperto]: [respuesta.idEvaluador],
+                    ['tipoEvaluador' + indexExperto]: [respuesta.tipoEvaluador],
                     ['respuestaExamenValoracionExperto' + indexExperto]: [
                         respuesta.respuestaExamenValoracion,
                         Validators.required,
@@ -284,8 +286,10 @@ export class RespuestaExamenComponent implements OnInit {
                 this.setup('linkObservaciones');
                 indexExperto++;
             }
+        });
 
-            if (respuesta.rol == 'docente') {
+        respuestas?.evaluador_interno?.forEach((respuesta) => {
+            if (respuesta.tipoEvaluador == 'Interno') {
                 this.evaluacionDocenteIds.push(respuesta.idRtaExamenValoracion);
                 this.respuestaForm.patchValue({
                     observacion: respuesta.observacion,
@@ -310,7 +314,8 @@ export class RespuestaExamenComponent implements OnInit {
                         respuesta.linkObservaciones,
                         Validators.required,
                     ],
-                    ['rol' + indexDocente]: [respuesta.rol],
+                    ['idEvaluador' + indexDocente]: [respuesta.idEvaluador],
+                    ['tipoEvaluador' + indexDocente]: [respuesta.tipoEvaluador],
                     ['respuestaExamenValoracionDocente' + indexDocente]: [
                         respuesta.respuestaExamenValoracion,
                         Validators.required,
@@ -391,7 +396,8 @@ export class RespuestaExamenComponent implements OnInit {
             linkFormatoB: evaluacion['linkFormatoB' + i],
             linkFormatoC: evaluacion['linkFormatoC' + i],
             linkObservaciones: evaluacion['linkObservaciones' + i],
-            rol: evaluacion['rol' + i],
+            tipoEvaluador: evaluacion['tipoEvaluador' + i],
+            idEvaluador: evaluacion['idEvaluador' + i],
             respuestaExamenValoracion:
                 formArrayName === 'expertoEvaluaciones'
                     ? evaluacion['respuestaExamenValoracionExperto' + i]
@@ -517,10 +523,16 @@ export class RespuestaExamenComponent implements OnInit {
                     null,
                     Validators.required,
                 ],
-                ['rol' + this[formArrayName].length]: [
+                ['tipoEvaluador' + this[formArrayName].length]: [
                     formArrayName === 'expertoEvaluaciones'
-                        ? 'experto'
-                        : 'docente',
+                        ? 'Externo'
+                        : 'Interno',
+                    Validators.required,
+                ],
+                ['idEvaluador' + this[formArrayName].length]: [
+                    formArrayName === 'expertoEvaluaciones'
+                        ? this.expertoSeleccionado.id
+                        : this.docenteSeleccionado.id,
                     Validators.required,
                 ],
                 [formArrayName === 'expertoEvaluaciones'

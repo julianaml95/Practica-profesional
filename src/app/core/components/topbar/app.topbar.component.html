@@ -1,15 +1,48 @@
-<div class="layout-topbar" style="flex-wrap: wrap;">
-
+<div class="layout-topbar" style="flex-wrap: wrap">
     <div class="topbar-container">
-        <div class="logo">
-            <img src="assets/layout/images/logoUnicauca.png" style="height: 100px;" alt="logo">
-            <span class="titulo-logo ">Maestría en computación</span>
+        <div class="logo" style="margin-left: auto">
+            <img
+                src="assets/layout/images/logoUnicauca.png"
+                style="height: 100px"
+                alt="logo"
+            />
+            <span class="titulo-logo">Maestría en computación</span>
+        </div>
+        <div
+            class="user-info"
+            style="
+                display: flex;
+                flex-direction: column;
+                row-gap: 5px;
+                align-items: center;
+                margin-left: auto;
+                text-align: center;
+            "
+        >
+            <img
+                src="assets/layout/images/logoUnicauca.png"
+                style="height: 50px; width: 50px; border-radius: 50%"
+                alt="avatar"
+            />
+            <div>
+                <span class="user-name" style="display: block">{{
+                    username
+                }}</span>
+                <span class="user-role" style="display: block">{{ role }}</span>
+            </div>
+            <a
+                *ngIf="isLoggedIn; else loginLink"
+                (click)="logout()"
+                style="cursor: pointer"
+                >Cerrar sesión</a
+            >
+            <ng-template #loginLink>
+                <a routerLink="/login">Iniciar sesión</a>
+            </ng-template>
         </div>
     </div>
 
-    <div style="width: 100%;" >
+    <div style="width: 100%">
         <p-menubar [model]="items"></p-menubar>
     </div>
-
-
 </div>

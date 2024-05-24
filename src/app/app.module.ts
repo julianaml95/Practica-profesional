@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { LocationStrategy, HashLocationStrategy } from '@angular/common';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -22,6 +22,8 @@ import { MessageService, SharedModule } from 'primeng/api';
 import { GestionEstudiantesModule } from './modules/gestion-estudiantes/gestion-estudiantes.module';
 import { AppBreadcrumbComponent } from './core/components/breadcrumb/app.breadcrumb.component';
 import { BreadcrumbService } from './core/components/breadcrumb/app.breadcrumb.service';
+import { LoginComponent } from './modules/examen-de-valoracion/components/login/login.component';
+import { AuthInterceptor } from './modules/examen-de-valoracion/config/interceptor';
 
 @NgModule({
     imports: [
@@ -44,9 +46,11 @@ import { BreadcrumbService } from './core/components/breadcrumb/app.breadcrumb.s
         AppMenuitemComponent,
         AppConfigComponent,
         AppBreadcrumbComponent,
+        LoginComponent,
         HomeComponent,
     ],
     providers: [
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
         { provide: LocationStrategy, useClass: HashLocationStrategy },
         MessageService,
         MenuService,

@@ -102,7 +102,13 @@
                         >
                     </p>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') ||
+                        role.includes('ROLE_DOCENTE')
+                    "
+                >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
                             >Título del Trabajo de Investigacion</label
@@ -117,7 +123,13 @@
                         />
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') ||
+                        role.includes('ROLE_DOCENTE')
+                    "
+                >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
                             >Solicitud Examen de Valoracion (Formato A .pdf)
@@ -192,7 +204,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') ||
+                        role.includes('ROLE_DOCENTE')
+                    "
+                >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
                             >Anteproyecto presentado a Examen (Formato D .pdf,
@@ -259,7 +277,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') ||
+                        role.includes('ROLE_DOCENTE')
+                    "
+                >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
                             >Examen de valoración (Formato E, .pdf, .rar, .zip)
@@ -324,7 +348,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') ||
+                        role.includes('ROLE_DOCENTE')
+                    "
+                >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required">Evaluador Externo</label>
                     </div>
@@ -390,7 +420,13 @@
                         ></button>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') ||
+                        role.includes('ROLE_DOCENTE')
+                    "
+                >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required">Evaluador Interno</label>
                     </div>
@@ -456,7 +492,10 @@
                         ></button>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="role.includes('ROLE_COORDINADOR')"
+                >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
                             >No Acta de aprobacion del examen</label
@@ -469,7 +508,10 @@
                         ></p-inputNumber>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="role.includes('ROLE_COORDINADOR')"
+                >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required">Fecha del Acta</label>
                     </div>
@@ -481,7 +523,10 @@
                         ></p-calendar>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="role.includes('ROLE_COORDINADOR')"
+                >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
                             >Ofcio dirigido a jurados sobre instrucciones para
@@ -557,7 +602,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="role.includes('ROLE_COORDINADOR')"
+                >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
                             >Fecha maxima de la evaluación</label

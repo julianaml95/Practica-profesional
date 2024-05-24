@@ -7,6 +7,11 @@ export const environment = {
   api_url: "http://localhost:8080/api/"
 };
 
+export const dev_login = {
+    production: false,
+    api_url: "http://localhost:8080/api/"
+  };
+
 export const gestion_expertos = {
     production: false,
     api_url: 'http://localhost:8085/api/',

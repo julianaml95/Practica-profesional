@@ -7,6 +7,7 @@ import { CrearSolicitudExamenComponent } from './components/crear-solicitud-exam
 import { RespuestaExamenComponent } from './components/respuesta-examen/respuesta-examen.component';
 import { ResolucionExamenComponent } from './components/resolucion-examen/resolucion-examen.component';
 import { SustentacionExamenComponent } from './components/sustentacion-examen/sustentacion-examen.component';
+import { RoleGuard } from 'src/app/core/guards/role/role-guard';
 
 const routes: Routes = [
     {
@@ -20,10 +21,14 @@ const routes: Routes = [
             {
                 path: 'solicitud',
                 component: SolicitudExamenComponent,
+                canActivate: [RoleGuard],
+                data: { roles: ['ROLE_COORDINADOR', 'ROLE_DOCENTE'] },
             },
             {
                 path: 'solicitud/editar/:id',
                 component: SolicitudExamenComponent,
+                canActivate: [RoleGuard],
+                data: { roles: ['ROLE_COORDINADOR', 'ROLE_DOCENTE'] },
             },
             {
                 path: 'solicitud/crear',
@@ -32,10 +37,14 @@ const routes: Routes = [
             {
                 path: 'respuesta',
                 component: RespuestaExamenComponent,
+                canActivate: [RoleGuard],
+                data: { roles: ['ROLE_COORDINADOR'] },
             },
             {
                 path: 'respuesta/editar/:id',
                 component: RespuestaExamenComponent,
+                canActivate: [RoleGuard],
+                data: { roles: ['ROLE_COORDINADOR'] },
             },
             {
                 path: 'resolucion',

@@ -31,7 +31,10 @@ export class BuscadorEstudiantesComponent implements OnInit {
         this.estudianteService
             .listEstudiantes()
             .subscribe({
-                next: (response) => (this.estudiantes = response),
+                next: (response) => {
+                    this.estudiantes = response;
+                    console.log(response);
+                },
                 error: (error: any) => {
                     this.handlerResponseException(error);
                 },

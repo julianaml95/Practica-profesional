@@ -1,0 +1,54 @@
+<div
+    class="login-container"
+    style="
+        max-width: 400px;
+        margin: auto;
+        padding: 2rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+    "
+>
+    <div
+        style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+        "
+    >
+        <h2>Iniciar Sesión</h2>
+    </div>
+    <form [formGroup]="loginForm">
+        <div class="p-field p-grid mt-2">
+            <label for="username" class="p-col-fixed">Username</label>
+            <div class="p-col">
+                <input
+                    class="w-full"
+                    id="username"
+                    type="text"
+                    pInputText
+                    formControlName="username"
+                    name="username"
+                    required
+                />
+            </div>
+        </div>
+        <div class="p-field p-grid mt-2">
+            <label for="password" class="p-col-fixed">Password</label>
+            <div class="p-col">
+                <input
+                    class="w-full"
+                    id="password"
+                    type="password"
+                    pInputText
+                    formControlName="password"
+                    name="password"
+                    required
+                />
+            </div>
+        </div>
+        <div class="p-field p-grid mt-2">
+            <button pButton type="submit" (click)="onSubmit()">Enviar</button>
+        </div>
+    </form>
+</div>
