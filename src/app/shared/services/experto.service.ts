@@ -1,7 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { backendGestionExpertos, backendGestionTrabajoDeGrado } from 'src/app/core/constants/api-url';
+import {
+    backendGestionExpertos,
+    backendGestionTrabajoDeGrado,
+} from 'src/app/core/constants/api-url';
 import { getHeaders } from 'src/app/core/constants/header';
 import { Experto } from 'src/app/modules/examen-de-valoracion/models/experto';
 
@@ -22,10 +25,14 @@ export class ExpertoService {
         );
     }
 
-    getExperto(id: number) {
+    obtenerExperto(id: number): Observable<any> {
         return this.http.get<Experto>(
-            backendGestionExpertos(`expertos/${id}`),
-            { headers: getHeaders() }
+            backendGestionTrabajoDeGrado(
+                `solicitud_examen_valoracion/experto/${id}`
+            ),
+            {
+                headers: getHeaders(),
+            }
         );
     }
 }

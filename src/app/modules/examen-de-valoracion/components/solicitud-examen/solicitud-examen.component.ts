@@ -17,35 +17,17 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { Mensaje } from 'src/app/core/enums/enums';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
-import {
-    errorMessage,
-    infoMessage,
-    warnMessage,
-} from 'src/app/core/utils/message-util';
+import { errorMessage, infoMessage, warnMessage } from 'src/app/core/utils/message-util';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
 import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-expertos/buscador-expertos.component';
 import { Experto } from '../../models/experto';
 import { SolicitudService } from '../../services/solicitud.service';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
-import {
-    EMPTY,
-    Subject,
-    catchError,
-    debounceTime,
-    distinctUntilChanged,
-    filter,
-    finalize,
-    switchMap,
-    take,
-    takeUntil,
-    tap,
-    throwError,
-    timer,
-} from 'rxjs';
+import { Subject, timer } from 'rxjs';
 import { Solicitud } from '../../models/solicitud';
 import { FileUpload } from 'primeng/fileupload';
-import { DocenteService } from 'src/app/modules/gestion-docentes/services/docente.service';
+import { DocenteService } from 'src/app/shared/services/docente.service';
 import { ExpertoService } from 'src/app/shared/services/experto.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -72,6 +54,7 @@ export class SolicitudExamenComponent implements OnInit {
     isLoading: boolean;
     editMode: boolean = false;
     isSolicitudValid: boolean;
+    isCoordinadorCreated: boolean;
 
     solicitudForm: FormGroup;
     estudianteSeleccionado: Estudiante = {};
@@ -146,12 +129,13 @@ export class SolicitudExamenComponent implements OnInit {
             this.solicitudForm.get('fechaMaximaEvaluacion').disable();
         }
         if (role.includes('ROLE_COORDINADOR')) {
-            this.solicitudForm.get('titulo').enable();
-            this.solicitudForm.get('linkFormatoA').enable();
-            this.solicitudForm.get('linkFormatoD').enable();
-            this.solicitudForm.get('linkFormatoE').enable();
-            this.solicitudForm.get('evaluadorExterno').enable();
-            this.solicitudForm.get('evaluadorInterno').enable();
+            this.solicitudForm.get('titulo').disable();
+            this.solicitudForm.get('linkFormatoA').disable();
+            this.solicitudForm.get('linkFormatoD').disable();
+            this.solicitudForm.get('linkFormatoE').disable();
+            this.solicitudForm.get('evaluadorExterno').disable();
+            this.solicitudForm.get('evaluadorInterno').disable();
+
             this.solicitudForm.get('actaAprobacionExamen').enable();
             this.solicitudForm.get('fechaActa').enable();
             this.solicitudForm.get('linkOficioDirigidoEvaluadores').enable();
@@ -296,33 +280,62 @@ export class SolicitudExamenComponent implements OnInit {
                     complete: () => {
                         timer(2000).subscribe(() => {
                             this.isLoading = false;
+                            this.messageService.add(
+                                infoMessage(Mensaje.ACTUALIZACION_EXITOSA)
+                            );
                             this.router.navigate(['examen-de-valoracion']);
                         });
                     },
                 });
         }
 
-        if (this.role.includes('ROLE_COORDINADOR')) {
-            this.solicitudService
-                .updateSolicitudCoordinador(
-                    this.solicitudForm.value,
-                    this.trabajoDeGradoId
-                )
-                .subscribe({
-                    next: (_) => {},
-                    error: (e) => {
-                        console.error(
-                            'Error al actualizar los datos en el backend:',
-                            e
-                        );
-                    },
-                    complete: () => {
-                        timer(2000).subscribe(() => {
-                            this.isLoading = false;
-                            this.router.navigate(['examen-de-valoracion']);
-                        });
-                    },
-                });
+        if (this.role.includes('ROLE_COORDINADOR') == true) {
+            if (this.isCoordinadorCreated == true) {
+                this.solicitudService
+                    .updateSolicitudCoordinador(
+                        this.solicitudForm.value,
+                        this.trabajoDeGradoId
+                    )
+                    .subscribe({
+                        next: (_) => {},
+                        error: (e) => {
+                            console.error(
+                                'Error al actualizar los datos en el backend:',
+                                e
+                            );
+                        },
+                        complete: () => {
+                            timer(2000).subscribe(() => {
+                                this.isLoading = false;
+                                this.messageService.add(
+                                    infoMessage(Mensaje.ACTUALIZACION_EXITOSA)
+                                );
+                                this.router.navigate(['examen-de-valoracion']);
+                            });
+                        },
+                    });
+            } else {
+                this.solicitudService
+                    .createSolicitudCoordinador(this.solicitudForm.value)
+                    .subscribe({
+                        next: (_) => {},
+                        error: (e) => {
+                            console.error(
+                                'Error al guardar los datos en el backend:',
+                                e
+                            );
+                        },
+                        complete: () => {
+                            timer(2000).subscribe(() => {
+                                this.isLoading = false;
+                                this.messageService.add(
+                                    infoMessage(Mensaje.GUARDADO_EXITOSO)
+                                );
+                                this.router.navigate(['examen-de-valoracion']);
+                            });
+                        },
+                    });
+            }
         }
     }
 
@@ -351,16 +364,9 @@ export class SolicitudExamenComponent implements OnInit {
                         'Error al guardar los datos en el backend:',
                         e
                     );
-                    if (!this.role.includes('ROLE_DOCENTE')) {
-                        this.router.navigate(['examen-de-valoracion']);
-                        this.messageService.add(
-                            warnMessage('Usuario no permitido.')
-                        );
-                    }
                 },
                 complete: () => {
-                    if (this.role.includes('ROLE_DOCENTE')) {
-                        // TODO
+                    if (this.role.includes('ROLE_DOCENTE') == true) {
                         this.solicitudService
                             .createSolicitudDocente(this.solicitudForm.value)
                             .subscribe({
@@ -427,7 +433,6 @@ export class SolicitudExamenComponent implements OnInit {
                         }
                     },
                     error: (e) => {
-                        console.log(e);
                         this.messageService.add(
                             warnMessage('Pendiente subir archivos.')
                         );
@@ -451,84 +456,160 @@ export class SolicitudExamenComponent implements OnInit {
         this.isLoading = true;
         const id = Number(this.route.snapshot.paramMap.get('id'));
         this.trabajoDeGradoId = id;
-        this.solicitudService.getSolicitudCoordinador(id).subscribe({
-            next: (response) => {
-                if (response) {
-                    console.log(response);
-                    const data = response;
-                    this.solicitudService.setTituloSeleccionadoSubject(
-                        data.titulo
-                    );
-                    this.setValuesForm(data);
-                    this.solicitudForm.get('idTrabajoGrados').setValue(id);
-                    this.docenteService
-                        .getDocente(response.evaluadorInterno)
-                        .subscribe({
-                            next: (response) => {
-                                console.log(response);
-                                this.evaluadorInternoSeleccionado =
-                                    this.mapEvaluadorInternoLabel(response);
-                                this.solicitudService.setEvaluadorInternoSeleccionadoSubject(
-                                    this.evaluadorInternoSeleccionado
-                                );
-                                this.evaluadorInterno.setValue(response.id);
-                            },
-                        });
-                    this.expertoService
-                        .getExperto(response.evaluadorExterno)
-                        .subscribe({
-                            next: (response) => {
-                                console.log(response);
-                                this.evaluadorExternoSeleccionado =
-                                    this.mapEvaluadorExternoLabel(response);
-                                this.solicitudService.setEvaluadorExternoSeleccionadoSubject(
-                                    this.evaluadorExternoSeleccionado
-                                );
-                                this.evaluadorExterno.setValue(response.id);
-                            },
-                        });
-                    this.solicitudForm
-                        .get('actaAprobacionExamen')
-                        .setValue(Number(data?.actaAprobacionExamen));
-                    this.solicitudForm
-                        .get('fechaActa')
-                        .setValue(
-                            data?.fechaActa ? new Date(data.fechaActa) : null
-                        );
-                    this.solicitudForm
-                        .get('fechaMaximaEvaluacion')
-                        .setValue(
-                            data?.fechaMaximaEvaluacion
-                                ? new Date(data.fechaMaximaEvaluacion)
-                                : null
-                        );
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-            complete: () => {
-                this.isSolicitudValid = true;
 
-                if (
-                    this.role.includes('ROLE_DOCENTE') &&
-                    !this.role.includes('ROLE_COORDINADOR')
-                ) {
+        if (this.role.includes('ROLE_COMITE')) {
+            this.isSolicitudValid = true;
+
+            this.solicitudService.getSolicitudDocente(id).subscribe({
+                next: (response) => {
+                    if (response) {
+                        this.solicitudService.setTituloSeleccionadoSubject(
+                            response.titulo
+                        );
+                    }
+                },
+                complete: () => {
+                    this.isLoading = false;
+                },
+            });
+        }
+
+        if (
+            this.role.includes('ROLE_DOCENTE') &&
+            !this.role.includes('ROLE_COORDINADOR')
+        ) {
+            this.solicitudService.getSolicitudDocente(id).subscribe({
+                next: (response) => {
+                    if (response) {
+                        const data = response;
+                        this.solicitudService.setTituloSeleccionadoSubject(
+                            data.titulo
+                        );
+                        this.setValuesForm(data);
+
+                        this.solicitudForm
+                        .get('idTrabajoGrados')
+                        .setValue(this.trabajoDeGradoId);
+
+                        this.evaluadorInternoSeleccionado =
+                            this.mapEvaluadorInternoLabel(
+                                response.evaluadorInterno
+                            );
+                        this.solicitudService.setEvaluadorInternoSeleccionadoSubject(
+                            this.evaluadorInternoSeleccionado
+                        );
+                        this.evaluadorInterno.setValue(
+                            response.evaluadorInterno.id
+                        );
+
+                        this.evaluadorExternoSeleccionado =
+                            this.mapEvaluadorExternoLabel(
+                                response.evaluadorExterno
+                            );
+                        this.solicitudService.setEvaluadorExternoSeleccionadoSubject(
+                            this.evaluadorExternoSeleccionado
+                        );
+                        this.evaluadorExterno.setValue(
+                            response.evaluadorExterno.id
+                        );
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
+                complete: () => {
+                    this.isSolicitudValid = true;
+
                     this.setup('linkFormatoA');
                     this.setup('linkFormatoD');
                     this.setup('linkFormatoE');
-                }
 
-                if (
-                    this.role.includes('ROLE_COORDINADOR') &&
-                    !this.role.includes('ROLE_DOCENTE')
-                ) {
+                    this.isLoading = false;
+                },
+            });
+        }
+
+        if (
+            this.role.includes('ROLE_COORDINADOR') &&
+            !this.role.includes('ROLE_DOCENTE')
+        ) {
+            this.solicitudService.getSolicitudCoordinador(id).subscribe({
+                next: (response) => {
+                    if (response) {
+                        if (
+                            !!response.actaAprobacionExamen ||
+                            !!response.fechaActa ||
+                            !!response.fechaMaximaEvaluacion ||
+                            !!response.linkOficioDirigidoEvaluadores
+                        ) {
+                            this.isCoordinadorCreated = true;
+                        } else {
+                            this.isCoordinadorCreated = false;
+                        }
+
+                        const data = response;
+                        this.solicitudService.setTituloSeleccionadoSubject(
+                            data.titulo
+                        );
+                        this.setValuesForm(data);
+                        this.solicitudForm.get('idTrabajoGrados').setValue(id);
+
+                        this.expertoService
+                            .obtenerExperto(response.evaluadorExterno)
+                            .subscribe({
+                                next: (response) => {
+                                    this.evaluadorExternoSeleccionado =
+                                        this.mapEvaluadorExternoLabel(response);
+                                    this.solicitudService.setEvaluadorExternoSeleccionadoSubject(
+                                        this.evaluadorExternoSeleccionado
+                                    );
+                                    this.evaluadorExterno.setValue(response.id);
+                                },
+                            });
+
+                        this.docenteService
+                            .obtenerDocente(response.evaluadorInterno)
+                            .subscribe({
+                                next: (response) => {
+                                    this.evaluadorInternoSeleccionado =
+                                        this.mapEvaluadorInternoLabel(response);
+                                    this.solicitudService.setEvaluadorInternoSeleccionadoSubject(
+                                        this.evaluadorInternoSeleccionado
+                                    );
+                                    this.evaluadorInterno.setValue(response.id);
+                                },
+                            });
+
+                        this.solicitudForm
+                            .get('actaAprobacionExamen')
+                            .setValue(data?.actaAprobacionExamen);
+                        this.solicitudForm
+                            .get('fechaActa')
+                            .setValue(
+                                data?.fechaActa
+                                    ? new Date(data.fechaActa)
+                                    : null
+                            );
+                        this.solicitudForm
+                            .get('fechaMaximaEvaluacion')
+                            .setValue(
+                                data?.fechaMaximaEvaluacion
+                                    ? new Date(data.fechaMaximaEvaluacion)
+                                    : null
+                            );
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
+                complete: () => {
+                    this.isSolicitudValid = true;
+
                     this.setup('linkFormatoA');
                     this.setup('linkFormatoD');
                     this.setup('linkFormatoE');
                     this.setup('linkOficioDirigidoEvaluadores');
-                }
-                this.isLoading = false;
-            },
-        });
+
+                    this.isLoading = false;
+                },
+            });
+        }
     }
 
     ngOnDestroy() {
@@ -768,31 +849,27 @@ export class SolicitudExamenComponent implements OnInit {
         );
     }
 
-    mapEvaluadorInternoLabel(docente: Docente) {
+    mapEvaluadorInternoLabel(docente: any) {
         const ultimaUniversidad =
-            docente.titulos.length > 0
+            docente?.titulos?.length > 0
                 ? docente.titulos[docente.titulos.length - 1].universidad
-                : 'Sin título universitario';
+                : null;
 
         return {
             id: docente.id,
-            nombre: docente.persona.nombre,
-            apellido: docente.persona.apellido,
-            correo: docente.persona.correoElectronico,
-            universidad: ultimaUniversidad,
+            nombre: docente.nombre,
+            apellido: docente.apellido,
+            correo: docente.correoElectronico ?? docente.correo,
+            universidad: docente.universidad ?? ultimaUniversidad,
         };
     }
 
     mapEvaluadorExternoLabel(experto: any) {
         return {
             id: experto.id,
-            nombre: experto.nombre ? experto.nombre : experto.persona.nombre,
-            apellido: experto.apellido
-                ? experto.apellido
-                : experto.persona.apellido,
-            correo: experto.correo
-                ? experto.correo
-                : experto.persona.correoElectronico,
+            nombre: experto.nombre,
+            apellido: experto.apellido,
+            correo: experto.correoElectronico ?? experto.correo,
             universidad: experto.universidad,
         };
     }

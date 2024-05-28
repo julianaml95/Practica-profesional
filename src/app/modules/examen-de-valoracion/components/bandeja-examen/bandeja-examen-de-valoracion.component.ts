@@ -11,6 +11,7 @@ import { Solicitud } from '../../models/solicitud';
 import { LocalStorageService } from '../../services/localstorage.service';
 import { ResolucionService } from '../../services/resolucion.service';
 import { SustentacionService } from '../../services/sustentacion.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-bandeja-examen-de-valoracion',
@@ -21,6 +22,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
     loading: boolean;
     estudianteSeleccionado: any;
     solicitudes: Solicitud[] = [];
+    role: string[];
 
     constructor(
         private breadcrumbService: BreadcrumbService,
@@ -31,7 +33,8 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         private messageService: MessageService,
         private dialogService: DialogService,
         private localStorageService: LocalStorageService,
-        private confirmationService: ConfirmationService
+        private confirmationService: ConfirmationService,
+        private authService: AuthService
     ) {}
 
     ngOnInit(): void {
@@ -41,10 +44,11 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
 
     loadData() {
         const estudiante = this.localStorageService.getLocalStorage('est');
+        this.role = this.authService.getRole();
+
         if (estudiante) {
             this.solicitudService.setEstudianteSeleccionado(estudiante);
             this.estudianteSeleccionado = estudiante;
-            console.log(this.estudianteSeleccionado);
             this.listTrabajosDeGrado(estudiante.id);
         }
     }
@@ -75,26 +79,26 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
     }
 
     onEditar(id: number) {
-        this.solicitudService.getSolicitudDocente(id).subscribe({
-            next: (response) => {
-                this.solicitudService.setSolicitudSeleccionada(response);
-            },
-        });
         this.solicitudService.getTrabajoDeGrado(id).subscribe({
             next: (response) => {
                 this.solicitudService.setTrabajoSeleccionado(response);
             },
         });
-        // this.resolucionService.getResolucionByTrabajo(id).subscribe({
-        //     next: (response) => {
-        //         this.solicitudService.setResolucionSeleccionada(response);
-        //     },
-        // });
-        // this.sustentacionService.getSustentacionByTrabajo(id).subscribe({
-        //     next: (response) => {
-        //         this.solicitudService.setSustentacionSeleccionada(response);
-        //     },
-        // });
+        this.solicitudService.getSolicitudDocente(id).subscribe({
+            next: (response) => {
+                this.solicitudService.setSolicitudSeleccionada(response);
+            },
+        });
+        this.resolucionService.getResolucionCoordinador(id).subscribe({
+            next: (response) => {
+                this.solicitudService.setResolucionSeleccionada(response);
+            },
+        });
+        this.sustentacionService.getSustentacionCoordinador(id).subscribe({
+            next: (response) => {
+                this.solicitudService.setSustentacionSeleccionada(response);
+            },
+        });
         this.router.navigate(['examen-de-valoracion/solicitud/editar', id]);
     }
 
@@ -155,7 +159,6 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                     this.solicitudService.setEstudianteSeleccionado(
                         this.estudianteSeleccionado
                     );
-                    console.log(this.estudianteSeleccionado);
                     this.listTrabajosDeGrado(this.estudianteSeleccionado.id);
                     this.localStorageService.saveLocalStorage(
                         this.mapEstudianteLabel(response),

@@ -11,9 +11,23 @@ import { Resolucion } from '../models/resolucion';
 export class ResolucionService {
     constructor(private http: HttpClient) {}
 
-    createResolucion(resolucion: Resolucion) {
+    createResolucionCoordinador(resolucion: Resolucion) {
         return this.http.post<any>(
-            backendGestionTrabajoDeGrado('generacion_resolucion'),
+            backendGestionTrabajoDeGrado(
+                'generacion_resolucion/insertarInformacionCoordinador'
+            ),
+            resolucion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    createResolucionComite(resolucion: Resolucion) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado(
+                'generacion_resolucion/insertarInformacionComite'
+            ),
             resolucion,
             {
                 headers: getHeaders(),
@@ -33,10 +47,21 @@ export class ResolucionService {
         );
     }
 
-    getResolucionByTrabajo(trabajoDeGradoId: number): Observable<Resolucion> {
+    getResolucionComite(trabajoDeGradoId: number): Observable<Resolucion> {
         return this.http.get<Resolucion>(
             backendGestionTrabajoDeGrado(
-                `generacion_resolucion/${trabajoDeGradoId}`
+                `generacion_resolucion/listarInformacionComite/${trabajoDeGradoId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    getResolucionCoordinador(trabajoDeGradoId: number): Observable<Resolucion> {
+        return this.http.get<Resolucion>(
+            backendGestionTrabajoDeGrado(
+                `generacion_resolucion/listarInformacionCoordinador/${trabajoDeGradoId}`
             ),
             {
                 headers: getHeaders(),

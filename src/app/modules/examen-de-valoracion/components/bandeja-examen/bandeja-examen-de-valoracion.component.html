@@ -67,6 +67,7 @@
                     icon="pi pi-plus"
                     label="Crear Examen de Valoracion"
                     (click)="onProcesoExamen()"
+                    [disabled]="!role.includes('ROLE_DOCENTE')"
                 ></button>
             </div>
             <p-table
@@ -94,7 +95,9 @@
                 <ng-template pTemplate="body" let-solicitud>
                     <tr>
                         <td style="min-width: 200px">{{ solicitud.titulo }}</td>
-                        <td style="min-width: 200px">{{ solicitud.fechaCreacion }}</td>
+                        <td style="min-width: 200px">
+                            {{ solicitud.fechaCreacion }}
+                        </td>
                         <td style="min-width: 200px">{{ solicitud.estado }}</td>
                         <td style="min-width: 200px">
                             <button

@@ -95,10 +95,10 @@
                         <b>Sustentación del proyecto de investigación</b>
                     </p>
                 </div>
-                <div class="field grid">
+                <div class="field grid" *ngIf="role.includes('ROLE_DOCENTE') || role.includes('ROLE_COORDINADOR')">
                     <div class="col-4 text-right align-self-center pb-5">
                         <label class="label-required"
-                            >Remisión del documento fnal al comité (Formato F
+                            >Remisión del documento final al comité (Formato F
                             .pdf)
                         </label>
                     </div>
@@ -143,7 +143,7 @@
                                 </div>
                                 <div
                                     class="mt-2"
-                                    style="word-break: break-word"
+                                    style="width: '200px'; word-break: break-word"
                                     *ngIf="FileRemisionComite"
                                 >
                                     {{ FileRemisionComite.name }} -
@@ -169,7 +169,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid">
+                <div class="field grid" *ngIf="role.includes('ROLE_DOCENTE') || role.includes('ROLE_COORDINADOR')">
                     <div class="col-4 text-right align-self-center">
                         <label class="label-required"
                             >Link documentación de la tesis (monografía y
@@ -185,11 +185,11 @@
                         />
                     </div>
                 </div>
-                <div class="field grid">
+                <div class="field grid" *ngIf="role.includes('ROLE_COMITE') || role.includes('ROLE_COORDINADOR')">
                     <div class="col-4 text-right align-self-center pb-5">
                         <label class="label-required"
-                            >Remisión del documento fnal al concejo de
-                            facultad(Formato G .pdf)
+                            >Remisión del documento final al concejo de facultad
+                            (Formato G .pdf)
                         </label>
                     </div>
                     <div class="col-8">
@@ -233,7 +233,7 @@
                                 </div>
                                 <div
                                     class="mt-2"
-                                    style="word-break: break-word"
+                                    style="width: '200px'; word-break: break-word"
                                     *ngIf="FileRemisionConcejo"
                                 >
                                     {{ FileRemisionConcejo.name }} -
@@ -259,7 +259,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="role.includes('ROLE_COORDINADOR')"
+                >
                     <div class="col-4 text-right align-self-center pb-5">
                         <label class="label-required"
                             >Constancia de que el documento fnal corresponde a
@@ -307,7 +310,7 @@
                                 </div>
                                 <div
                                     class="mt-2"
-                                    style="word-break: break-word"
+                                    style="width: '200px'; word-break: break-word"
                                     *ngIf="FileConstanciaDocumento"
                                 >
                                     {{ FileConstanciaDocumento.name }} -
@@ -335,7 +338,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="role.includes('ROLE_COORDINADOR')"
+                >
                     <div class="col-4 text-right align-self-center pb-5">
                         <label class="label-required"
                             >Acta de sustentación (Formato I .pdf)
@@ -380,7 +386,7 @@
                                 </div>
                                 <div
                                     class="mt-2"
-                                    style="word-break: break-word"
+                                    style="width: '200px'; word-break: break-word"
                                     *ngIf="FileActaSustentacion"
                                 >
                                     {{ FileActaSustentacion.name }} -
@@ -404,7 +410,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="role.includes('ROLE_COORDINADOR')"
+                >
                     <div class="col-4 text-right align-self-center pb-5">
                         <label class="label-required"
                             >Acta para Sustentación Pública (Formato
@@ -452,7 +461,7 @@
                                 </div>
                                 <div
                                     class="mt-2"
-                                    style="word-break: break-word"
+                                    style="width: '200px'; word-break: break-word"
                                     *ngIf="FileActaSustentacionP"
                                 >
                                     {{ FileActaSustentacionP.name }} -
@@ -478,7 +487,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="role.includes('ROLE_COORDINADOR')"
+                >
                     <div class="col-4 text-right align-self-center pb-5">
                         <label class="label-required col-2 text-right"
                             >Respuesta a la sustentación
@@ -500,7 +512,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="role.includes('ROLE_COORDINADOR')"
+                >
                     <div class="col-4 text-right align-self-center pb-5">
                         <label class="label-required"
                             >Estudio hoja de vida academica para grado
@@ -548,7 +563,7 @@
                                 </div>
                                 <div
                                     class="mt-2"
-                                    style="word-break: break-word"
+                                    style="width: '200px'; word-break: break-word"
                                     *ngIf="FileEstudioHVA"
                                 >
                                     {{ FileEstudioHVA.name }} -
@@ -574,7 +589,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid">
+                <div
+                    class="field grid"
+                    *ngIf="role.includes('ROLE_COORDINADOR')"
+                >
                     <div class="col-4 text-right flex align-items-center">
                         <p
                             class="label-required"
@@ -585,10 +603,10 @@
                     </div>
                     <div class="col-8">
                         <div class="flex align-items-center column-gap-3">
-                            <p-inputNumber
-                                inputId="integeronly"
+                            <input
+                                pInputText
                                 formControlName="numeroActaTrabajoFinal"
-                            ></p-inputNumber>
+                            />
                             <label class="text-right label-required"
                                 >Fecha del Acta</label
                             >

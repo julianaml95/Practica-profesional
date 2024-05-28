@@ -11,6 +11,9 @@ export enum Mensaje {
     DOCENTE_ELIMINADO_CORRECTAMENTE = 'Docente eliminado correctamente',
     CONFIRMAR_ELIMINAR_DOCENTE = '¿Está seguro de eliminar este docente?',
 
+    // Cursos
+    CURSO_ELIMINADO_CORRECTAMENTE = 'Curso eliminado correctamente',
+
     // Empresas
     EMPRESA_ELIMINADA_CORRECTAMENTE = 'Empresa eliminada correctamente',
 
@@ -26,13 +29,16 @@ export enum Mensaje {
     EXAMEN_APROBADO = 'Examen de valoración aprobado',
     EXAMEN_NO_APROBADO = 'Examen de valoración no aprobado',
     EXAMEN_APLAZADO = 'Examen de valoración aplazado',
+    SOLICITUD_ELIMINADA_CORRECTAMENTE = 'Solicitud eliminada correctamente',
 
     // General
+    CREDENCIALES_INCORRECTAS = 'Credenciales incorrectas',
+    CAMPOS_COORDINADOR_PENDIENTE = 'Pendiente subir informacion de coordinador (*)',
+    CAMPOS_COMITE_PENDIENTE = 'Pendiente subir informacion de comite (*)',
+    CAMPOS_DOCENTE_PENDIENTE = 'Pendiente subir informacion de docente (*)',
     REGISTRE_CAMPOS_OBLIGATORIOS = 'Completa los campos marcados como obligatorios (*)',
-    SOLICITUD_ELIMINADA_CORRECTAMENTE = 'Solicitud eliminada correctamente',
     ARCHIVO_ELIMINADO_CORRECTAMENTE = 'Archivo eliminado correctamente',
     ARCHIVO_DEMASIADO_GRANDE = 'Archivo demasiado grande',
-    CURSO_ELIMINADO_CORRECTAMENTE = 'Curso eliminado correctamente',
     CONFIRMAR_ELIMINAR_REGISTRO = '¿Está seguro de eliminar este registro?',
     CONFIRMAR_SALIR_SIN_GUARDAR = 'La información no ha sido guardada, ¿Desea salir?',
     ACTUALIZACION_EXITOSA = 'El registro fue actualizado exitosamente',

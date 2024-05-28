@@ -2,6 +2,9 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
+import { warnMessage } from 'src/app/core/utils/message-util';
+import { Mensaje } from 'src/app/core/enums/enums';
 
 @Component({
     selector: 'app-login',
@@ -14,6 +17,7 @@ export class LoginComponent implements OnInit {
 
     constructor(
         private fb: FormBuilder,
+        private messageService: MessageService,
         private authService: AuthService,
         private router: Router
     ) {}
@@ -35,12 +39,13 @@ export class LoginComponent implements OnInit {
         if (this.loginForm.valid) {
             const { username, password } = this.loginForm.value;
             this.authService.login(username, password).subscribe({
-                next: (response) => {
-                    console.log('Login successful', response);
+                next: (_) => {
                     this.router.navigate(['/']);
                 },
-                error: (error) => {
-                    console.error('Login failed', error);
+                error: (_) => {
+                    this.messageService.add(
+                        warnMessage(Mensaje.CREDENCIALES_INCORRECTAS)
+                    );
                 },
             });
         } else {

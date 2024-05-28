@@ -17,7 +17,6 @@ import { Experto } from '../../models/experto';
 import { Subject } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
-import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-respuesta-examen',
@@ -228,12 +227,6 @@ export class RespuestaExamenComponent implements OnInit {
         this.formReady.emit(this.respuestaForm);
     }
 
-    setValuesForm(respuesta: Respuesta) {
-        this.respuestaForm.patchValue({
-            ...respuesta,
-        });
-    }
-
     initializeForm(respuestas: any) {
         let indexExperto = 0;
         let indexDocente = 0;
@@ -419,6 +412,10 @@ export class RespuestaExamenComponent implements OnInit {
                 ? this.evaluacionExpertoIds[index]
                 : this.evaluacionDocenteIds[index];
         const evaluacionData = this.mapEvaluacion(formArrayName, index);
+
+        if (evaluacionData.respuestaExamenValoracion == 'Aprobado')
+            evaluacionData.fechaMaximaEntrega = '';
+
         const { [formArrayName]: omit, ...rest } = this.respuestaForm.value;
         const castBit = {
             ...rest,
@@ -465,6 +462,10 @@ export class RespuestaExamenComponent implements OnInit {
             return;
         }
         const evaluacionData = this.mapEvaluacion(formArrayName, index);
+
+        if (evaluacionData.respuestaExamenValoracion == 'Aprobado')
+            evaluacionData.fechaMaximaEntrega = '';
+
         const { [formArrayName]: omit, ...rest } = this.respuestaForm.value;
         const castBit = {
             ...rest,

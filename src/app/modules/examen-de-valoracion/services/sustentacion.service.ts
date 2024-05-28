@@ -11,9 +11,35 @@ import { Sustentacion } from '../models/sustentacion';
 export class SustentacionService {
     constructor(private http: HttpClient) {}
 
-    createSustentacion(sustentacion: Sustentacion) {
+    createSustentacionCoordinador(sustentacion: Sustentacion) {
         return this.http.post<any>(
-            backendGestionTrabajoDeGrado('sustentacion_proyecto_investigacion'),
+            backendGestionTrabajoDeGrado(
+                'sustentacion_proyecto_investigacion/insertarInformacionCoordinador'
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    createSustentacionComite(sustentacion: Sustentacion) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado(
+                'sustentacion_proyecto_investigacion/insertarInformacionComite'
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    createSustentacionDocente(sustentacion: Sustentacion) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado(
+                'sustentacion_proyecto_investigacion/insertarInformacionDocente'
+            ),
             sustentacion,
             {
                 headers: getHeaders(),
@@ -33,12 +59,12 @@ export class SustentacionService {
         );
     }
 
-    getSustentacionByTrabajo(
+    getSustentacionCoordinador(
         trabajoDeGradoId: number
     ): Observable<Sustentacion> {
         return this.http.get<Sustentacion>(
             backendGestionTrabajoDeGrado(
-                `sustentacion_proyecto_investigacion/${trabajoDeGradoId}`
+                `sustentacion_proyecto_investigacion/listarInformacionCoordinador/${trabajoDeGradoId}`
             ),
             {
                 headers: getHeaders(),

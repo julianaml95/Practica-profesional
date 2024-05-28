@@ -34,8 +34,8 @@
     <!-- Contenido  -->
     <ng-template pTemplate="body" let-docente>
         <tr [pSelectableRow]="docente">
-            <td style="min-width: 150px">{{ docente.persona.nombre }}</td>
-            <td style="min-width: 150px">{{ docente.persona.apellido }}</td>
+            <td style="min-width: 150px">{{ docente.nombre }}</td>
+            <td style="min-width: 150px">{{ docente.apellido }}</td>
         </tr>
     </ng-template>
     <!-- Mensaje sin registros -->

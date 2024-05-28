@@ -22,6 +22,7 @@ import {
 import { SustentacionService } from '../../services/sustentacion.service';
 import { Mensaje } from 'src/app/core/enums/enums';
 import { Sustentacion } from '../../models/sustentacion';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-sustentacion-examen',
@@ -46,8 +47,13 @@ export class SustentacionExamenComponent implements OnInit {
     FileActaSustentacionP: File | null;
     FileEstudioHVA: File | null;
 
+    isCoordinadorCreated: boolean = false;
+    isComiteCreated: boolean = false;
+    isDocenteCreated: boolean = false;
     isLoading: boolean = false;
     editMode: boolean = false;
+
+    role: string[];
 
     trabajoDeGradoId: number;
     respuestaId: number;
@@ -56,7 +62,6 @@ export class SustentacionExamenComponent implements OnInit {
 
     sustentacionForm: FormGroup;
 
-    tituloSeleccionado: string;
     estudianteSeleccionado: Estudiante = {};
 
     estados: string[] = ['Aprobado', 'No Aprobado'];
@@ -68,7 +73,8 @@ export class SustentacionExamenComponent implements OnInit {
         private solicitudService: SolicitudService,
         private sustentacionService: SustentacionService,
         private breadcrumbService: BreadcrumbService,
-        private messageService: MessageService
+        private messageService: MessageService,
+        private authService: AuthService
     ) {}
 
     ngOnInit() {
@@ -103,21 +109,74 @@ export class SustentacionExamenComponent implements OnInit {
         this.formReady.emit(this.sustentacionForm);
     }
 
+    updateFormFields(role: string[]): void {
+        if (
+            role.includes('ROLE_DOCENTE') &&
+            !role.includes('ROLE_COORDINADOR') &&
+            !role.includes('ROLE_COMITE')
+        ) {
+            this.sustentacionForm.get('linkRemisionDocumentoFinal').enable();
+            this.sustentacionForm.get('urlDocumentacion').enable();
+
+            this.sustentacionForm.get('linkRemisionDocumentoFinalCF').disable();
+
+            this.sustentacionForm.get('linkConstanciaDocumentoFinal').disable();
+            this.sustentacionForm.get('linkActaSustentacion').disable();
+            this.sustentacionForm.get('linkActaSustentacionPublica').disable();
+            this.sustentacionForm.get('respuestaSustentacion').disable();
+            this.sustentacionForm.get('linkEstudioHojaVidaAcademica').disable();
+            this.sustentacionForm.get('numeroActaTrabajoFinal').disable();
+            this.sustentacionForm.get('fechaActa').disable();
+        }
+
+        if (
+            role.includes('ROLE_COMITE') &&
+            !role.includes('ROLE_COORDINADOR') &&
+            !role.includes('ROLE_DOCENTE')
+        ) {
+            this.sustentacionForm.get('linkRemisionDocumentoFinalCF').enable();
+
+            this.sustentacionForm.get('linkRemisionDocumentoFinal').disable();
+            this.sustentacionForm.get('urlDocumentacion').disable();
+
+            this.sustentacionForm.get('linkConstanciaDocumentoFinal').disable();
+            this.sustentacionForm.get('linkActaSustentacion').disable();
+            this.sustentacionForm.get('linkActaSustentacionPublica').disable();
+            this.sustentacionForm.get('respuestaSustentacion').disable();
+            this.sustentacionForm.get('linkEstudioHojaVidaAcademica').disable();
+            this.sustentacionForm.get('numeroActaTrabajoFinal').disable();
+            this.sustentacionForm.get('fechaActa').disable();
+        }
+
+        if (
+            role.includes('ROLE_COORDINADOR') &&
+            !role.includes('ROLE_COMITE') &&
+            !role.includes('ROLE_DOCENTE')
+        ) {
+            this.sustentacionForm.get('linkRemisionDocumentoFinal').enable();
+            this.sustentacionForm.get('urlDocumentacion').enable();
+            this.sustentacionForm.get('linkRemisionDocumentoFinalCF').enable();
+
+            this.sustentacionForm.get('linkConstanciaDocumentoFinal').enable();
+            this.sustentacionForm.get('linkActaSustentacion').enable();
+            this.sustentacionForm.get('linkActaSustentacionPublica').enable();
+            this.sustentacionForm.get('respuestaSustentacion').enable();
+            this.sustentacionForm.get('linkEstudioHojaVidaAcademica').enable();
+            this.sustentacionForm.get('numeroActaTrabajoFinal').enable();
+            this.sustentacionForm.get('fechaActa').enable();
+        }
+    }
+
     subscribeToObservers() {
+        this.role = this.authService.getRole();
+        this.updateFormFields(this.role);
+
         this.solicitudService.estudianteSeleccionado$.subscribe({
             next: (response) => {
                 if (response) {
                     this.estudianteSeleccionado = response;
                 } else {
                     this.router.navigate(['examen-de-valoracion']);
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.tituloSeleccionadoSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.tituloSeleccionado = response;
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -136,7 +195,7 @@ export class SustentacionExamenComponent implements OnInit {
         this.solicitudService.resolucionSeleccionadaSubject$.subscribe({
             next: (response) => {
                 if (response) {
-                    this.resolucionId = response.id;
+                    this.resolucionId = response.idGeneracionResolucion;
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -144,7 +203,7 @@ export class SustentacionExamenComponent implements OnInit {
         this.solicitudService.sustentacionSeleccionadaSubject$.subscribe({
             next: (response) => {
                 if (response) {
-                    this.sustentacionId = response.id;
+                    this.sustentacionId = response.idSustentacionTI;
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -193,7 +252,11 @@ export class SustentacionExamenComponent implements OnInit {
                             }
                         }
                     },
-                    error: (e) => this.handlerResponseException(e),
+                    error: (e) => {
+                        this.messageService.add(
+                            warnMessage('Pendiente subir archivos.')
+                        );
+                    },
                 });
         }
     }
@@ -207,15 +270,46 @@ export class SustentacionExamenComponent implements OnInit {
     loadSustentacion() {
         this.isLoading = true;
         this.sustentacionService
-            .getSustentacionByTrabajo(this.trabajoDeGradoId)
+            .getSustentacionCoordinador(this.trabajoDeGradoId)
             .subscribe({
                 next: (response) => {
                     if (response) {
                         const data = response;
                         this.setValuesForm(data);
+
                         this.sustentacionForm
                             .get('idTrabajoGrados')
                             .setValue(this.trabajoDeGradoId);
+
+                        if (
+                            !!response.linkRemisionDocumentoFinal ||
+                            !!response.urlDocumentacion
+                        ) {
+                            this.isDocenteCreated = true;
+                        } else {
+                            this.isDocenteCreated = false;
+                        }
+
+                        if (!!response.linkRemisionDocumentoFinalCF) {
+                            this.isComiteCreated = true;
+                        } else {
+                            this.isComiteCreated = false;
+                        }
+
+                        if (
+                            !!response.linkConstanciaDocumentoFinal ||
+                            !!response.linkActaSustentacion ||
+                            !!response.linkActaSustentacionPublica ||
+                            !!response.respuestaSustentacion ||
+                            !!response.linkEstudioHojaVidaAcademica ||
+                            !!response.numeroActaTrabajoFinal ||
+                            !!response.fechaActa
+                        ) {
+                            this.isCoordinadorCreated = true;
+                        } else {
+                            this.isCoordinadorCreated = false;
+                        }
+
                         const respuestaSustentacion =
                             data?.respuestaSustentacion == true
                                 ? 'Aprobado'
@@ -224,25 +318,33 @@ export class SustentacionExamenComponent implements OnInit {
                             .get('respuestaSustentacion')
                             .setValue(respuestaSustentacion);
                         this.sustentacionForm
-                            .get('numeroActaTrabajoFinal')
-                            .setValue(Number(data?.numeroActaTrabajoFinal));
-                        this.sustentacionForm
                             .get('fechaActa')
                             .setValue(
                                 data?.fechaActa
-                                    ? new Date(data.fechaActa)
+                                    ? new Date(data?.fechaActa)
                                     : null
                             );
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
                 complete: () => {
-                    this.setup('linkRemisionDocumentoFinal');
-                    this.setup('linkRemisionDocumentoFinalCF');
-                    this.setup('linkConstanciaDocumentoFinal');
-                    this.setup('linkActaSustentacion');
-                    this.setup('linkActaSustentacionPublica');
-                    this.setup('linkEstudioHojaVidaAcademica');
+                    if (this.role.includes('ROLE_DOCENTE')) {
+                        this.setup('linkRemisionDocumentoFinal');
+                    }
+
+                    if (this.role.includes('ROLE_COMITE')) {
+                        this.setup('linkRemisionDocumentoFinalCF');
+                    }
+
+                    if (this.role.includes('ROLE_COORDINADOR')) {
+                        this.setup('linkRemisionDocumentoFinal');
+                        this.setup('linkRemisionDocumentoFinalCF');
+
+                        this.setup('linkConstanciaDocumentoFinal');
+                        this.setup('linkActaSustentacion');
+                        this.setup('linkActaSustentacionPublica');
+                        this.setup('linkEstudioHojaVidaAcademica');
+                    }
                     this.isLoading = false;
                 },
             });
@@ -257,17 +359,101 @@ export class SustentacionExamenComponent implements OnInit {
         formValue.respuestaSustentacion =
             formValue.respuestaSustentacion === 'Aprobado' ? 1 : 0;
 
-        this.sustentacionService
-            .updateSustentacion(formValue, this.sustentacionId)
-            .subscribe({
-                next: (_) => {},
-                error: (e) => this.handlerResponseException(e),
-                complete: () => {
-                    timer(2000).subscribe(() => {
-                        this.isLoading = false;
-                    });
-                },
-            });
+        if (
+            (this.role.includes('ROLE_COORDINADOR') ||
+                this.role.includes('ROLE_DOCENTE') ||
+                this.role.includes('ROLE_COMITE')) &&
+            this.isComiteCreated == true &&
+            this.isDocenteCreated == true &&
+            this.isCoordinadorCreated == true
+        ) {
+            this.sustentacionService
+                .updateSustentacion(formValue, this.sustentacionId)
+                .subscribe({
+                    next: (_) => {},
+                    error: (e) => this.handlerResponseException(e),
+                    complete: () => {
+                        timer(2000).subscribe(() => {
+                            this.isLoading = false;
+                            this.messageService.add(
+                                infoMessage(Mensaje.ACTUALIZACION_EXITOSA)
+                            );
+                        });
+                    },
+                });
+        }
+
+        if (
+            this.role.includes('ROLE_COMITE') &&
+            this.isDocenteCreated == true &&
+            this.isComiteCreated == false &&
+            this.isCoordinadorCreated == false
+        ) {
+            this.sustentacionService
+                .createSustentacionComite(formValue)
+                .subscribe({
+                    next: (response) => {
+                        if (response) {
+                            timer(2000).subscribe(() => {
+                                this.isLoading = false;
+                                this.messageService.add(
+                                    infoMessage(Mensaje.GUARDADO_EXITOSO)
+                                );
+                            });
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                });
+        }
+
+        if (
+            this.role.includes('ROLE_COORDINADOR') &&
+            this.isDocenteCreated == true &&
+            this.isComiteCreated == true &&
+            this.isCoordinadorCreated == false
+        ) {
+            this.sustentacionService
+                .createSustentacionCoordinador(formValue)
+                .subscribe({
+                    next: (response) => {
+                        if (response) {
+                            timer(2000).subscribe(() => {
+                                this.isLoading = false;
+                                this.messageService.add(
+                                    infoMessage(Mensaje.GUARDADO_EXITOSO)
+                                );
+                            });
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                });
+        }
+
+        if (
+            (this.role.includes('ROLE_COORDINADOR') ||
+                this.role.includes('ROLE_DOCENTE')) &&
+            this.isDocenteCreated == true &&
+            this.isComiteCreated == false &&
+            this.isCoordinadorCreated == false
+        ) {
+            this.isLoading = false;
+            this.messageService.add(
+                warnMessage(Mensaje.CAMPOS_COMITE_PENDIENTE)
+            );
+        }
+
+        if (
+            (this.role.includes('ROLE_DOCENTE') ||
+                this.role.includes('ROLE_COMITE')) &&
+            this.isDocenteCreated == true &&
+            this.isComiteCreated == true &&
+            this.isCoordinadorCreated == false
+        ) {
+            this.isLoading = false;
+            this.messageService.add(
+                warnMessage(Mensaje.CAMPOS_COORDINADOR_PENDIENTE)
+            );
+        }
     }
 
     createSustentacion(): void {
@@ -277,20 +463,39 @@ export class SustentacionExamenComponent implements OnInit {
         formValue.respuestaSustentacion =
             formValue.respuestaSustentacion === 'Aprobado' ? 1 : 0;
 
-        this.sustentacionService.createSustentacion(formValue).subscribe({
-            next: (response) => {
-                if (response) {
-                    this.solicitudService.setSustentacionSeleccionada(response);
-                    timer(2000).subscribe(() => {
-                        this.isLoading = false;
-                        this.router.navigate([
-                            `examen-de-valoracion/sustentacion/editar/${response.idSustentacionTI}`,
-                        ]);
-                    });
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
+        if (
+            this.role.includes('ROLE_DOCENTE') == true &&
+            this.isDocenteCreated == false
+        )
+            this.sustentacionService
+                .createSustentacionDocente(formValue)
+                .subscribe({
+                    next: (response) => {
+                        if (response) {
+                            this.solicitudService.setSustentacionSeleccionada(
+                                response
+                            );
+                            timer(2000).subscribe(() => {
+                                this.isLoading = false;
+                                this.router.navigate([
+                                    `examen-de-valoracion/sustentacion/editar/${response.idSustentacionTI}`,
+                                ]);
+                            });
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                });
+
+        if (
+            (this.role.includes('ROLE_COMITE') == true ||
+                this.role.includes('ROLE_COORDINADOR') == true) &&
+            this.isDocenteCreated == false
+        ) {
+            this.isLoading = false;
+            this.messageService.add(
+                warnMessage(Mensaje.CAMPOS_DOCENTE_PENDIENTE)
+            );
+        }
     }
 
     createOrUpdateSustentacion() {
@@ -495,14 +700,14 @@ export class SustentacionExamenComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        // if (response.status != 501) return;
-        // const mapException = mapResponseException(response.error);
-        // mapException.forEach((value, _) => {
-        //     this.messageService.add(errorMessage(value));
-        // });
-        this.messageService.add(
-            errorMessage(response.error ? response.error : response)
-        );
+        if (response.status != 501) return;
+        const mapException = mapResponseException(response.error);
+        mapException.forEach((value, _) => {
+            this.messageService.add(errorMessage(value));
+        });
+        // this.messageService.add(
+        //     errorMessage(response.error ? response.error : response)
+        // );
     }
 
     isActiveIndex(): Boolean {

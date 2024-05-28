@@ -22,13 +22,15 @@ const routes: Routes = [
                 path: 'solicitud',
                 component: SolicitudExamenComponent,
                 canActivate: [RoleGuard],
-                data: { roles: ['ROLE_COORDINADOR', 'ROLE_DOCENTE'] },
+                data: { roles: ['ROLE_DOCENTE'] },
             },
             {
                 path: 'solicitud/editar/:id',
                 component: SolicitudExamenComponent,
                 canActivate: [RoleGuard],
-                data: { roles: ['ROLE_COORDINADOR', 'ROLE_DOCENTE'] },
+                data: {
+                    roles: ['ROLE_COORDINADOR', 'ROLE_DOCENTE', 'ROLE_COMITE'],
+                },
             },
             {
                 path: 'solicitud/crear',
@@ -49,18 +51,30 @@ const routes: Routes = [
             {
                 path: 'resolucion',
                 component: ResolucionExamenComponent,
+                canActivate: [RoleGuard],
+                data: { roles: ['ROLE_COORDINADOR', 'ROLE_COMITE'] },
             },
             {
                 path: 'resolucion/editar/:id',
                 component: ResolucionExamenComponent,
+                canActivate: [RoleGuard],
+                data: { roles: ['ROLE_COORDINADOR', 'ROLE_COMITE'] },
             },
             {
                 path: 'sustentacion',
                 component: SustentacionExamenComponent,
+                canActivate: [RoleGuard],
+                data: {
+                    roles: ['ROLE_COORDINADOR', 'ROLE_DOCENTE', 'ROLE_COMITE'],
+                },
             },
             {
                 path: 'sustentacion/editar/:id',
                 component: SustentacionExamenComponent,
+                canActivate: [RoleGuard],
+                data: {
+                    roles: ['ROLE_COORDINADOR', 'ROLE_DOCENTE', 'ROLE_COMITE'],
+                },
             },
         ],
     },
