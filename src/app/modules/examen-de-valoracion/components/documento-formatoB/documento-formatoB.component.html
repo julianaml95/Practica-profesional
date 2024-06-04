@@ -1,0 +1,384 @@
+<div id="formatoB">
+    <div class="flex flex-column w-full mb-4">
+        <div
+            class="flex flex-row align-items-center justify-content-evenly header-logo"
+        >
+            <h2>
+                Maestría en Computación Facultad de Ingeniería Electrónica y
+                Telecomunicaciones
+            </h2>
+            <img
+                src="assets/layout/images/logoUnicauca.png"
+                alt="Logo Unicauca"
+                width="120px"
+                height="120px"
+            />
+        </div>
+        <div
+            class="flex flex-column w-full justify-content-center align-items-center row-gap-4 header-titulo"
+        >
+            <span style="font-size: 20px"> ACTA DE EXAMEN DE VALORACION </span>
+            <span>
+                Popayán {{ fechaActual | date : "dd/MM/yyyy HH:mm:ss" }}
+            </span>
+        </div>
+    </div>
+    <form class="mt-4" [formGroup]="formatoBForm">
+        <div class="flex flex-column gap-4">
+            <div class="field grid">
+                <div class="col-2 col-label text-right mr-2 align-self-start">
+                    <label
+                        class="uppercase font-bold"
+                        style="line-height: 1.5rem"
+                        >Programa</label
+                    >
+                </div>
+                <div class="col-9 col-input">
+                    <p>
+                        Facultad de Ingeniería Electrónica y Telecomunicaciones.
+                    </p>
+                </div>
+            </div>
+            <div class="field grid">
+                <!-- FIELD TO PDF -->
+                <div class="body-field p-show">
+                    <label class="uppercase">Titulo</label>
+                    <span>{{ formatoBForm.get("titulo").value }}</span>
+                </div>
+                <!-- END -->
+
+                <div class="col-2 col-label text-right mr-2 align-self-start">
+                    <label class="uppercase font-bold">Titulo</label>
+                </div>
+                <div class="col-9 col-input">
+                    <textarea
+                        pInputTextarea
+                        [maxLength]="250"
+                        class="p-inputtextarea-md w-full p-hide"
+                        formControlName="titulo"
+                        [ngClass]="{
+                            'ng-invalid ng-dirty':
+                                getFormControl('titulo').invalid &&
+                                getFormControl('titulo').touched
+                        }"
+                    ></textarea>
+                </div>
+            </div>
+            <div class="field grid">
+                <!-- FIELD TO PDF -->
+                <div class="body-field p-show">
+                    <label class="uppercase">Estudiante</label>
+                    <span>{{ formatoBForm.get("estudiante").value }}</span>
+                </div>
+                <!-- END -->
+
+                <div class="col-2 col-label text-right mr-2 align-self-start">
+                    <label class="uppercase font-bold">Estudiante</label>
+                </div>
+                <div class="col-9 col-input">
+                    <input
+                        pInputText
+                        [maxLength]="250"
+                        class="p-inputtext-md w-full"
+                        formControlName="estudiante"
+                    />
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-column gap-2">
+            <div class="field grid gap-2">
+                <div class="col-2 col-label text-right mr-2 align-self-start">
+                    <label class="pdf-label uppercase font-bold"
+                        >Jurado 1</label
+                    >
+                </div>
+                <div
+                    class="col-9 col-input body-field"
+                    *ngIf="experto.value; else noEvaluadorSelected"
+                >
+                    <!-- FIELD TO PDF -->
+                    <label class="uppercase p-show">Jurado 1</label>
+                    <span class="p-show"
+                        >{{ experto?.value?.nombre }}
+                        {{ experto?.value?.apellido }}</span
+                    >
+                    <!-- END -->
+
+                    <div class="flex align-items-center">
+                        <p-card class="w-full max-w-30rem">
+                            <div class="flex justify-content-between">
+                                <span class="card-title"
+                                    >Datos del Jurado Externo</span
+                                >
+                                <button
+                                    pButton
+                                    icon="pi pi-times"
+                                    style="border: none; font-size: 1.2rem"
+                                    (click)="limpiarExperto()"
+                                ></button>
+                            </div>
+                            <div
+                                class="mt-2 card-data flex justify-content-between"
+                            >
+                                <span>Nombres y Apellidos</span>
+                                <span
+                                    >{{ experto?.value?.nombre }}
+                                    {{ experto?.value?.apellido }}</span
+                                >
+                            </div>
+                            <div
+                                class="mt-2 card-data flex justify-content-between"
+                            >
+                                <span>Universidad</span>
+                                <span>{{ experto?.value?.universidad }}</span>
+                            </div>
+                            <div
+                                class="mt-2 card-data flex justify-content-between"
+                            >
+                                <span>Correo</span>
+                                <span>{{ experto?.value?.correo }}</span>
+                            </div>
+                        </p-card>
+                    </div>
+                </div>
+                <div class="align-self-center" *ngIf="!experto.value">
+                    <button
+                        pButton
+                        icon="pi pi-plus"
+                        label="Seleccionar Evaluador"
+                        (click)="onSeleccionarExperto()"
+                    ></button>
+                </div>
+            </div>
+            <div class="field grid gap-2">
+                <div class="col-2 col-label text-right mr-2 align-self-start">
+                    <label class="pdf-label uppercase font-bold"
+                        >Jurado 2</label
+                    >
+                </div>
+                <div
+                    class="col-9 col-input body-field"
+                    *ngIf="docente.value; else noEvaluadorSelected"
+                >
+                    <!-- FIELD TO PDF -->
+                    <label class="uppercase p-show">Jurado 2</label>
+                    <span class="p-show"
+                        >{{ docente?.value?.nombre }}
+                        {{ docente?.value?.apellido }}</span
+                    >
+                    <!-- END -->
+
+                    <div class="flex align-items-center">
+                        <p-card class="w-full max-w-30rem">
+                            <div class="flex justify-content-between">
+                                <span class="card-title"
+                                    >Datos del Jurado 2</span
+                                >
+                                <button
+                                    pButton
+                                    icon="pi pi-times"
+                                    style="border: none; font-size: 1.2rem"
+                                    (click)="limpiarDocente()"
+                                ></button>
+                            </div>
+                            <div
+                                class="mt-2 card-data flex justify-content-between"
+                            >
+                                <span>Nombres y Apellidos</span>
+                                <span
+                                    >{{ docente?.value?.nombre }}
+                                    {{ docente?.value?.apellido }}</span
+                                >
+                            </div>
+                            <div
+                                class="mt-2 card-data flex justify-content-between"
+                            >
+                                <span>Universidad</span>
+                                <span>{{ docente?.value?.universidad }}</span>
+                            </div>
+                            <div
+                                class="mt-2 card-data flex justify-content-between"
+                            >
+                                <span>Correo</span>
+                                <span>{{ docente?.value?.correo }}</span>
+                            </div>
+                        </p-card>
+                    </div>
+                </div>
+                <div class="align-self-center" *ngIf="!docente.value">
+                    <button
+                        pButton
+                        icon="pi pi-plus"
+                        label="Seleccionar Evaluador"
+                        (click)="onSeleccionarDocente()"
+                    ></button>
+                </div>
+            </div>
+            <div class="field grid">
+                <div class="col-2 col-label text-right mr-2 align-self-start">
+                    <label class="uppercase font-bold">Fecha</label>
+                </div>
+                <div class="col-9">
+                    <p-calendar
+                        formControlName="fecha"
+                        [showIcon]="true"
+                        dateFormat="dd.mm.yy"
+                    ></p-calendar>
+                </div>
+            </div>
+            <div class="field grid">
+                <div class="col-2 col-label text-right mr-2 align-self-start">
+                    <label class="uppercase font-bold"
+                        >Concepto de jurado
+                    </label>
+                </div>
+                <div class="col-9">
+                    <div *ngFor="let estado of estados" class="field-checkbox">
+                        <p-radioButton
+                            [inputId]="estado"
+                            [value]="estado"
+                            formControlName="conceptoJurado"
+                        ></p-radioButton>
+                        <label [for]="estado" class="ml-2">{{ estado }}</label>
+                    </div>
+                </div>
+            </div>
+            <div class="field grid">
+                <div class="col-2 col-label text-right mr-2 align-self-start">
+                    <label class="font-bold">Firman </label>
+                </div>
+            </div>
+            <div class="field grid">
+                <!-- FIELD TO PDF -->
+                <div class="body-image p-show">
+                    <img
+                        [src]="firmaJuradoUno"
+                        alt="Vista Previa de la Firma"
+                        style="max-width: 300px; max-height: 100px"
+                    />
+                    <b
+                        >{{ experto?.value?.nombre }}
+                        {{ experto?.value?.apellido }}</b
+                    >
+                </div>
+                <!-- END -->
+                <span
+                    class="col-4 col-label--firma text-right align-self-start"
+                >
+                    <b
+                        >{{ experto?.value?.nombre }}
+                        {{ experto?.value?.apellido }}</b
+                    >
+                </span>
+                <div class="col-6 col-input--firma text-center">
+                    <p-fileUpload
+                        name="firmaJuradoUno"
+                        chooseIcon="pi pi-file"
+                        accept=".png"
+                        chooseLabel="Seleccionar"
+                        class="w-full max-w-10rem"
+                        previewWidth="100"
+                        [auto]="true"
+                        (onSelect)="onFirmaJurado($event, 'juradoUno')"
+                    >
+                        <ng-template let-file pTemplate="file">
+                            <div *ngIf="firmaJuradoUno">
+                                <img
+                                    [src]="firmaJuradoUno"
+                                    alt="Vista Previa de la Firma"
+                                    style="
+                                        min-height: 120px;
+                                        min-width: 150px;
+                                        width: 100%;
+                                        height: 100%;
+                                    "
+                                />
+                            </div>
+                        </ng-template>
+                    </p-fileUpload>
+                </div>
+            </div>
+            <div class="field grid">
+                <!-- FIELD TO PDF -->
+                <div class="body-image p-show">
+                    <img
+                        [src]="firmaJuradoDos"
+                        alt="Vista Previa de la Firma"
+                        style="max-width: 300px; max-height: 100px"
+                    />
+                    <b
+                        >{{ docente?.value?.nombre }}
+                        {{ docente?.value?.apellido }}</b
+                    >
+                </div>
+                <!-- END -->
+                <span
+                    class="col-4 col-label--firma text-right align-self-start"
+                >
+                    <b
+                        >{{ docente?.value?.nombre }}
+                        {{ docente?.value?.apellido }}</b
+                    >
+                </span>
+                <div class="col-6 col-input--firma text-center">
+                    <p-fileUpload
+                        name="firmaJuradoDos"
+                        chooseIcon="pi pi-file"
+                        accept=".png"
+                        chooseLabel="Seleccionar"
+                        class="w-full max-w-10rem"
+                        previewWidth="100"
+                        [auto]="true"
+                        (onSelect)="onFirmaJurado($event, 'juradoDos')"
+                    >
+                        <ng-template let-file pTemplate="file">
+                            <div *ngIf="firmaJuradoDos">
+                                <img
+                                    [src]="firmaJuradoDos"
+                                    alt="Vista Previa de la Firma"
+                                    style="max-width: 300px; max-height: 100px"
+                                />
+                            </div>
+                        </ng-template>
+                    </p-fileUpload>
+                </div>
+            </div>
+        </div>
+        <div
+            class="flex flex-row align-items-center justify-content-center footer-logo body-footer"
+        >
+            <img
+                src="assets/layout/images/logosIcontec.png"
+                alt="Logo Icontec"
+                width="200px"
+                height="140px"
+            />
+            <div
+                class="flex flex-column align-items-center justify-content-center footer-text"
+            >
+                <span>
+                    Hacia una Universidad comprometida con la paz territorial
+                </span>
+                <hr />
+                <span>
+                    Facultad de Ingeniería Electrónica y Telecomunicaciones
+                    Sector Tulcán Popayán - Cauca - Colombia Conmutador 8209800
+                    Exts. 2145 -2103
+                </span>
+            </div>
+        </div>
+        <div class="flex align-items-center justify-content-end mt-4">
+            <button
+                pButton
+                type="button"
+                icon="pi pi-save"
+                label="Descargar Documento"
+                (click)="onSave()"
+                [loading]="loading"
+            ></button>
+        </div>
+    </form>
+</div>
+<ng-template #noEvaluadorSelected>
+    <p-fieldset class="field-evaluador" legend="Cargar Evaluador"></p-fieldset>
+</ng-template>

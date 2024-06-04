@@ -17,7 +17,11 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { Mensaje } from 'src/app/core/enums/enums';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
-import { errorMessage, infoMessage, warnMessage } from 'src/app/core/utils/message-util';
+import {
+    errorMessage,
+    infoMessage,
+    warnMessage,
+} from 'src/app/core/utils/message-util';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
 import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-expertos/buscador-expertos.component';
@@ -46,6 +50,7 @@ export class SolicitudExamenComponent implements OnInit {
     private unsubscribe_solicitud$ = new Subject<void>();
 
     trabajoDeGradoId: number;
+    solicitudId: number;
     respuestaId: number;
     resolucionId: number;
     sustentacionId: number;
@@ -167,13 +172,22 @@ export class SolicitudExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
-        this.solicitudService.respuestaSeleccionadaSubject$.subscribe(
-            (response) => {
+        this.solicitudService.solicitudSeleccionadaSubject$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.solicitudId = response.idExamenValoracion;
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+        this.solicitudService.respuestaSeleccionadaSubject$.subscribe({
+            next: (response) => {
                 if (response) {
                     this.respuestaId = response.id;
                 }
-            }
-        );
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
         this.solicitudService.resolucionSeleccionadaSubject$.subscribe({
             next: (response) => {
                 if (response) {
@@ -267,7 +281,7 @@ export class SolicitudExamenComponent implements OnInit {
             this.solicitudService
                 .updateSolicitudDocente(
                     this.solicitudForm.value,
-                    this.trabajoDeGradoId
+                    this.solicitudId
                 )
                 .subscribe({
                     next: (_) => {},
@@ -294,7 +308,7 @@ export class SolicitudExamenComponent implements OnInit {
                 this.solicitudService
                     .updateSolicitudCoordinador(
                         this.solicitudForm.value,
-                        this.trabajoDeGradoId
+                        this.solicitudId
                     )
                     .subscribe({
                         next: (_) => {},
@@ -488,8 +502,8 @@ export class SolicitudExamenComponent implements OnInit {
                         this.setValuesForm(data);
 
                         this.solicitudForm
-                        .get('idTrabajoGrados')
-                        .setValue(this.trabajoDeGradoId);
+                            .get('idTrabajoGrados')
+                            .setValue(this.trabajoDeGradoId);
 
                         this.evaluadorInternoSeleccionado =
                             this.mapEvaluadorInternoLabel(
@@ -797,7 +811,9 @@ export class SolicitudExamenComponent implements OnInit {
         this.solicitudService.setTituloSeleccionadoSubject(
             this.solicitudForm.get('titulo').value
         );
-        this.router.navigate(['examen-de-valoracion/solicitud/crear']);
+        this.router.navigate([
+            'examen-de-valoracion/solicitud/documentoFormatoA',
+        ]);
     }
 
     limpiarEvaluadorExterno() {

@@ -12,6 +12,8 @@ import { infoMessage } from 'src/app/core/utils/message-util';
 import { CursoEgresadoComponent } from '../curso-egresados/curso-egresados.component';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
+import { SolicitudService } from 'src/app/modules/examen-de-valoracion/services/solicitud.service';
+import { LocalStorageService } from 'src/app/modules/examen-de-valoracion/services/localstorage.service';
 
 @Component({
     selector: 'app-bandeja-seguimiento-a-egresados',
@@ -19,53 +21,17 @@ import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador
     styleUrls: ['bandeja-seguimiento-a-egresados.component.scss'],
 })
 export class BandejaSeguimientoAEgresadosComponent implements OnInit {
-    loading: boolean;
+    empresas: Empresa[] = [];
+    cursos: Curso[] = [];
 
     estudianteSeleccionado: Estudiante;
 
-    empresas: Empresa[] = [
-        {
-            id: 1,
-            nombre: 'Empresa A',
-            ubicacion: 'Ciudad A',
-            cargo: 'Cargo A',
-            jefeDirecto: 'Jefe A',
-            telefono: '123-456-7890',
-            correo: 'correoA@example.com',
-            estado: 'Activo',
-        },
-        {
-            id: 2,
-            nombre: 'Empresa B',
-            ubicacion: 'Ciudad B',
-            cargo: 'Cargo B',
-            jefeDirecto: 'Jefe B',
-            telefono: '987-654-3210',
-            correo: 'correoB@example.com',
-            estado: 'Inactivo',
-        },
-    ];
-
-    cursos: Curso[] = [
-        {
-            id: 1,
-            nombre: 'Curso 1',
-            orientadoA: 'Estudiantes de Ingeniería',
-            fechaInicio: '01/01/2022',
-            fechaFin: '15/05/2022',
-        },
-        {
-            id: 2,
-            nombre: 'Curso 2',
-            orientadoA: 'Estudiantes de Ciencias',
-            fechaInicio: '15/02/2022',
-            fechaFin: '30/06/2022',
-        },
-    ];
+    loading: boolean;
 
     constructor(
         private breadcrumbService: BreadcrumbService,
         private empresaService: EmpresaService,
+        private localStorageService: LocalStorageService,
         private cursoService: CursoService,
         private dialogService: DialogService,
         private messageService: MessageService,
@@ -73,7 +39,18 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
+        this.loadData();
         this.setBreadcrumb();
+    }
+
+    loadData() {
+        const estudiante = this.localStorageService.getLocalStorage('est');
+
+        if (estudiante) {
+            this.estudianteSeleccionado = estudiante;
+            this.listCursos();
+            this.listEmpresas();
+        }
     }
 
     mapEstudianteLabel(estudiante: any) {
@@ -90,6 +67,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
 
     limpiarEstudiante() {
         this.estudianteSeleccionado = null;
+        this.localStorageService.clearLocalStorage('est');
     }
 
     showBuscadorEstudiantes() {
@@ -107,10 +85,15 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
                 if (response) {
                     this.estudianteSeleccionado =
                         this.mapEstudianteLabel(response);
+                    this.localStorageService.saveLocalStorage(
+                        this.mapEstudianteLabel(response),
+                        'est'
+                    );
                     this.listCursos();
                     this.listEmpresas();
                 }
             },
+            error: (e) => console.log(e),
         });
     }
 
@@ -127,8 +110,11 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
             .listEmpresas(this.estudianteSeleccionado.id)
             .subscribe({
                 next: (response) => {
-                    this.empresas = response.filter((d) => d.id !== null)
+                    if (response) {
+                        this.empresas = response.filter((d) => d.id !== null);
+                    }
                 },
+                error: (e) => console.log(e),
             })
             .add(() => (this.loading = false));
     }
@@ -136,47 +122,66 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     listCursos() {
         this.loading = true;
         this.cursoService
-            .listCursos()
+            .listCursos(this.estudianteSeleccionado.id)
             .subscribe({
-                next: (response) =>
-                    (this.cursos = response.filter((d) => d.id !== null)),
+                next: (response) => {
+                    if (response) {
+                        this.cursos = response.filter((d) => d.id !== null);
+                    }
+                },
+                error: (e) => console.log(e),
             })
             .add(() => (this.loading = false));
     }
 
     showAddEmpresa() {
-        return this.dialogService.open(EmpresaEgresadoComponent, {
+        const ref = this.dialogService.open(EmpresaEgresadoComponent, {
             header: 'Agregar empresa',
             height: '60vh',
             width: '40%',
             data: { estudianteId: this.estudianteSeleccionado.id },
         });
+        ref.onClose.subscribe(() => {
+            this.listEmpresas();
+        });
     }
 
     showUpdateEmpresa(id: number) {
-        return this.dialogService.open(EmpresaEgresadoComponent, {
+        const ref = this.dialogService.open(EmpresaEgresadoComponent, {
             header: 'Editar empresa',
             height: '60vh',
             width: '40%',
-            data: { empresaId: id },
+            data: {
+                empresaId: id,
+                estudianteId: this.estudianteSeleccionado.id,
+            },
+        });
+        ref.onClose.subscribe(() => {
+            this.listEmpresas();
         });
     }
 
     showAddCurso() {
-        return this.dialogService.open(CursoEgresadoComponent, {
+        const ref = this.dialogService.open(CursoEgresadoComponent, {
             header: 'Agregar curso',
             height: '58vh',
             width: '40%',
             data: { estudianteId: this.estudianteSeleccionado.id },
         });
+        ref.onClose.subscribe(() => {
+            this.listCursos();
+        });
     }
 
     showUpdateCurso(id: number) {
-        return this.dialogService.open(CursoEgresadoComponent, {
+        const ref = this.dialogService.open(CursoEgresadoComponent, {
             header: 'Editar curso',
             height: '58vh',
             width: '40%',
-            data: { cursoId: id },
+            data: { cursoId: id, estudianteId: this.estudianteSeleccionado.id },
+        });
+        ref.onClose.subscribe(() => {
+            this.listCursos();
         });
     }
 

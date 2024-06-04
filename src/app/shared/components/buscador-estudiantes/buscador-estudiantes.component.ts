@@ -33,7 +33,6 @@ export class BuscadorEstudiantesComponent implements OnInit {
             .subscribe({
                 next: (response) => {
                     this.estudiantes = response;
-                    console.log(response);
                 },
                 error: (error: any) => {
                     this.handlerResponseException(error);

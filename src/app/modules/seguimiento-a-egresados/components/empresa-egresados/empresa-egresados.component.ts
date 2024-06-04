@@ -55,6 +55,7 @@ export class EmpresaEgresadoComponent implements OnInit {
 
     initForm(): void {
         this.empresaForm = this.fb.group({
+            idEstudiante: [this.config.data?.estudianteId, Validators.required],
             nombre: [null, Validators.required],
             ubicacion: [null, Validators.required],
             cargo: [null, Validators.required],
@@ -62,7 +63,6 @@ export class EmpresaEgresadoComponent implements OnInit {
             telefono: [null, Validators.required],
             correo: [null, [Validators.required, Validators.email]],
             estado: [null, Validators.required],
-            idEstudiante: [this.config.data?.estudianteId, Validators.required],
         });
 
         this.formReady.emit(this.empresaForm);
@@ -92,7 +92,12 @@ export class EmpresaEgresadoComponent implements OnInit {
 
     loadDataForEdit(id: number) {
         this.empresaService.getEmpresa(id).subscribe({
-            next: (response) => this.setValuesForm(response),
+            next: (response) => {
+                this.setValuesForm(response);
+                this.empresaForm
+                    .get('idEstudiante')
+                    .setValue(this.config.data?.estudianteId);
+            },
             error: (e) => this.handleErrorResponse(e),
         });
     }

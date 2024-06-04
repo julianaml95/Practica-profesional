@@ -502,11 +502,11 @@
                             class="field-checkbox"
                         >
                             <p-radioButton
-                                inputId="respuestaSustentacion"
+                                [inputId]="estado"
                                 [value]="estado"
                                 formControlName="respuestaSustentacion"
                             ></p-radioButton>
-                            <label for="respuestaSustentacion" class="ml-2">{{
+                            <label [for]="estado" class="ml-2">{{
                                 estado
                             }}</label>
                         </div>

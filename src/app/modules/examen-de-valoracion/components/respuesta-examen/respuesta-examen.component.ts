@@ -647,6 +647,21 @@ export class RespuestaExamenComponent implements OnInit {
             });
     }
 
+    onCrearDocumento(name: string) {
+        this.solicitudService.setTituloSeleccionadoSubject(
+            this.tituloSeleccionado
+        );
+        if (name == 'formatoB')
+            this.router.navigate([
+                'examen-de-valoracion/respuesta/documentoFormatoB',
+            ]);
+
+        if (name == 'formatoC')
+            this.router.navigate([
+                'examen-de-valoracion/respuesta/documentoFormatoC',
+            ]);
+    }
+
     redirectToSolicitud(trabajoDeGradoId: number) {
         this.router.navigate([
             `examen-de-valoracion/solicitud/editar/${trabajoDeGradoId}`,

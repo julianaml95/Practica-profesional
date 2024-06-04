@@ -16,6 +16,9 @@ import {
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import { Curso } from '../../models/curso';
 import { CursoService } from '../../services/cursos.service';
+import { SolicitudService } from 'src/app/modules/examen-de-valoracion/services/solicitud.service';
+import { Router } from '@angular/router';
+import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 
 @Component({
     selector: 'curso-egresados',
@@ -25,9 +28,12 @@ import { CursoService } from '../../services/cursos.service';
 export class CursoEgresadoComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
     cursoForm: FormGroup;
+
     cursoId: number;
+    estudianteId: number;
+
     editMode: boolean;
-    loading = false;
+    loading: boolean = false;
 
     constructor(
         private fb: FormBuilder,
@@ -39,9 +45,17 @@ export class CursoEgresadoComponent implements OnInit {
 
     ngOnInit() {
         this.initForm();
+        if (this.config.data?.estudianteId) {
+            this.extractEstudianteIdFromData();
+        }
         if (this.config.data?.cursoId) {
             this.extractCursoIdFromData();
         }
+    }
+
+    extractEstudianteIdFromData(): void {
+        this.estudianteId = Number(this.config.data.estudianteId);
+        this.cursoForm.get('idEstudiante').setValue(this.estudianteId);
     }
 
     extractCursoIdFromData(): void {
@@ -52,6 +66,7 @@ export class CursoEgresadoComponent implements OnInit {
 
     initForm(): void {
         this.cursoForm = this.fb.group({
+            idEstudiante: [null, Validators.required],
             nombre: [null, Validators.required],
             orientadoA: [null, Validators.required],
             fechaInicio: [null, Validators.required],
@@ -85,7 +100,22 @@ export class CursoEgresadoComponent implements OnInit {
 
     loadDataForEdit(id: number) {
         this.cursoService.getCurso(id).subscribe({
-            next: (response) => this.setValuesForm(response),
+            next: (response) => {
+                this.setValuesForm(response);
+                this.extractEstudianteIdFromData();
+                this.cursoForm
+                    .get('fechaInicio')
+                    .setValue(
+                        response.fechaInicio
+                            ? new Date(response.fechaInicio)
+                            : null
+                    );
+                this.cursoForm
+                    .get('fechaFin')
+                    .setValue(
+                        response.fechaFin ? new Date(response.fechaFin) : null
+                    );
+            },
             error: (e) => this.handleErrorResponse(e),
         });
     }

@@ -35,8 +35,8 @@ export class CursoService {
         });
     }
 
-    listCursos(): Observable<Curso[]> {
-        return this.http.get<Curso[]>(backendGestionEgresados('curso'), {
+    listCursos(estudianteId: number): Observable<Curso[]> {
+        return this.http.get<Curso[]>(backendGestionEgresados(`curso/listarCursos/${estudianteId}`), {
             headers: getHeaders(),
         });
     }

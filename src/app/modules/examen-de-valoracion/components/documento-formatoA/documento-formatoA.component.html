@@ -1,26 +1,44 @@
-<p-panel id="htmlData">
-    <ng-template pTemplate="header">
-        <div class="flex flex-column w-full justify-content-center align-items-center row-gap-4">
-            <span class="pdf-text" style="font-size: 20px">
+<div id="formatoA">
+    <div class="flex flex-column w-full mb-4">
+        <div
+            class="flex flex-row align-items-center justify-content-evenly header-logo"
+        >
+            <h2>
+                Maestría en Computación Facultad de Ingeniería Electrónica y
+                Telecomunicaciones
+            </h2>
+            <img
+                src="assets/layout/images/logoUnicauca.png"
+                alt="Logo Unicauca"
+                width="120px"
+                height="120px"
+            />
+        </div>
+        <div
+            class="flex flex-column w-full justify-content-center align-items-center row-gap-4 header-titulo"
+        >
+            <span style="font-size: 20px">
                 SOLICITUD EXAMEN DE VALORACION
             </span>
-            <span class="pdf-text">
+            <span>
                 Popayán {{ fechaActual | date : "dd/MM/yyyy HH:mm:ss" }}
             </span>
         </div>
-    </ng-template>
-    <form [formGroup]="crearSolicitudForm">
+    </div>
+    <form class="mt-4" [formGroup]="formatoAForm">
         <div class="flex flex-column gap-4">
             <div class="field grid">
-                <div class="col-2 col-label text-right mr-2 align-self-start">
+                <div
+                    class="col-2 col-label text-right mr-2 align-self-start p-hide"
+                >
                     <label
-                        class="pdf-label uppercase font-bold"
+                        class="uppercase font-bold"
                         style="line-height: 1.5rem"
                         >Formato A</label
                     >
                 </div>
                 <div class="col-9 col-input">
-                    <p class="pdf-text">
+                    <p>
                         Por la presente, me permito formalmente solicitar la
                         presentación del examen de valoración ante el honorable
                         Comité de Programa de la Maestría en Computación. La
@@ -31,14 +49,21 @@
                 </div>
             </div>
             <div class="field grid">
+                <!-- FIELD TO PDF -->
+                <div class="body-field p-show">
+                    <label class="uppercase">Titulo</label>
+                    <span>{{ formatoAForm.get("titulo").value }}</span>
+                </div>
+                <!-- END -->
+
                 <div class="col-2 col-label text-right mr-2 align-self-start">
-                    <label class="pdf-label uppercase font-bold">Titulo</label>
+                    <label class="uppercase font-bold">Titulo</label>
                 </div>
                 <div class="col-9 col-input">
                     <textarea
                         pInputTextarea
                         [maxLength]="250"
-                        class="p-inputtextarea-md w-full pdf-text p-hide"
+                        class="p-inputtextarea-md w-full p-hide"
                         formControlName="titulo"
                         [ngClass]="{
                             'ng-invalid ng-dirty':
@@ -46,29 +71,29 @@
                                 getFormControl('titulo').touched
                         }"
                     ></textarea>
-                    <p
-                        class="w-full pdf-text p-show"
-                        style="word-wrap: break-word"
-                    >
-                        {{ crearSolicitudForm.get("titulo").value }}
-                    </p>
                 </div>
             </div>
             <div class="field grid">
+                <!-- FIELD TO PDF -->
+                <div class="body-field p-show">
+                    <label class="uppercase">Estudiante</label>
+                    <span>{{ formatoAForm.get("estudiante").value }}</span>
+                </div>
+                <!-- END -->
+
                 <div class="col-2 col-label text-right mr-2 align-self-start">
-                    <label class="pdf-label uppercase font-bold"
-                        >Estudiante</label
-                    >
+                    <label class="uppercase font-bold">Estudiante</label>
                 </div>
                 <div class="col-9 col-input">
                     <input
                         pInputText
                         [maxLength]="250"
-                        class="p-inputtext-md w-full pdf-text"
+                        class="p-inputtext-md w-full"
                         formControlName="estudiante"
                     />
                 </div>
             </div>
+
             <div class="field grid">
                 <div class="col-2 col-label text-right mr-2 align-self-start">
                     <label class="pdf-label uppercase font-bold"
@@ -76,9 +101,20 @@
                     >
                 </div>
                 <div class="col-9 col-input flex flex-column row-gap-6">
-                    <ng-container
+                    <div
                         *ngFor="let orientador of orientadores; let i = index"
+                        class="body-field"
                     >
+                        <!-- FIELD TO PDF -->
+                        <label class="uppercase p-show"
+                            >{{ orientador.rol }} {{ orientador.tipo }}</label
+                        >
+                        <span class="p-show"
+                            >{{ orientador?.nombre }}
+                            {{ orientador?.apellido }}</span
+                        >
+                        <!-- END -->
+
                         <div class="flex align-items-center">
                             <p-card class="w-full max-w-30rem">
                                 <div class="flex justify-content-between">
@@ -88,7 +124,6 @@
                                     >
                                     <button
                                         pButton
-                                        class="p-hide"
                                         icon="pi pi-times"
                                         style="border: none; font-size: 1.2rem"
                                         (click)="limpiarOrientador(i)"
@@ -119,9 +154,9 @@
                                 </div>
                             </p-card>
                         </div>
-                    </ng-container>
+                    </div>
                     <div
-                        class="flex align-items-center column-gap-4 p-hide btn-roles"
+                        class="flex align-items-center column-gap-4 btn-roles"
                     >
                         <button
                             pButton
@@ -167,9 +202,17 @@
                     >
                 </div>
                 <div
-                    class="col-9 col-input"
+                    class="col-9 col-input body-field"
                     *ngIf="experto.value; else noEvaluadorSelected"
                 >
+                    <!-- FIELD TO PDF -->
+                    <label class="uppercase p-show">Evaluador Externo</label>
+                    <span class="p-show"
+                        >{{ experto?.value?.nombre }}
+                        {{ experto?.value?.apellido }}</span
+                    >
+                    <!-- END -->
+
                     <div class="flex align-items-center">
                         <p-card class="w-full max-w-30rem">
                             <div class="flex justify-content-between">
@@ -178,7 +221,6 @@
                                 >
                                 <button
                                     pButton
-                                    class="p-hide"
                                     icon="pi pi-times"
                                     style="border: none; font-size: 1.2rem"
                                     (click)="limpiarExperto()"
@@ -224,9 +266,17 @@
                     >
                 </div>
                 <div
-                    class="col-9 col-input"
+                    class="col-9 col-input body-field"
                     *ngIf="docente.value; else noEvaluadorSelected"
                 >
+                    <!-- FIELD TO PDF -->
+                    <label class="uppercase p-show">Evaluador Interno</label>
+                    <span class="p-show"
+                        >{{ docente?.value?.nombre }}
+                        {{ docente?.value?.apellido }}</span
+                    >
+                    <!-- END -->
+
                     <div class="flex align-items-center">
                         <p-card class="w-full max-w-30rem">
                             <div class="flex justify-content-between">
@@ -235,7 +285,6 @@
                                 >
                                 <button
                                     pButton
-                                    class="p-hide"
                                     icon="pi pi-times"
                                     style="border: none; font-size: 1.2rem"
                                     (click)="limpiarDocente()"
@@ -275,6 +324,16 @@
                 </div>
             </div>
             <div class="field grid">
+                <!-- FIELD TO PDF -->
+                <div class="body-image p-show">
+                    <img
+                        [src]="firmaEstudiantePreview"
+                        alt="Vista Previa de la Firma"
+                        style="max-width: 300px; max-height: 100px"
+                    />
+                    <b>Firma estudiante</b>
+                </div>
+                <!-- END -->
                 <span
                     class="col-10 col-label--firma text-right align-self-start"
                 >
@@ -296,7 +355,12 @@
                                 <img
                                     [src]="firmaEstudiantePreview"
                                     alt="Vista Previa de la Firma"
-                                    style="max-width: 300px; max-height: 100px"
+                                    style="
+                                        min-height: 120px;
+                                        min-width: 150px;
+                                        width: 100%;
+                                        height: 100%;
+                                    "
                                 />
                             </div>
                         </ng-template>
@@ -304,11 +368,33 @@
                 </div>
             </div>
         </div>
+        <div
+            class="flex flex-row align-items-center justify-content-center footer-logo body-footer"
+        >
+            <img
+                src="assets/layout/images/logosIcontec.png"
+                alt="Logo Icontec"
+                width="200px"
+                height="140px"
+            />
+            <div
+                class="flex flex-column align-items-center justify-content-center footer-text"
+            >
+                <span>
+                    Hacia una Universidad comprometida con la paz territorial
+                </span>
+                <hr />
+                <span>
+                    Facultad de Ingeniería Electrónica y Telecomunicaciones
+                    Sector Tulcán Popayán - Cauca - Colombia Conmutador 8209800
+                    Exts. 2145 -2103
+                </span>
+            </div>
+        </div>
         <div class="flex align-items-center justify-content-end mt-4">
             <button
                 pButton
                 type="button"
-                class="p-hide"
                 icon="pi pi-save"
                 label="Descargar Documento"
                 (click)="onSave()"
@@ -316,7 +402,7 @@
             ></button>
         </div>
     </form>
-</p-panel>
+</div>
 <ng-template #noEvaluadorSelected>
     <p-fieldset class="field-evaluador" legend="Cargar Evaluador"></p-fieldset>
 </ng-template>

@@ -7,9 +7,8 @@ import { PrimenNgModule } from '../primen-ng/primen-ng.module';
 
 import { ReactiveFormsModule } from '@angular/forms';
 import { PrincipalExamenDeValoracionComponent } from './pages/principal-examen-de-valoracion/principal-examen-de-valoracion.component';
-import { BandejaExamenDeValoracionComponent } from './components/bandeja-examen/bandeja-examen-de-valoracion.component';
 import { SolicitudService } from './services/solicitud.service';
-import { CrearSolicitudExamenComponent } from './components/crear-solicitud-examen/crear-solicitud-examen.component';
+import { BandejaExamenDeValoracionComponent } from './components/bandeja-examen/bandeja-examen-de-valoracion.component';
 import { SolicitudExamenComponent } from './components/solicitud-examen/solicitud-examen.component';
 import { RespuestaExamenComponent } from './components/respuesta-examen/respuesta-examen.component';
 import { SharedModule } from 'src/app/shared/shared.module';
@@ -17,11 +16,17 @@ import { CustomFileUploadComponent } from './components/custom-file-upload/custo
 import { ResolucionExamenComponent } from './components/resolucion-examen/resolucion-examen.component';
 import { SustentacionExamenComponent } from './components/sustentacion-examen/sustentacion-examen.component';
 
+import { DocumentoFormatoAComponent } from './components/documento-formatoA/documento-formatoA.component';
+import { DocumentoFormatoBComponent } from './components/documento-formatoB/documento-formatoB.component';
+import { DocumentoFormatoCComponent } from './components/documento-formatoC/documento-formatoC.component';
+
 @NgModule({
     declarations: [
         PrincipalExamenDeValoracionComponent,
         BandejaExamenDeValoracionComponent,
-        CrearSolicitudExamenComponent,
+        DocumentoFormatoAComponent,
+        DocumentoFormatoBComponent,
+        DocumentoFormatoCComponent,
         SolicitudExamenComponent,
         CustomFileUploadComponent,
         RespuestaExamenComponent,

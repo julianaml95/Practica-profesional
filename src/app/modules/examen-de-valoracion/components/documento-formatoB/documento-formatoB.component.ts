@@ -13,7 +13,7 @@ import {
     Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MessageService, SelectItem } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 
 import { Mensaje } from 'src/app/core/enums/enums';
@@ -29,30 +29,26 @@ import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-ex
 import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
 import { PdfService } from 'src/app/shared/services/pdf.service';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
-import { Experto } from '../../models/experto';
-import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
-import { Rol, TipoRol } from 'src/app/core/enums/domain-enum';
-import { enumToSelectItems } from 'src/app/core/utils/util';
-import { Orientador } from '../../models/orientador';
 
 @Component({
-    selector: 'crear-solicitud-examen',
-    templateUrl: 'crear-solicitud-examen.component.html',
-    styleUrls: ['crear-solicitud-examen.component.scss'],
+    selector: 'documento-formatoB',
+    templateUrl: 'documento-formatoB.component.html',
+    styleUrls: ['documento-formatoB.component.scss'],
 })
-export class CrearSolicitudExamenComponent implements OnInit {
+export class DocumentoFormatoBComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
-    @ViewChild('htmlData') htmlData!: ElementRef;
-    crearSolicitudForm: FormGroup;
+    @ViewChild('formatoB') formatoB!: ElementRef;
+    formatoBForm: FormGroup;
     loading = false;
-    tipoSeleccionado = '';
-    rolSeleccionado = '';
+
     fechaActual: Date;
-    firmaEstudiantePreview: string | ArrayBuffer;
+
+    firmaJuradoUno: string | ArrayBuffer;
+    firmaJuradoDos: string | ArrayBuffer;
+
     estudianteSeleccionado: Estudiante = {};
-    orientadores: Orientador[] = [];
-    roles: SelectItem[] = enumToSelectItems(Rol);
-    tipos: SelectItem[] = enumToSelectItems(TipoRol);
+
+    estados: string[] = ['Aprobado', 'Aplazado', 'No Aprobado'];
 
     constructor(
         private fb: FormBuilder,
@@ -65,27 +61,15 @@ export class CrearSolicitudExamenComponent implements OnInit {
     ) {}
 
     get estudiante(): FormControl {
-        return this.crearSolicitudForm.get('estudiante') as FormControl;
+        return this.formatoBForm.get('estudiante') as FormControl;
     }
 
     get experto(): FormControl {
-        return this.crearSolicitudForm.get('evaluador_externo') as FormControl;
-    }
-
-    get orientador(): FormControl {
-        return this.crearSolicitudForm.get('orientador') as FormControl;
+        return this.formatoBForm.get('jurado_externo') as FormControl;
     }
 
     get docente(): FormControl {
-        return this.crearSolicitudForm.get('evaluador_interno') as FormControl;
-    }
-
-    get tipo(): FormControl {
-        return this.crearSolicitudForm.get('tipo') as FormControl;
-    }
-
-    get rol(): FormControl {
-        return this.crearSolicitudForm.get('rol') as FormControl;
+        return this.formatoBForm.get('jurado_interno') as FormControl;
     }
 
     ngOnInit() {
@@ -95,7 +79,7 @@ export class CrearSolicitudExamenComponent implements OnInit {
         this.solicitudService.tituloSeleccionadoSubject$.subscribe(
             (response) => {
                 if (response) {
-                    this.crearSolicitudForm.get('titulo').setValue(response);
+                    this.formatoBForm.get('titulo').setValue(response);
                 }
             }
         );
@@ -109,34 +93,28 @@ export class CrearSolicitudExamenComponent implements OnInit {
             }
         });
 
-        this.tipo.valueChanges.subscribe(
-            (response) => (this.tipoSeleccionado = response)
-        );
-        this.rol.valueChanges.subscribe(
-            (response) => (this.rolSeleccionado = response)
-        );
-
         if (!this.estudianteSeleccionado) {
-            this.router.navigate(['examen-de-valoracion/solicitud']);
+            this.router.navigate(['examen-de-valoracion/respuesta']);
         }
 
         this.setBreadcrumb();
     }
 
     initForm(): void {
-        this.crearSolicitudForm = this.fb.group({
+        this.formatoBForm = this.fb.group({
             titulo: [null, Validators.required],
             estudiante: [null, Validators.required],
-            orientador: [null, Validators.required],
-            rol: [null, Validators.required],
-            tipo: [null, Validators.required],
-            evaluador_interno: [null, Validators.required],
-            evaluador_externo: [null, Validators.required],
-            firma_estudiante: [null, Validators.required],
+            jurado_interno: [null, Validators.required],
+            jurado_externo: [null, Validators.required],
+            firmaJuradoUno: [null, Validators.required],
+            firmaJuradoDos: [null, Validators.required],
+            conceptoJurado: [null, Validators.required],
+            fecha: [null, Validators.required],
         });
 
-        this.crearSolicitudForm.get('estudiante').disable();
-        this.formReady.emit(this.crearSolicitudForm);
+        this.formatoBForm.get('titulo').disable();
+        this.formatoBForm.get('estudiante').disable();
+        this.formReady.emit(this.formatoBForm);
     }
 
     onCancel() {
@@ -144,24 +122,24 @@ export class CrearSolicitudExamenComponent implements OnInit {
     }
 
     onSave() {
-        if (this.crearSolicitudForm.invalid) {
+        if (this.formatoBForm.invalid) {
             this.handleWarningMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS);
             return;
         } else {
-            const data = document.getElementById('htmlData');
+            const data = document.getElementById('formatoB');
             this.pdfService.generatePDF(
                 data,
-                `${this.estudianteSeleccionado.codigo} - solicitud.pdf`
+                `${this.estudianteSeleccionado.codigo} - formatoB.pdf`
             );
             this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO);
         }
     }
 
     getFormControl(formControlName: string): FormControl {
-        return this.crearSolicitudForm.get(formControlName) as FormControl;
+        return this.formatoBForm.get(formControlName) as FormControl;
     }
 
-    onFirmaEstudianteChange(event: any) {
+    onFirmaJurado(event: any, name: string) {
         const input = event && event.files ? event : { files: [] };
 
         const file = input.files[0];
@@ -169,11 +147,16 @@ export class CrearSolicitudExamenComponent implements OnInit {
         if (file) {
             const reader = new FileReader();
             reader.onload = () => {
-                this.firmaEstudiantePreview = reader.result as string;
+                if (name == 'juradoUno') {
+                    this.firmaJuradoUno = reader.result as string;
+                    this.formatoBForm.patchValue({ firmaJuradoUno: file });
+                }
+                if (name == 'juradoDos') {
+                    this.firmaJuradoDos = reader.result as string;
+                    this.formatoBForm.patchValue({ firmaJuradoDos: file });
+                }
             };
             reader.readAsDataURL(file);
-
-            this.crearSolicitudForm.patchValue({ firma_estudiante: file });
         }
     }
 
@@ -184,29 +167,13 @@ export class CrearSolicitudExamenComponent implements OnInit {
         });
     }
 
-    mapExpertoLabel(experto: Experto) {
-        const ultimaUniversidad =
-            experto.titulos.length > 0
-                ? experto.titulos[experto.titulos.length - 1].universidad
-                : 'Sin título universitario';
-
+    mapExpertoLabel(experto: any) {
         return {
             id: experto.id,
-            nombre: experto.persona.nombre,
-            apellido: experto.persona.apellido,
-            correo: experto.persona.correoElectronico,
-            universidad: ultimaUniversidad,
-        };
-    }
-
-    mapOrientadorLabel(orientador: Orientador) {
-        return {
-            id: orientador.id,
-            nombre: orientador.persona.nombre,
-            apellido: orientador.persona.apellido,
-            correo: orientador.persona.correoElectronico,
-            rol: this.rolSeleccionado,
-            tipo: this.tipoSeleccionado,
+            nombre: experto.nombre,
+            apellido: experto.apellido,
+            correo: experto.correoElectronico ?? experto.correo,
+            universidad: experto.universidad,
         };
     }
 
@@ -220,18 +187,18 @@ export class CrearSolicitudExamenComponent implements OnInit {
         return `${e.nombre} ${e.apellido}`;
     }
 
-    mapDocenteLabel(docente: Docente) {
+    mapDocenteLabel(docente: any) {
         const ultimaUniversidad =
-            docente.titulos.length > 0
+            docente?.titulos?.length > 0
                 ? docente.titulos[docente.titulos.length - 1].universidad
-                : 'Sin título universitario';
+                : null;
 
         return {
-            id: docente.persona.id,
-            nombre: docente.persona.nombre,
-            apellido: docente.persona.apellido,
-            correo: docente.persona.correoElectronico,
-            universidad: ultimaUniversidad,
+            id: docente.id,
+            nombre: docente.nombre,
+            apellido: docente.apellido,
+            correo: docente.correoElectronico ?? docente.correo,
+            universidad: docente.universidad ?? ultimaUniversidad,
         };
     }
 
@@ -242,26 +209,6 @@ export class CrearSolicitudExamenComponent implements OnInit {
                 if (response) {
                     const experto = this.mapExpertoLabel(response);
                     this.experto.setValue(experto);
-                }
-            },
-        });
-    }
-
-    onSeleccionarOrientador(tipo: string): void {
-        const ref =
-            tipo === 'INTERNO'
-                ? this.showBuscadorDocentes()
-                : this.showBuscadorExpertos();
-
-        ref.onClose.subscribe({
-            next: (response) => {
-                if (response) {
-                    const orientador =
-                        tipo === 'INTERNO'
-                            ? this.mapOrientadorLabel(response)
-                            : this.mapOrientadorLabel(response);
-                    this.orientador.setValue(orientador);
-                    this.orientadores.push(orientador);
                 }
             },
         });
@@ -296,8 +243,8 @@ export class CrearSolicitudExamenComponent implements OnInit {
                 routerLink: 'examen-de-valoracion',
             },
             {
-                label: 'Solicitud',
-                routerLink: 'examen-de-valoracion/solicitud',
+                label: 'Respuesta',
+                routerLink: 'examen-de-valoracion/respuesta',
             },
         ]);
     }
@@ -313,11 +260,6 @@ export class CrearSolicitudExamenComponent implements OnInit {
 
     limpiarDocente() {
         this.docente.setValue(null);
-    }
-
-    limpiarOrientador(index: number) {
-        this.orientador.setValue(null);
-        this.orientadores.splice(index, 1);
     }
 
     limpiarExperto() {
