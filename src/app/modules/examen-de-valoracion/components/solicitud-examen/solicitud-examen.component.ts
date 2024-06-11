@@ -15,7 +15,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
-import { Mensaje } from 'src/app/core/enums/enums';
+import { Aviso, EstadoProceso, Mensaje } from 'src/app/core/enums/enums';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {
     errorMessage,
@@ -28,7 +28,7 @@ import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-ex
 import { Experto } from '../../models/experto';
 import { SolicitudService } from '../../services/solicitud.service';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
-import { Subject, timer } from 'rxjs';
+import { Subscription, timer } from 'rxjs';
 import { Solicitud } from '../../models/solicitud';
 import { FileUpload } from 'primeng/fileupload';
 import { DocenteService } from 'src/app/shared/services/docente.service';
@@ -47,19 +47,22 @@ export class SolicitudExamenComponent implements OnInit {
     @ViewChild('fileUpload3') fileUpload3!: FileUpload;
     @ViewChild('fileUpload4') fileUpload4!: FileUpload;
 
-    private unsubscribe_solicitud$ = new Subject<void>();
+    private trabajoSeleccionadoSubscription: Subscription;
 
     trabajoDeGradoId: number;
     solicitudId: number;
     respuestaId: number;
     resolucionId: number;
     sustentacionId: number;
+    
     role: string[];
-
-    isLoading: boolean;
+    estado: string;
+    
+    errorMessageShown: boolean = false;
     editMode: boolean = false;
-    isSolicitudValid: boolean;
-    isCoordinadorCreated: boolean;
+    isLoading: boolean;
+    isSolicitudValid: boolean = false;
+    isCoordinadorCreated: boolean = false;
 
     solicitudForm: FormGroup;
     estudianteSeleccionado: Estudiante = {};
@@ -162,12 +165,14 @@ export class SolicitudExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
-        this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
+        this.trabajoSeleccionadoSubscription = this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
             next: (response) => {
                 if (response) {
+                    this.estado = response.estado;
                     this.solicitudForm
                         .get('idTrabajoGrados')
                         .setValue(response.id);
+                    this.checkEstados();
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -221,7 +226,34 @@ export class SolicitudExamenComponent implements OnInit {
                     'fechaMaximaEvaluacion',
                     data?.fechaMaximaEvaluacion
                 );
-
+                if (data?.evaluadorExterno) {
+                    this.expertoService
+                    .obtenerExperto(data.evaluadorExterno)
+                    .subscribe({
+                        next: (response) => {
+                            this.evaluadorExternoSeleccionado =
+                                this.mapEvaluadorExternoLabel(response);
+                            this.solicitudService.setEvaluadorExternoSeleccionadoSubject(
+                                this.evaluadorExternoSeleccionado
+                            );
+                            this.evaluadorExterno.setValue(response.id);
+                            },
+                        });
+                }
+                if (data?.evaluadorInterno) {
+                    this.docenteService
+                    .obtenerDocente(data.evaluadorInterno)
+                    .subscribe({
+                        next: (response) => {
+                            this.evaluadorInternoSeleccionado =
+                            this.mapEvaluadorInternoLabel(response);
+                            this.solicitudService.setEvaluadorInternoSeleccionadoSubject(
+                                this.evaluadorInternoSeleccionado
+                                );
+                                this.evaluadorInterno.setValue(response.id);
+                            },
+                        });
+                }
                 this.processFileField('linkFormatoA', data.linkFormatoA);
                 this.processFileField('linkFormatoD', data.linkFormatoD);
                 this.processFileField('linkFormatoE', data.linkFormatoE);
@@ -230,6 +262,39 @@ export class SolicitudExamenComponent implements OnInit {
                     data.linkOficioDirigidoEvaluadores
                 );
             }
+        }
+    }
+
+    ngOnDestroy() {
+        if (this.trabajoSeleccionadoSubscription) {
+            this.trabajoSeleccionadoSubscription.unsubscribe();
+        }
+    }
+
+    checkEstados() {
+        switch (this.estado) {
+            // case EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_PARA_CORREGIR:
+            //     this.messageService.add({
+            //         severity: 'warn',
+            //         summary: 'Advertencia',
+            //         detail: Aviso.CORREGIR_CAMPOS_OBLIGATORIOS,
+            //         life: 10000
+            //     });
+            //     this.isCoordinadorCreated = true;
+            //     this.isSolicitudValid = false;
+            //     break;
+            case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR:
+                this.isCoordinadorCreated = false;
+                this.isSolicitudValid = false;
+                break;
+            case EstadoProceso.PENDIENTE_RESULTADO_EXAMEN_DE_VALORACION:
+                this.isCoordinadorCreated = true;
+                this.isSolicitudValid = true;
+                break;
+            default:
+                this.isCoordinadorCreated = true;
+                this.isSolicitudValid = true;
+                break;
         }
     }
 
@@ -277,7 +342,7 @@ export class SolicitudExamenComponent implements OnInit {
             return;
         }
         this.isLoading = true;
-        if (this.role.includes('ROLE_DOCENTE')) {
+        if (this.role.includes('ROLE_DOCENTE') == true) {
             this.solicitudService
                 .updateSolicitudDocente(
                     this.solicitudForm.value,
@@ -297,7 +362,6 @@ export class SolicitudExamenComponent implements OnInit {
                             this.messageService.add(
                                 infoMessage(Mensaje.ACTUALIZACION_EXITOSA)
                             );
-                            this.router.navigate(['examen-de-valoracion']);
                         });
                     },
                 });
@@ -324,7 +388,6 @@ export class SolicitudExamenComponent implements OnInit {
                                 this.messageService.add(
                                     infoMessage(Mensaje.ACTUALIZACION_EXITOSA)
                                 );
-                                this.router.navigate(['examen-de-valoracion']);
                             });
                         },
                     });
@@ -403,8 +466,6 @@ export class SolicitudExamenComponent implements OnInit {
                                     });
                                 },
                             });
-                    } else {
-                        this.router.navigate(['examen-de-valoracion']);
                     }
                 },
             });
@@ -447,9 +508,12 @@ export class SolicitudExamenComponent implements OnInit {
                         }
                     },
                     error: (e) => {
-                        this.messageService.add(
-                            warnMessage('Pendiente subir archivos.')
-                        );
+                        if (!this.errorMessageShown) {
+                            this.messageService.add(
+                                warnMessage('Pendiente subir archivos.')
+                            );
+                            this.errorMessageShown = true;
+                        }
                     },
                 });
         }
@@ -464,33 +528,16 @@ export class SolicitudExamenComponent implements OnInit {
         this.solicitudForm.patchValue({
             ...solicitud,
         });
+        this.solicitudForm.get('idTrabajoGrados').setValue(this.trabajoDeGradoId);
     }
 
     loadSolicitud() {
-        this.isLoading = true;
         const id = Number(this.route.snapshot.paramMap.get('id'));
+        this.isLoading = true;
         this.trabajoDeGradoId = id;
 
-        if (this.role.includes('ROLE_COMITE')) {
-            this.isSolicitudValid = true;
-
-            this.solicitudService.getSolicitudDocente(id).subscribe({
-                next: (response) => {
-                    if (response) {
-                        this.solicitudService.setTituloSeleccionadoSubject(
-                            response.titulo
-                        );
-                    }
-                },
-                complete: () => {
-                    this.isLoading = false;
-                },
-            });
-        }
-
         if (
-            this.role.includes('ROLE_DOCENTE') &&
-            !this.role.includes('ROLE_COORDINADOR')
+            this.role.includes('ROLE_DOCENTE') == true
         ) {
             this.solicitudService.getSolicitudDocente(id).subscribe({
                 next: (response) => {
@@ -500,10 +547,6 @@ export class SolicitudExamenComponent implements OnInit {
                             data.titulo
                         );
                         this.setValuesForm(data);
-
-                        this.solicitudForm
-                            .get('idTrabajoGrados')
-                            .setValue(this.trabajoDeGradoId);
 
                         this.evaluadorInternoSeleccionado =
                             this.mapEvaluadorInternoLabel(
@@ -530,8 +573,6 @@ export class SolicitudExamenComponent implements OnInit {
                 },
                 error: (e) => this.handlerResponseException(e),
                 complete: () => {
-                    this.isSolicitudValid = true;
-
                     this.setup('linkFormatoA');
                     this.setup('linkFormatoD');
                     this.setup('linkFormatoE');
@@ -542,29 +583,16 @@ export class SolicitudExamenComponent implements OnInit {
         }
 
         if (
-            this.role.includes('ROLE_COORDINADOR') &&
-            !this.role.includes('ROLE_DOCENTE')
+            this.role.includes('ROLE_COORDINADOR') == true
         ) {
             this.solicitudService.getSolicitudCoordinador(id).subscribe({
                 next: (response) => {
                     if (response) {
-                        if (
-                            !!response.actaAprobacionExamen ||
-                            !!response.fechaActa ||
-                            !!response.fechaMaximaEvaluacion ||
-                            !!response.linkOficioDirigidoEvaluadores
-                        ) {
-                            this.isCoordinadorCreated = true;
-                        } else {
-                            this.isCoordinadorCreated = false;
-                        }
-
                         const data = response;
                         this.solicitudService.setTituloSeleccionadoSubject(
                             data.titulo
                         );
                         this.setValuesForm(data);
-                        this.solicitudForm.get('idTrabajoGrados').setValue(id);
 
                         this.expertoService
                             .obtenerExperto(response.evaluadorExterno)
@@ -591,10 +619,6 @@ export class SolicitudExamenComponent implements OnInit {
                                     this.evaluadorInterno.setValue(response.id);
                                 },
                             });
-
-                        this.solicitudForm
-                            .get('actaAprobacionExamen')
-                            .setValue(data?.actaAprobacionExamen);
                         this.solicitudForm
                             .get('fechaActa')
                             .setValue(
@@ -613,8 +637,6 @@ export class SolicitudExamenComponent implements OnInit {
                 },
                 error: (e) => this.handlerResponseException(e),
                 complete: () => {
-                    this.isSolicitudValid = true;
-
                     this.setup('linkFormatoA');
                     this.setup('linkFormatoD');
                     this.setup('linkFormatoE');
@@ -624,11 +646,6 @@ export class SolicitudExamenComponent implements OnInit {
                 },
             });
         }
-    }
-
-    ngOnDestroy() {
-        this.unsubscribe_solicitud$.next();
-        this.unsubscribe_solicitud$.complete();
     }
 
     onFileSelectFirst(event: any) {
@@ -699,8 +716,13 @@ export class SolicitudExamenComponent implements OnInit {
 
     uploadFileAndSetValue(fileControlName: string, event: any) {
         const selectedFiles: FileList = event.files;
+        const maxFileSize = 5000000; // 5 MB
         if (selectedFiles && selectedFiles.length > 0) {
             const selectedFile = selectedFiles[0];
+            if (selectedFile.size > maxFileSize) {
+                this.messageService.add(errorMessage(Aviso.ARCHIVO_DEMASIADO_GRANDE))
+                return null
+            }
             const fileType = selectedFile.type.split('/')[1];
             this.convertFileToBase64(selectedFile)
                 .then((base64) => {
@@ -826,12 +848,8 @@ export class SolicitudExamenComponent implements OnInit {
         this.evaluadorInternoSeleccionado = null;
     }
 
-    redirectToRespuesta(respuestaId: number) {
-        respuestaId
-            ? this.router.navigate([
-                  `examen-de-valoracion/respuesta/editar/${respuestaId}`,
-              ])
-            : this.router.navigate(['examen-de-valoracion/respuesta']);
+    redirectToRespuesta() {
+        this.router.navigate(['examen-de-valoracion/respuesta']);
     }
 
     redirectToResolucion(resolucionId: number) {

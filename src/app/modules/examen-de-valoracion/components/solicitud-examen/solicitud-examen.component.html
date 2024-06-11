@@ -41,7 +41,7 @@
                 pButton
                 type="button"
                 icon="pi pi-book"
-                class="w-15rem p-button-secondary"
+                class="w-15rem p-button-info"
                 label="Solicitud examen de valoración"
                 [disabled]="isActiveIndex()"
             ></button>
@@ -51,7 +51,7 @@
                 icon="pi pi-envelope"
                 class="w-15rem p-button-secondary"
                 label="Respuesta al examen de valoración"
-                [disabled]="!this.isSolicitudValid"
+                [disabled]="!this.isSolicitudValid || role == 'ROLE_DOCENTE' || role == 'ROLE_ESTUDIANTE'"
                 (click)="redirectToRespuesta(this.respuestaId)"
             ></button>
             <button
@@ -60,16 +60,17 @@
                 icon="pi pi-paperclip"
                 class="w-15rem p-button-secondary"
                 label="Generacion de resolucion"
-                [disabled]="!this.isSolicitudValid"
+                [disabled]="!this.isSolicitudValid || role == 'ROLE_ESTUDIANTE'"
                 (click)="redirectToResolucion(this.resolucionId)"
             ></button>
             <button
+                *ngIf="false"
                 pButton
                 type="button"
                 icon="pi pi-paperclip"
                 class="w-20rem p-button-secondary"
                 label="Sustentación del proyecto de investigación"
-                [disabled]="!this.isSolicitudValid"
+                [disabled]="!this.isSolicitudValid || role == 'ROLE_ESTUDIANTE'"
                 (click)="redirectToSustentacion(this.sustentacionId)"
             ></button>
         </div>

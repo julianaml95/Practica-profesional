@@ -71,7 +71,7 @@ export class DocumentoFormatoAComponent implements OnInit {
     }
 
     get experto(): FormControl {
-        return this.formatoAForm.get('evaluador_externo') as FormControl;
+        return this.formatoAForm.get('evaluadorExterno') as FormControl;
     }
 
     get orientador(): FormControl {
@@ -79,7 +79,7 @@ export class DocumentoFormatoAComponent implements OnInit {
     }
 
     get docente(): FormControl {
-        return this.formatoAForm.get('evaluador_interno') as FormControl;
+        return this.formatoAForm.get("evaluadorInterno") as FormControl;
     }
 
     get tipo(): FormControl {
@@ -132,9 +132,9 @@ export class DocumentoFormatoAComponent implements OnInit {
             orientador: [null, Validators.required],
             rol: [null, Validators.required],
             tipo: [null, Validators.required],
-            evaluador_interno: [null, Validators.required],
-            evaluador_externo: [null, Validators.required],
-            firma_estudiante: [null, Validators.required, Validators.required],
+            evaluadorInterno: [null, Validators.required],
+            evaluadorExterno: [null, Validators.required],
+            firmaEstudiante: [null, Validators.required],
         });
 
         this.formatoAForm.get('titulo').disable();
@@ -176,7 +176,7 @@ export class DocumentoFormatoAComponent implements OnInit {
             };
             reader.readAsDataURL(file);
 
-            this.formatoAForm.patchValue({ firma_estudiante: file });
+            this.formatoAForm.patchValue({ firmaEstudiante: file });
         }
     }
 
@@ -279,7 +279,6 @@ export class DocumentoFormatoAComponent implements OnInit {
 
     handlerResponseException(response: any) {
         if (response.status !== 501) return;
-
         const mapException = mapResponseException(response.error);
         mapException.forEach((value) => {
             this.messageService.add(errorMessage(value));

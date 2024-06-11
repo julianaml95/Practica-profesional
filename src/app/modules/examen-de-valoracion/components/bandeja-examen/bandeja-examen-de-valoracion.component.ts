@@ -5,7 +5,7 @@ import { SolicitudService } from '../../services/solicitud.service';
 import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { ConfirmationService, MessageService, PrimeIcons } from 'primeng/api';
-import { Mensaje } from 'src/app/core/enums/enums';
+import { Aviso } from 'src/app/core/enums/enums';
 import { errorMessage } from 'src/app/core/utils/message-util';
 import { Solicitud } from '../../models/solicitud';
 import { LocalStorageService } from '../../services/localstorage.service';
@@ -89,12 +89,12 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                 this.solicitudService.setSolicitudSeleccionada(response);
             },
         });
-        this.resolucionService.getResolucionCoordinador(id).subscribe({
+        this.resolucionService.getResolucionDocente(id).subscribe({
             next: (response) => {
                 this.solicitudService.setResolucionSeleccionada(response);
             },
         });
-        this.sustentacionService.getSustentacionCoordinador(id).subscribe({
+        this.sustentacionService.getSustentacionDocente(id).subscribe({
             next: (response) => {
                 this.solicitudService.setSustentacionSeleccionada(response);
             },
@@ -106,7 +106,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         this.solicitudService.deleteTrabajoDeGrado(id).subscribe({
             next: () =>
                 this.messageService.add(
-                    errorMessage(Mensaje.SOLICITUD_ELIMINADA_CORRECTAMENTE)
+                    errorMessage(Aviso.SOLICITUD_ELIMINADA_CORRECTAMENTE)
                 ),
             error: (e) => console.log(e),
             complete: () => {
@@ -118,7 +118,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
     onDelete(event: any, id: number) {
         this.confirmationService.confirm({
             target: event.target,
-            message: Mensaje.CONFIRMAR_ELIMINAR_REGISTRO,
+            message: Aviso.CONFIRMAR_ELIMINAR_REGISTRO,
             icon: PrimeIcons.EXCLAMATION_TRIANGLE,
             acceptLabel: 'Si, eliminar',
             rejectLabel: 'No',

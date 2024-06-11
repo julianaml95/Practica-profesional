@@ -1,13 +1,18 @@
 export interface Sustentacion {
     idSustentacionTI?: number;
-    linkRemisionDocumentoFinal?: string;
+    linkFormatoF?: string;
     urlDocumentacion?: string;
-    linkRemisionDocumentoFinalCF?: string;
-    linkConstanciaDocumentoFinal?: string;
-    linkActaSustentacion?: string;
+    linkFormatoG?: string;
+    // linkEstudioHojaVidaAcademica?: string;
+    juradoExterno?: string;
+    juradoInterno?: string;
+    numeroActa?: string;
+    fechaActa?: string;
+    linkFormatoH?: string;
+    linkFormatoI?: string;
     linkActaSustentacionPublica?: string;
     respuestaSustentacion?: boolean;
-    linkEstudioHojaVidaAcademica?: string;
-    numeroActaTrabajoFinal?: number;
-    fechaActa?: string;
+    linkEstudioHojaVidaAcademicaGrado?: string;
+    numeroActaFinal?: string;
+    fechaActaFinal?: string;
 }

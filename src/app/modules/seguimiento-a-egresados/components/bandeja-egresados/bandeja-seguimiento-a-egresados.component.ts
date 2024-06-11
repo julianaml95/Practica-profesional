@@ -7,7 +7,7 @@ import { CursoService } from '../../services/cursos.service';
 import { DialogService } from 'primeng/dynamicdialog';
 import { EmpresaEgresadoComponent } from '../empresa-egresados/empresa-egresados.component';
 import { ConfirmationService, MessageService, PrimeIcons } from 'primeng/api';
-import { Mensaje } from 'src/app/core/enums/enums';
+import { Aviso } from 'src/app/core/enums/enums';
 import { infoMessage } from 'src/app/core/utils/message-util';
 import { CursoEgresadoComponent } from '../curso-egresados/curso-egresados.component';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
@@ -189,7 +189,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
         this.empresaService.deleteEmpresa(id).subscribe({
             next: () => {
                 this.messageService.add(
-                    infoMessage(Mensaje.EMPRESA_ELIMINADA_CORRECTAMENTE)
+                    infoMessage(Aviso.EMPRESA_ELIMINADA_CORRECTAMENTE)
                 );
                 this.listEmpresas();
             },
@@ -200,7 +200,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
         this.cursoService.deleteCurso(id).subscribe({
             next: () => {
                 this.messageService.add(
-                    infoMessage(Mensaje.CURSO_ELIMINADO_CORRECTAMENTE)
+                    infoMessage(Aviso.CURSO_ELIMINADO_CORRECTAMENTE)
                 );
                 this.listCursos();
             },
@@ -210,7 +210,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     onDelete(event: any, id: number, name: string) {
         this.confirmationService.confirm({
             target: event.target,
-            message: Mensaje.CONFIRMAR_ELIMINAR_REGISTRO,
+            message: Aviso.CONFIRMAR_ELIMINAR_REGISTRO,
             icon: PrimeIcons.EXCLAMATION_TRIANGLE,
             acceptLabel: 'Si, eliminar',
             rejectLabel: 'No',

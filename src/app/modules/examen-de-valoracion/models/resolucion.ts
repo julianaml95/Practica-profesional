@@ -3,13 +3,11 @@ export interface Resolucion {
     titulo?: string;
     director?: string;
     codirector?: string;
-    numeroActaRevision?: string;
-    fechaActa?: string;
-    linkAnteproyectoAprobado?: string;
+    linkAnteproyectoFinal?: string;
     linkSolicitudComite?: string;
-    linkSolicitudConcejoFacultad?: string;
-    numeroResolucionGeneradaCF?: string;
-    fechaResolucion?: string;
-    linkResolucionGeneradaCF?: string;
-    resolucionConcejoFacultad?: string;
+    numeroActaSolicitudComite?: string;
+    fechaActaSolicitudComite?: string;
+    linkSolicitudConsejoFacultad?: string;
+    numeroActaConsejoFacultad?: string;
+    fechaActaConsejoFacultad?: string;
 }

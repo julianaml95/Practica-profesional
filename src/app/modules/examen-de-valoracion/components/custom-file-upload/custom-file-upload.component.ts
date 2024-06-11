@@ -11,6 +11,7 @@ import { mapResponseException } from 'src/app/core/utils/exception-util';
 import { errorMessage } from 'src/app/core/utils/message-util';
 import { MessageService } from 'primeng/api';
 import { FileUpload } from 'primeng/fileupload';
+import { Aviso } from 'src/app/core/enums/enums';
 
 @Component({
     selector: 'app-custom-file-upload',
@@ -72,8 +73,13 @@ export class CustomFileUploadComponent implements ControlValueAccessor {
 
     onFileChange(event: any) {
         const selectedFiles: FileList = event.files;
+        const maxFileSize = 5000000; // 5 MB
         if (selectedFiles && selectedFiles.length > 0) {
             const selectedFile = selectedFiles[0];
+            if (selectedFile.size > maxFileSize) {
+                this.messageService.add(errorMessage(Aviso.ARCHIVO_DEMASIADO_GRANDE))
+                return null
+            }
             const fileType = selectedFile.type.split('/')[1];
             this.convertFileToBase64(selectedFile)
                 .then((base64) => {

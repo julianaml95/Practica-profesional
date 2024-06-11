@@ -1,46 +1,58 @@
 export enum Mensaje {
-    // Estudiantes
-    REGISTRO_ESTUDIANTES_EXITOSO = 'Estudiantes cargados exitosamente',
-    ERROR_CARGAR_ESTUDIANTES = 'Carga de estudiantes fallida. Verifica los datos e intenta nuevamente',
-    ESTUDIANTE_ELIMINADO_CORRECTAMENTE = 'Estudiante eliminado correctamente',
-    CONFIRMAR_ELIMINAR_ESTUDIANTE = '¿Está seguro de eliminar este estudiante?',
+    REGISTRO_ESTUDIANTES_EXITOSO = "Estudiantes cargados exitosamente",
+    ERROR_CARGAR_ESTUDIANTES = "Carga de estudiantes fallida. Verifica los datos e intenta nuevamente",
+    REGISTRE_CAMPOS_OBLIGATORIOS = "Completa los campos marcados como obligatorios (*)",
+    ESTUDIANTE_ELIMINADO_CORRECTAMENTE = "Estudiante eliminado correctamente",
+    CONFIRMAR_ELIMINAR_ESTUDIANTE = "¿Está seguro de eliminar este estudiante?",
+    CONFIRMAR_SALIR_SIN_GUARDAR = "La información no ha sido guardada, ¿Desea salir?",
+    REGISTRO_DOCENTES_EXITOSO = "Docentes cargados exitosamente",
+    ERROR_CARGAR_DOCENTES = "Carga de docentes fallida. Verifica los datos e intenta nuevamente",
+    DOCENTE_ELIMINADO_CORRECTAMENTE = "Docente eliminado correctamente",
+    CONFIRMAR_ELIMINAR_DOCENTE = "¿Está seguro de eliminar este docente?",
+    ACTUALIZACION_EXITOSA= "El registro fue actualizado exitosamente",
+    GUARDADO_EXITOSO  =  "Los datos han sido guardados exitosamente",
+}
 
-    // Docentes
-    REGISTRO_DOCENTES_EXITOSO = 'Docentes cargados exitosamente',
-    ERROR_CARGAR_DOCENTES = 'Carga de docentes fallida. Verifica los datos e intenta nuevamente',
-    DOCENTE_ELIMINADO_CORRECTAMENTE = 'Docente eliminado correctamente',
-    CONFIRMAR_ELIMINAR_DOCENTE = '¿Está seguro de eliminar este docente?',
-
-    // Cursos
+export enum Aviso {
     CURSO_ELIMINADO_CORRECTAMENTE = 'Curso eliminado correctamente',
-
-    // Empresas
     EMPRESA_ELIMINADA_CORRECTAMENTE = 'Empresa eliminada correctamente',
 
-    // Respuestas
     RESPUESTA_ELIMINADA_CORRECTAMENTE = 'Respuesta eliminada correctamente',
     RESPUESTA_GUARDADA_CORRECTAMENTE = 'Respuesta cargada correctamente',
     RESPUESTA_ACTUALIZADA_CORRECTAMENTE = 'Respuesta actualizada correctamente',
 
-    //Solicitud
-    CONFIRMAR_MODIFICAR_SOLICITUD = 'Selecciona modificar informacion (*)',
-    SIN_REGISTRAR_SOLICITUD_EXAMEN = 'Sin registrar solicitud examen de valoración',
-    PENDIENTE_RESULTADO_EXAMEN = 'Pendiente resultado examen de valoración',
-    EXAMEN_APROBADO = 'Examen de valoración aprobado',
-    EXAMEN_NO_APROBADO = 'Examen de valoración no aprobado',
-    EXAMEN_APLAZADO = 'Examen de valoración aplazado',
+    SOLICITUD_SIN_MODIFICAR = 'Selecciona modificar informacion (*)',
     SOLICITUD_ELIMINADA_CORRECTAMENTE = 'Solicitud eliminada correctamente',
 
-    // General
     CREDENCIALES_INCORRECTAS = 'Credenciales incorrectas',
+    CORREGIR_CAMPOS_OBLIGATORIOS = 'Con correciones pendientes',
     CAMPOS_COORDINADOR_PENDIENTE = 'Pendiente subir informacion de coordinador (*)',
-    CAMPOS_COMITE_PENDIENTE = 'Pendiente subir informacion de comite (*)',
     CAMPOS_DOCENTE_PENDIENTE = 'Pendiente subir informacion de docente (*)',
-    REGISTRE_CAMPOS_OBLIGATORIOS = 'Completa los campos marcados como obligatorios (*)',
-    ARCHIVO_ELIMINADO_CORRECTAMENTE = 'Archivo eliminado correctamente',
-    ARCHIVO_DEMASIADO_GRANDE = 'Archivo demasiado grande',
+
     CONFIRMAR_ELIMINAR_REGISTRO = '¿Está seguro de eliminar este registro?',
-    CONFIRMAR_SALIR_SIN_GUARDAR = 'La información no ha sido guardada, ¿Desea salir?',
-    ACTUALIZACION_EXITOSA = 'El registro fue actualizado exitosamente',
-    GUARDADO_EXITOSO = 'Los datos han sido guardados exitosamente',
+    ARCHIVO_ELIMINADO_CORRECTAMENTE = 'Archivo eliminado correctamente',
+    ARCHIVO_DEMASIADO_GRANDE = 'El tamaño del archivo excede el límite máximo de 5 MB.',
+}
+
+export enum EstadoProceso {
+    SIN_REGISTRAR_SOLICITUD_EXAMEN_DE_VALORACION = "Sin registrar solicitud de examen de valoración por parte del docente",
+    PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR = "Pendiente registro de informacion por parte del coordinador",
+    DEVUELTO_EXAMEN_DE_VALORACION_PARA_CORREGIR = "Se ha devuelto el examen de valoracion para correciones",
+    PENDIENTE_RESULTADO_EXAMEN_DE_VALORACION = "Pendiente respuesta de examen de valoración por parte de los evaluadores",
+    EXAMEN_DE_VALORACION_APROBADO = "Sin registrar informacion por parte del docente para generacion de resolucion",
+    EXAMEN_DE_VALORACION_NO_APROBADO = "Examen de valoración no aprobado",
+    EXAMEN_DE_VALORACION_APLAZADO = "Examen de valoración aplazado",
+    DEVUELTO_GENERACION_DE_RESOLUCION_PARA_CORREGIR = "Se ha solicitado correciones para continuar con el proceso de generacion de resolucion",
+    PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_GENERACION_RESOLUCION = "Pendiente registro de informacion por parte del coordinador con respuesta de comite",
+    PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE2_GENERACION_RESOLUCION = "Pendiente registro de informacion por parte del coordinador con respuesta de consejo",
+    PENDIENTE_SUBIDA_ARCHIVOS_DOCENTE_SUSTENTACION = "Pendiente registro de informacion por parte del docente para sustentacion",
+    DEVUELTO_SUSTENTACION_PARA_CORREGIR_AL_DOCENTE = "Se ha solicitado correciones para continuar con el proceso de sustentacion",
+    PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_SUSTENTACION = "Pendiente registro de informacion por parte del coordinador - Fase 1 para sustentacion",
+    PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE2_SUSTENTACION = "Pendiente registro de informacion por parte del coordinador para sustentacion para respuesta de consejo",
+    PENDIENTE_SUBIDA_ARCHIVOS_ESTUDIANTE_SUSTENTACION = "Pendiente registro de informacion por parte del estudiante para sustentacion",
+    DEVUELTO_SUSTENTACION_POR_REGISTRO_EGRESADO = "Se ha solicitado registrar los datos de egresado en la plataforma del estudiante",
+    PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE3_SUSTENTACION = "Pendiente registro de informacion por parte del coordinador - Fase 3 para sustentacion",
+    SUSTENTACION_APROBADA = "Sustentación aprobada. Examen de valoración finalizado con éxito",
+    SUSTENTACION_NO_APROBADA = "Sustentación no aprobada. Examen de valoración finalizado.",
+    SUSTENTACION_APLAZADA = "Sustentación aplazada. Examen de valoración en espera"
 }

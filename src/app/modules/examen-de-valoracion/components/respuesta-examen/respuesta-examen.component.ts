@@ -5,18 +5,19 @@ import { SolicitudService } from '../../services/solicitud.service';
 import { Router } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
-import { Mensaje } from 'src/app/core/enums/enums';
+import { Aviso, EstadoProceso, Mensaje } from 'src/app/core/enums/enums';
 import {
     errorMessage,
     infoMessage,
     warnMessage,
 } from 'src/app/core/utils/message-util';
-import { Respuesta } from '../../models/respuesta';
 import { RespuestaService } from '../../services/respuesta.service';
 import { Experto } from '../../models/experto';
-import { Subject } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
+import { AuthService } from '../../services/auth.service';
+import { mapResponseException } from 'src/app/core/utils/exception-util';
 
 @Component({
     selector: 'app-respuesta-examen',
@@ -25,12 +26,14 @@ import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 })
 export class RespuestaExamenComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
-    private unsubscribe_respuesta$ = new Subject<void>();
-    private unsubscribe_evaluacion_experto$ = new Subject<void>();
-    private unsubscribe_evaluacion_docente$ = new Subject<void>();
+    private trabajoSeleccionadoSubscription: Subscription;
 
     isLoading: boolean;
+    isRespuestaValid: boolean = false;
     editMode: boolean = false;
+
+    role: string[];
+    estado: string;
 
     trabajoDeGradoId: number;
     solicitudId: number;
@@ -57,7 +60,8 @@ export class RespuestaExamenComponent implements OnInit {
         private fb: FormBuilder,
         private breadcrumbService: BreadcrumbService,
         private messageService: MessageService,
-        private respuestaService: RespuestaService
+        private respuestaService: RespuestaService,
+        private authService: AuthService,
     ) {}
 
     get expertoEvaluaciones(): FormArray {
@@ -76,6 +80,8 @@ export class RespuestaExamenComponent implements OnInit {
     }
 
     subscribeToObservers() {
+        this.role = this.authService.getRole();
+
         this.solicitudService.estudianteSeleccionado$.subscribe({
             next: (response) => {
                 if (response) {
@@ -94,13 +100,15 @@ export class RespuestaExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
-        this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
+        this.trabajoSeleccionadoSubscription = this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
             next: (response) => {
                 if (response) {
+                    this.estado = response.estado;
                     this.respuestaForm
                         .get('idTrabajoGrados')
                         .setValue(response.id);
                     this.trabajoDeGradoId = response.id;
+                    this.checkEstados()
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -217,7 +225,7 @@ export class RespuestaExamenComponent implements OnInit {
 
     initForm(): void {
         this.respuestaForm = this.fb.group({
-            idTrabajoGrados: [null],
+            idTrabajoGrados: [null, Validators.required],
             expertoEvaluaciones: this.fb.array([]),
             docenteEvaluaciones: this.fb.array([]),
             estadoFinalizado: [false, Validators.required],
@@ -227,6 +235,27 @@ export class RespuestaExamenComponent implements OnInit {
         this.formReady.emit(this.respuestaForm);
     }
 
+    checkEstados() {
+        switch (this.estado) {
+            case EstadoProceso.PENDIENTE_RESULTADO_EXAMEN_DE_VALORACION:
+            case EstadoProceso.EXAMEN_DE_VALORACION_APLAZADO:
+            case EstadoProceso.EXAMEN_DE_VALORACION_NO_APROBADO:
+                this.isRespuestaValid = false;
+                this.messageService.add({
+                    severity: 'warn',
+                    summary: 'Advertencia',
+                    detail: 'El examen de valoración no está aprobado.'
+                });
+                break;
+            case EstadoProceso.EXAMEN_DE_VALORACION_APROBADO:
+                this.isRespuestaValid = true;
+                break;
+            default:
+                this.isRespuestaValid = true;
+                break;
+        }
+    }
+    
     initializeForm(respuestas: any) {
         let indexExperto = 0;
         let indexDocente = 0;
@@ -351,6 +380,20 @@ export class RespuestaExamenComponent implements OnInit {
         return false;
     }
 
+    showObservacion(): boolean {
+        if (this.docenteEvaluaciones.length > 0) {
+            const index = this.docenteEvaluaciones.length - 1;
+            const docenteValue = this.docenteEvaluaciones.at(index).get('respuestaExamenValoracionDocente' + index)?.value;    
+            return ['Aplazado', 'No Aprobado'].includes(docenteValue);
+        }
+        if (this.expertoEvaluaciones.length > 0) {
+            const index = this.expertoEvaluaciones.length - 1;
+            const expertoValue = this.expertoEvaluaciones.at(index).get('respuestaExamenValoracionExperto' + index)?.value;
+            return ['Aplazado', 'No Aprobado'].includes(expertoValue);
+        }
+        return false;
+    }
+
     loadRespuestas() {
         this.isLoading = true;
         this.evaluacionExpertoIds = [];
@@ -371,14 +414,9 @@ export class RespuestaExamenComponent implements OnInit {
     }
 
     ngOnDestroy() {
-        this.unsubscribe_respuesta$.next();
-        this.unsubscribe_respuesta$.complete();
-
-        this.unsubscribe_evaluacion_experto$.next();
-        this.unsubscribe_evaluacion_experto$.complete();
-
-        this.unsubscribe_evaluacion_docente$.next();
-        this.unsubscribe_evaluacion_docente$.complete();
+        if (this.trabajoSeleccionadoSubscription) {
+            this.trabajoSeleccionadoSubscription.unsubscribe();
+        }
     }
 
     mapEvaluacion(formArrayName: string, index: number) {
@@ -439,7 +477,7 @@ export class RespuestaExamenComponent implements OnInit {
                             });
                         this.messageService.add(
                             infoMessage(
-                                Mensaje.RESPUESTA_ACTUALIZADA_CORRECTAMENTE
+                                Aviso.RESPUESTA_ACTUALIZADA_CORRECTAMENTE
                             )
                         );
                     }
@@ -489,7 +527,7 @@ export class RespuestaExamenComponent implements OnInit {
                             });
                         this.messageService.add(
                             infoMessage(
-                                Mensaje.RESPUESTA_GUARDADA_CORRECTAMENTE
+                                Aviso.RESPUESTA_GUARDADA_CORRECTAMENTE
                             )
                         );
                     }
@@ -498,6 +536,10 @@ export class RespuestaExamenComponent implements OnInit {
                     this.handlerResponseException(e);
                 },
                 complete: () => {
+                    if (this.isExamenCreado("expertoEvaluaciones", 0) &&
+                    this.isExamenCreado("docenteEvaluaciones", 0)) {
+                        this.router.navigate(['examen-de-valoracion']);
+                    }
                     this.loadRespuestas();
                 },
             });
@@ -577,7 +619,7 @@ export class RespuestaExamenComponent implements OnInit {
             this.respuestaService.deleteRespuestaExamen(respuestaId).subscribe({
                 next: () => {
                     this.messageService.add(
-                        errorMessage(Mensaje.RESPUESTA_ELIMINADA_CORRECTAMENTE)
+                        errorMessage(Aviso.RESPUESTA_ELIMINADA_CORRECTAMENTE)
                     );
                 },
                 error: (e) => this.handlerResponseException(e),
@@ -647,21 +689,6 @@ export class RespuestaExamenComponent implements OnInit {
             });
     }
 
-    onCrearDocumento(name: string) {
-        this.solicitudService.setTituloSeleccionadoSubject(
-            this.tituloSeleccionado
-        );
-        if (name == 'formatoB')
-            this.router.navigate([
-                'examen-de-valoracion/respuesta/documentoFormatoB',
-            ]);
-
-        if (name == 'formatoC')
-            this.router.navigate([
-                'examen-de-valoracion/respuesta/documentoFormatoC',
-            ]);
-    }
-
     redirectToSolicitud(trabajoDeGradoId: number) {
         this.router.navigate([
             `examen-de-valoracion/solicitud/editar/${trabajoDeGradoId}`,
@@ -689,14 +716,11 @@ export class RespuestaExamenComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        // if (response.status != 501) return;
-        // const mapException = mapResponseException(response.error);
-        // mapException.forEach((value, _) => {
-        //     this.messageService.add(errorMessage(value));
-        // });
-        this.messageService.add(
-            errorMessage(response.error ? response.error : response)
-        );
+        if (response.status != 501) return;
+        const mapException = mapResponseException(response.error);
+        mapException.forEach((value, _) => {
+            this.messageService.add(errorMessage(value));
+        });
     }
 
     isActiveIndex(): Boolean {

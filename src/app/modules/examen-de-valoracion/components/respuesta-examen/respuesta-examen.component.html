@@ -44,13 +44,14 @@
                 class="w-15rem p-button-secondary"
                 severity="secondary"
                 label="Solicitud examen de valoración"
+                [disabled]="role == 'ROLE_ESTUDIANTE'"
                 (click)="redirectToSolicitud(this.trabajoDeGradoId)"
             ></button>
             <button
                 pButton
                 type="button"
                 icon="pi pi-envelope"
-                class="w-15rem p-button-secondary"
+                class="w-15rem p-button-info"
                 label="Respuesta al examen de valoración"
                 [disabled]="isActiveIndex()"
             ></button>
@@ -60,6 +61,7 @@
                 icon="pi pi-paperclip"
                 class="w-15rem p-button-secondary"
                 label="Generacion de resolucion"
+                [disabled]="!isRespuestaValid || role == 'ROLE_ESTUDIANTE'"
                 (click)="redirectToResolucion(this.resolucionId)"
             ></button>
             <button
@@ -68,6 +70,7 @@
                 icon="pi pi-paperclip"
                 class="w-20rem p-button-secondary"
                 label="Sustentación del proyecto de investigación"
+                [disabled]="!isRespuestaValid || role == 'ROLE_ESTUDIANTE'"
                 (click)="redirectToSustentacion(this.sustentacionId)"
             ></button>
         </div>
@@ -273,7 +276,7 @@
                                                         )
                                                     "
                                                 ></button>
-                                                <button
+                                                <!-- <button
                                                     *ngIf="
                                                         !selectedFiles[
                                                             'expertoEvaluaciones.linkFormatoB' +
@@ -286,7 +289,7 @@
                                                     label="Crear Documento"
                                                     (click)="onCrearDocumento('formatoB')"
                                                     [loading]="loading"
-                                                ></button>
+                                                ></button> -->
                                             </div>
                                             <div
                                                 class="mt-2"
@@ -396,7 +399,7 @@
                                                         )
                                                     "
                                                 ></button>
-                                                <button
+                                                <!-- <button
                                                     *ngIf="
                                                         !selectedFiles[
                                                             'expertoEvaluaciones.linkFormatoC' +
@@ -413,7 +416,7 @@
                                                         )
                                                     "
                                                     [loading]="loading"
-                                                ></button>
+                                                ></button> -->
                                             </div>
                                             <div
                                                 class="mt-2"
@@ -553,10 +556,7 @@
                                                 class="field-checkbox"
                                             >
                                                 <p-radioButton
-                                                    [inputId]="
-                                                        'respuestaExamenValoracionExperto' +
-                                                        i
-                                                    "
+                                                    [inputId]="'respuestaExamenValoracionExperto' + estado + i"
                                                     [value]="estado"
                                                     [formControlName]="
                                                         'respuestaExamenValoracionExperto' +
@@ -564,10 +564,7 @@
                                                     "
                                                 ></p-radioButton>
                                                 <label
-                                                    [for]="
-                                                        'respuestaExamenValoracionExperto' +
-                                                        i
-                                                    "
+                                                    [for]="'respuestaExamenValoracionExperto' + estado + i"
                                                     class="ml-2"
                                                     >{{ estado }}</label
                                                 >
@@ -1058,10 +1055,7 @@
                                                 class="field-checkbox"
                                             >
                                                 <p-radioButton
-                                                    [inputId]="
-                                                        'respuestaExamenValoracionDocente' +
-                                                        i
-                                                    "
+                                                    [inputId]="'respuestaExamenValoracionDocente' + estado + i"
                                                     [value]="estado"
                                                     [formControlName]="
                                                         'respuestaExamenValoracionDocente' +
@@ -1069,10 +1063,7 @@
                                                     "
                                                 ></p-radioButton>
                                                 <label
-                                                    [for]="
-                                                        'respuestaExamenValoracionDocente' +
-                                                        i
-                                                    "
+                                                    [for]="'respuestaExamenValoracionDocente' + estado + i"
                                                     class="ml-2"
                                                     >{{ estado }}</label
                                                 >
@@ -1135,7 +1126,7 @@
                 <p-divider layout="horizontal" [align]="'center'"
                     ><b></b
                 ></p-divider>
-                <div class="flex mt-4 align-items-center">
+                <div class="flex m-4 align-items-center">
                     <div class="flex-grow-0">
                         <p-checkbox
                             label="Estado del examen de valoración"
@@ -1145,7 +1136,7 @@
                             "
                         ></p-checkbox>
                     </div>
-                    <span class="p-float-label ml-4">
+                    <span class="p-float-label ml-4" *ngIf="showObservacion()">
                         <textarea
                             id="float-input"
                             rows="5"

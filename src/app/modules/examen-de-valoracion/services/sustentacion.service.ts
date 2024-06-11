@@ -11,30 +11,6 @@ import { Sustentacion } from '../models/sustentacion';
 export class SustentacionService {
     constructor(private http: HttpClient) {}
 
-    createSustentacionCoordinador(sustentacion: Sustentacion) {
-        return this.http.post<any>(
-            backendGestionTrabajoDeGrado(
-                'sustentacion_proyecto_investigacion/insertarInformacionCoordinador'
-            ),
-            sustentacion,
-            {
-                headers: getHeaders(),
-            }
-        );
-    }
-
-    createSustentacionComite(sustentacion: Sustentacion) {
-        return this.http.post<any>(
-            backendGestionTrabajoDeGrado(
-                'sustentacion_proyecto_investigacion/insertarInformacionComite'
-            ),
-            sustentacion,
-            {
-                headers: getHeaders(),
-            }
-        );
-    }
-
     createSustentacionDocente(sustentacion: Sustentacion) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
@@ -47,10 +23,10 @@ export class SustentacionService {
         );
     }
 
-    updateSustentacion(sustentacion: Sustentacion, sustentacionId: number) {
-        return this.http.put<any>(
+    createSustentacionEstudiante(sustentacion: Sustentacion) {
+        return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                `sustentacion_proyecto_investigacion/${sustentacionId}`
+                'sustentacion_proyecto_investigacion/insertarInformacionEstudiante'
             ),
             sustentacion,
             {
@@ -59,12 +35,112 @@ export class SustentacionService {
         );
     }
 
-    getSustentacionCoordinador(
+    createSustentacionCoordinadorFase1(sustentacion: Sustentacion) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado(
+                'sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase1'
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    createSustentacionCoordinadorFase2(sustentacion: Sustentacion) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado(
+                'sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase2'
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    createSustentacionCoordinadorFase3(sustentacion: Sustentacion) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado(
+                'sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase3'
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    // updateSustentacion(sustentacion: Sustentacion, sustentacionId: number) {
+    //     return this.http.put<any>(
+    //         backendGestionTrabajoDeGrado(
+    //             `sustentacion_proyecto_investigacion/${sustentacionId}`
+    //         ),
+    //         sustentacion,
+    //         {
+    //             headers: getHeaders(),
+    //         }
+    //     );
+    // }
+
+    getSustentacionDocente(
         trabajoDeGradoId: number
     ): Observable<Sustentacion> {
         return this.http.get<Sustentacion>(
             backendGestionTrabajoDeGrado(
-                `sustentacion_proyecto_investigacion/listarInformacionCoordinador/${trabajoDeGradoId}`
+                `sustentacion_proyecto_investigacion/listarInformacionDocente/${trabajoDeGradoId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    getSustentacionEstudiante(
+        trabajoDeGradoId: number
+    ): Observable<any> {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/listarInformacionEstudiante/${trabajoDeGradoId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    getSustentacionCoordinadorFase1(
+        trabajoDeGradoId: number
+    ): Observable<any> {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/listarInformacionCoordinadorFase1/${trabajoDeGradoId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    getSustentacionCoordinadorFase2(
+        trabajoDeGradoId: number
+    ): Observable<any> {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/listarInformacionCoordinadorFase2/${trabajoDeGradoId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    getSustentacionCoordinadorFase3(
+        trabajoDeGradoId: number
+    ): Observable<any> {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/listarInformacionCoordinadorFase3/${trabajoDeGradoId}`
             ),
             {
                 headers: getHeaders(),

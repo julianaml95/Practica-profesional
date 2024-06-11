@@ -11,10 +11,10 @@ import { Resolucion } from '../models/resolucion';
 export class ResolucionService {
     constructor(private http: HttpClient) {}
 
-    createResolucionCoordinador(resolucion: Resolucion) {
+    createResolucionDocente(resolucion: Resolucion) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'generacion_resolucion/insertarInformacionCoordinador'
+                'generacion_resolucion/insertarInformacionDocente'
             ),
             resolucion,
             {
@@ -23,10 +23,10 @@ export class ResolucionService {
         );
     }
 
-    createResolucionComite(resolucion: Resolucion) {
+    createResolucionCoordinadorFase1(resolucion: Resolucion) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'generacion_resolucion/insertarInformacionComite'
+                'generacion_resolucion/insertarInformacionCoordinadorFase1'
             ),
             resolucion,
             {
@@ -35,10 +35,10 @@ export class ResolucionService {
         );
     }
 
-    updateResolucion(resolucion: Resolucion, resolucionId: number) {
-        return this.http.put<any>(
+    createResolucionCoordinadorFase2(resolucion: Resolucion) {
+        return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                `generacion_resolucion/${resolucionId}`
+                'generacion_resolucion/insertarInformacionCoordinadorFase2'
             ),
             resolucion,
             {
@@ -47,10 +47,22 @@ export class ResolucionService {
         );
     }
 
-    getResolucionComite(trabajoDeGradoId: number): Observable<Resolucion> {
-        return this.http.get<Resolucion>(
+    // updateResolucion(resolucion: Resolucion, resolucionId: number) {
+    //     return this.http.put<any>(
+    //         backendGestionTrabajoDeGrado(
+    //             `generacion_resolucion/${resolucionId}`
+    //         ),
+    //         resolucion,
+    //         {
+    //             headers: getHeaders(),
+    //         }
+    //     );
+    // }
+
+    getResolucionDocente(trabajoDeGradoId: number): Observable<any> {
+        return this.http.get<any>(
             backendGestionTrabajoDeGrado(
-                `generacion_resolucion/listarInformacionComite/${trabajoDeGradoId}`
+                `generacion_resolucion/listarInformacionDocente/${trabajoDeGradoId}`
             ),
             {
                 headers: getHeaders(),
@@ -58,10 +70,21 @@ export class ResolucionService {
         );
     }
 
-    getResolucionCoordinador(trabajoDeGradoId: number): Observable<Resolucion> {
-        return this.http.get<Resolucion>(
+    getResolucionCoordinadorFase1(trabajoDeGradoId: number): Observable<any> {
+        return this.http.get<any>(
             backendGestionTrabajoDeGrado(
-                `generacion_resolucion/listarInformacionCoordinador/${trabajoDeGradoId}`
+                `generacion_resolucion/listarInformacionCoordinadorFase1/${trabajoDeGradoId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    getResolucionCoordinadorFase2(trabajoDeGradoId: number): Observable<any> {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `generacion_resolucion/listarInformacionCoordinadorFase2/${trabajoDeGradoId}`
             ),
             {
                 headers: getHeaders(),

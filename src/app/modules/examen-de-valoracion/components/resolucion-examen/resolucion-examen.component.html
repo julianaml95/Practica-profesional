@@ -43,6 +43,7 @@
                 icon="pi pi-book"
                 class="w-15rem p-button-secondary"
                 label="Solicitud examen de valoración"
+                [disabled]="role == 'ROLE_ESTUDIANTE'"
                 (click)="redirectToSolicitud(this.trabajoDeGradoId)"
             ></button>
             <button
@@ -51,14 +52,16 @@
                 icon="pi pi-envelope"
                 class="w-15rem p-button-secondary"
                 label="Respuesta al examen de valoración"
+                [disabled]="role == 'ROLE_ESTUDIANTE' || role == 'ROLE_DOCENTE'"
                 (click)="redirectToRespuesta(this.respuestaId)"
             ></button>
             <button
                 pButton
                 type="button"
                 icon="pi pi-paperclip"
-                class="w-15rem p-button-secondary"
+                class="w-15rem p-button-info"
                 label="Generacion de resolucion"
+                [disabled]="role == 'ROLE_ESTUDIANTE'"
                 [disabled]="isActiveIndex()"
             ></button>
             <button
@@ -67,6 +70,7 @@
                 icon="pi pi-paperclip"
                 class="w-20rem p-button-secondary"
                 label="Sustentación del proyecto de investigación"
+                [disabled]="role == 'ROLE_ESTUDIANTE'"
                 (click)="redirectToSustentacion(this.sustentacionId)"
             ></button>
         </div>
@@ -102,7 +106,7 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_COMITE')
+                        role.includes('ROLE_DOCENTE')
                     "
                 >
                     <div class="col-4 text-right align-self-center">
@@ -118,7 +122,7 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_COMITE')
+                        role.includes('ROLE_DOCENTE')
                     "
                 >
                     <div class="col-4 text-right align-self-center">
@@ -159,7 +163,7 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_COMITE')
+                        role.includes('ROLE_DOCENTE')
                     "
                 >
                     <div class="col-4 text-right align-self-center">
@@ -198,40 +202,12 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_COMITE')
-                    "
-                >
-                    <div class="col-4 text-right flex align-items-center">
-                        <p style="width: 80%; margin-left: 20%">
-                            No acta de revisón a la respuesta del examen de
-                            valoración
-                        </p>
-                    </div>
-                    <div class="col-8">
-                        <div class="flex align-items-center column-gap-3">
-                            <input
-                                pInputText
-                                formControlName="numeroActaRevision"
-                            />
-                            <label class="text-right">Fecha del Acta</label>
-                            <p-calendar
-                                formControlName="fechaActa"
-                                [showIcon]="true"
-                                dateFormat="dd.mm.yy"
-                            ></p-calendar>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_COMITE')
+                        role.includes('ROLE_DOCENTE')
                     "
                 >
                     <div class="col-4 text-right align-self-center pb-5">
                         <label class="label-required"
-                            >Anteproyecto aprobado (.pdf)
+                            >Anteproyecto final (.pdf)
                         </label>
                     </div>
                     <div class="col-8">
@@ -243,8 +219,8 @@
                             >
                                 <div class="flex flex-row w-full">
                                     <p-fileUpload
-                                        #AnteproyectoAprobado
-                                        name="linkAnteproyectoAprobado"
+                                        #AnteproyectoFinal
+                                        name="linkAnteproyectoFinal"
                                         mode="basic"
                                         [auto]="true"
                                         accept=".pdf"
@@ -255,20 +231,20 @@
                                         chooseLabel="Buscar documento"
                                         [disabled]="
                                             resolucionForm.get(
-                                                'linkAnteproyectoAprobado'
+                                                'linkAnteproyectoFinal'
                                             ).value
                                         "
                                     >
                                     </p-fileUpload>
                                     <button
-                                        *ngIf="FileAnteproyectoAprobado"
+                                        *ngIf="FileAnteproyectoFinal"
                                         pButton
                                         class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
                                             onFileClear(
-                                                'linkAnteproyectoAprobado'
+                                                'linkAnteproyectoFinal'
                                             )
                                         "
                                     ></button>
@@ -279,30 +255,30 @@
                                         width: '200px';
                                         word-break: break-word;
                                     "
-                                    *ngIf="FileAnteproyectoAprobado"
+                                    *ngIf="FileAnteproyectoFinal"
                                 >
-                                    {{ FileAnteproyectoAprobado.name }} -
+                                    {{ FileAnteproyectoFinal.name }} -
                                     {{
-                                        FileAnteproyectoAprobado.size
+                                        FileAnteproyectoFinal.size
                                             | bytesToKb
                                     }}
                                     KB
                                 </div>
                             </div>
                             <button
-                                *ngIf="editMode && FileAnteproyectoAprobado"
+                                *ngIf="editMode && FileAnteproyectoFinal"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
                                 (click)="
                                     getFileAndSetValue(
-                                        'linkAnteproyectoAprobado'
+                                        'linkAnteproyectoFinal'
                                     )
                                 "
                             ></button>
                         </div>
-                        <div class="mt-2" *ngIf="!FileAnteproyectoAprobado">
+                        <div class="mt-2" *ngIf="!FileAnteproyectoFinal">
                             <p>No has seleccionado ningún documento.</p>
                         </div>
                     </div>
@@ -311,7 +287,7 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_COMITE')
+                        role.includes('ROLE_DOCENTE')
                     "
                 >
                     <div class="col-4 text-right align-self-center pb-5">
@@ -386,7 +362,33 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid" *ngIf="role.includes('ROLE_COMITE')">
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR')
+                    "
+                >
+                    <div class="col-4 text-right flex align-items-center">
+                        <p style="width: 80%; margin-left: 20%">
+                            No de resolucion generada por el comite
+                        </p>
+                    </div>
+                    <div class="col-8">
+                        <div class="flex align-items-center column-gap-3">
+                            <input
+                                pInputText
+                                formControlName="numeroActaSolicitudComite"
+                            />
+                            <label class="text-right">Fecha del Acta</label>
+                            <p-calendar
+                                formControlName="fechaActaSolicitudComite"
+                                [showIcon]="true"
+                                dateFormat="dd.mm.yy"
+                            ></p-calendar>
+                        </div>
+                    </div>
+                </div>
+                <div class="field grid" *ngIf="role.includes('ROLE_COORDINADOR')">
                     <div class="col-4 text-right align-self-center pb-5">
                         <label class="label-required"
                             >Solicitud al concejo de facultad para resolución de
@@ -402,8 +404,8 @@
                             >
                                 <div class="flex flex-row w-full">
                                     <p-fileUpload
-                                        #SolicitudConcejo
-                                        name="linkSolicitudConcejoFacultad"
+                                        #SolicitudConsejo
+                                        name="linkSolicitudConsejoFacultad"
                                         mode="basic"
                                         [auto]="true"
                                         accept=".pdf"
@@ -414,20 +416,20 @@
                                         chooseLabel="Buscar documento"
                                         [disabled]="
                                             resolucionForm.get(
-                                                'linkSolicitudConcejoFacultad'
+                                                'linkSolicitudConsejoFacultad'
                                             ).value
                                         "
                                     >
                                     </p-fileUpload>
                                     <button
-                                        *ngIf="FileSolicitudConcejo"
+                                        *ngIf="FileSolicitudConsejo"
                                         pButton
                                         class="p-button-secondary"
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
                                             onFileClear(
-                                                'linkSolicitudConcejoFacultad'
+                                                'linkSolicitudConsejoFacultad'
                                             )
                                         "
                                     ></button>
@@ -438,128 +440,51 @@
                                         width: '200px';
                                         word-break: break-word;
                                     "
-                                    *ngIf="FileSolicitudConcejo"
+                                    *ngIf="FileSolicitudConsejo"
                                 >
-                                    {{ FileSolicitudConcejo.name }} -
-                                    {{ FileSolicitudConcejo.size | bytesToKb }}
+                                    {{ FileSolicitudConsejo.name }} -
+                                    {{ FileSolicitudConsejo.size | bytesToKb }}
                                     KB
                                 </div>
                             </div>
                             <button
-                                *ngIf="editMode && FileSolicitudConcejo"
+                                *ngIf="editMode && FileSolicitudConsejo"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
                                 icon="pi pi-download"
                                 (click)="
                                     getFileAndSetValue(
-                                        'linkSolicitudConcejoFacultad'
+                                        'linkSolicitudConsejoFacultad'
                                     )
                                 "
                             ></button>
                         </div>
-                        <div class="mt-2" *ngIf="!FileSolicitudConcejo">
+                        <div class="mt-2" *ngIf="!FileSolicitudConsejo">
                             <p>No has seleccionado ningún documento.</p>
                         </div>
                     </div>
                 </div>
-                <div class="field grid" *ngIf="role.includes('ROLE_COMITE')">
+                <div class="field grid" *ngIf="role.includes('ROLE_COORDINADOR') && isCoordinadorFase1Created == true">
                     <div class="col-4 text-right">
                         <p style="width: 80%; margin-left: 20%">
-                            No de resolución generada por el concejo de facultad
+                            No de resolución generada por el consejo de facultad
                         </p>
                     </div>
                     <div class="col-8">
                         <div class="flex align-items-center column-gap-3">
                             <input
                                 pInputText
-                                formControlName="numeroResolucionGeneradaCF"
+                                formControlName="numeroActaConsejoFacultad"
                             />
                             <label class="text-right"
-                                >Fecha de la resolución</label
+                                >Fecha del acta</label
                             >
                             <p-calendar
-                                formControlName="fechaResolucion"
+                                formControlName="fechaActaConsejoFacultad"
                                 [showIcon]="true"
                                 dateFormat="dd.mm.yy"
                             ></p-calendar>
-                        </div>
-                    </div>
-                </div>
-                <div class="field grid" *ngIf="role.includes('ROLE_COMITE')">
-                    <div class="col-4 text-right align-self-center pb-5">
-                        <label class="label-required"
-                            >Resolución generada por el concejo de facultad
-                            (.pdf)
-                        </label>
-                    </div>
-                    <div class="col-8">
-                        <div
-                            class="flex flex-wrap gap-2 max-w-30rem align-items-start"
-                        >
-                            <div
-                                class="flex flex-column row-gap-2 align-items-start justify-content-start"
-                            >
-                                <div class="flex flex-row w-full">
-                                    <p-fileUpload
-                                        #ResolucionConcejo
-                                        name="linkResolucionGeneradaCF"
-                                        mode="basic"
-                                        [auto]="true"
-                                        accept=".pdf"
-                                        chooseIcon="pi pi-file"
-                                        class="w-full max-w-30rem"
-                                        maxFileSize="5000000"
-                                        (onSelect)="onFileSelectFourth($event)"
-                                        chooseLabel="Buscar documento"
-                                        [disabled]="
-                                            resolucionForm.get(
-                                                'linkResolucionGeneradaCF'
-                                            ).value
-                                        "
-                                    >
-                                    </p-fileUpload>
-                                    <button
-                                        *ngIf="FileResolucionConcejo"
-                                        pButton
-                                        class="p-button-secondary"
-                                        icon="pi pi-times"
-                                        type="button"
-                                        (click)="
-                                            onFileClear(
-                                                'linkResolucionGeneradaCF'
-                                            )
-                                        "
-                                    ></button>
-                                </div>
-                                <div
-                                    class="mt-2"
-                                    style="
-                                        width: '200px';
-                                        word-break: break-word;
-                                    "
-                                    *ngIf="FileResolucionConcejo"
-                                >
-                                    {{ FileResolucionConcejo.name }} -
-                                    {{ FileResolucionConcejo.size | bytesToKb }}
-                                    KB
-                                </div>
-                            </div>
-                            <button
-                                *ngIf="editMode && FileResolucionConcejo"
-                                pButton
-                                class="p-button-secondary"
-                                type="button"
-                                icon="pi pi-download"
-                                (click)="
-                                    getFileAndSetValue(
-                                        'linkResolucionGeneradaCF'
-                                    )
-                                "
-                            ></button>
-                        </div>
-                        <div class="mt-2" *ngIf="!FileResolucionConcejo">
-                            <p>No has seleccionado ningún documento.</p>
                         </div>
                     </div>
                 </div>

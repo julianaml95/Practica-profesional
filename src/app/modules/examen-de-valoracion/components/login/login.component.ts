@@ -4,7 +4,7 @@ import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { warnMessage } from 'src/app/core/utils/message-util';
-import { Mensaje } from 'src/app/core/enums/enums';
+import { Aviso } from 'src/app/core/enums/enums';
 
 @Component({
     selector: 'app-login',
@@ -44,7 +44,7 @@ export class LoginComponent implements OnInit {
                 },
                 error: (_) => {
                     this.messageService.add(
-                        warnMessage(Mensaje.CREDENCIALES_INCORRECTAS)
+                        warnMessage(Aviso.CREDENCIALES_INCORRECTAS)
                     );
                 },
             });
