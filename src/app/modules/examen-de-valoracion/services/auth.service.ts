@@ -33,7 +33,6 @@ export class AuthService {
                     this.loggedIn.next(true);
                     this.roleSubject.next(response.role);
                     this.usernameSubject.next(response.username);
-                    this.router.navigate(['/']);
                 })
             );
     }

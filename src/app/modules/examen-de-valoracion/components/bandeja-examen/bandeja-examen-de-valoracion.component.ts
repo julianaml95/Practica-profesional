@@ -70,8 +70,8 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         this.solicitudService.setResolucionSeleccionada(null);
         this.solicitudService.setRespuestaSeleccionada(null);
         this.solicitudService.setSolicitudSeleccionada(null);
-        this.solicitudService.setTrabajoSeleccionado(null);
         this.solicitudService.setTituloSeleccionadoSubject(null);
+        this.solicitudService.setTrabajoSeleccionado(null);
     }
 
     onProcesoExamen() {

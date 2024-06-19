@@ -26,6 +26,103 @@
                 >
             </div>
         </p-card>
+        <p-dialog
+            header="PDF Viewer"
+            [(visible)]="displayModal"
+            [style]="{
+                width: '80vw',
+                height: '80vh'
+            }"
+            (onHide)="closeModal()"
+        >
+            <ng-template pTemplate="header">
+                <div
+                    style="
+                        display: flex;
+                        flex: 1;
+                        flex-direction: column;
+                        align-items: center;
+                        padding: 1rem;
+                        border-bottom: 1px solid #ccc;
+                        width: 20rem;
+                    "
+                >
+                    <div
+                        style="
+                            font-size: 1.5rem;
+                            font-weight: bold;
+                            margin-bottom: 0.5rem;
+                            width: 100%;
+                            text-align: center;
+                            word-break: break-all;
+                        "
+                    >
+                        {{ pdfUrls[currentPdfIndex]?.name }}
+                    </div>
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: flex-start;
+                            align-items: center;
+                            width: 100%;
+                        "
+                    >
+                        <span style="font-size: 1rem; margin-right: 1rem"
+                            >Página {{ currentPdfIndex + 1 }} de
+                            {{ pdfUrls?.length }}</span
+                        >
+                        <div
+                            style="
+                                display: flex;
+                                align-items: center;
+                                column-gap: 10px;
+                            "
+                        >
+                            <button
+                                pButton
+                                icon="pi pi-arrow-left"
+                                (click)="previousPdf()"
+                                [disabled]="currentPdfIndex === 0"
+                            ></button>
+                            <button
+                                pButton
+                                icon="pi pi-arrow-right"
+                                (click)="nextPdf()"
+                                [disabled]="
+                                    currentPdfIndex === pdfUrls?.length - 1
+                                "
+                            ></button>
+                        </div>
+                    </div>
+                    <div
+                        style="
+                            margin-top: 1rem;
+                            display: flex;
+                            align-items: center;
+                            column-gap: 0.5rem;
+                        "
+                    >
+                        <input
+                            type="checkbox"
+                            id="reviewedCheckbox"
+                            [(ngModel)]="isReviewed"
+                        />
+                        <label for="reviewedCheckbox"
+                            >Revisé todos los documentos</label
+                        >
+                    </div>
+                </div>
+            </ng-template>
+            <div class="pdf-container">
+                <pdf-viewer
+                    [render-text]="true"
+                    *ngIf="pdfUrls?.length > 0"
+                    [src]="pdfUrls[currentPdfIndex]?.url"
+                    class="pdf-viewer"
+                    (after-load-complete)="onPdfLoad($event)"
+                ></pdf-viewer>
+            </div>
+        </p-dialog>
     </div>
     <div class="flex mt-4 justify-content-between">
         <div class="flex align-items-center column-gap-4">
@@ -70,7 +167,9 @@
                 icon="pi pi-paperclip"
                 class="w-20rem p-button-secondary"
                 label="Sustentación del proyecto de investigación"
-                [disabled]="role == 'ROLE_ESTUDIANTE'"
+                [disabled]="
+                    !isCoordinadorFase2Created || role == 'ROLE_ESTUDIANTE'
+                "
                 (click)="redirectToSustentacion(this.sustentacionId)"
             ></button>
         </div>
@@ -83,11 +182,26 @@
                 (click)="createOrUpdateResolucion()"
             ></button>
             <button
+                *ngIf="editMode && role.includes('ROLE_COORDINADOR')"
+                pButton
+                pTooltip="Revisar documentos"
+                tooltipPosition="top"
+                icon="pi pi-eye"
+                (click)="openModal()"
+            ></button>
+            <button
                 *ngIf="editMode"
                 pButton
                 icon="pi pi-pencil"
-                label="Modificar Informacion"
+                [label]="
+                    isDocenteCreated &&
+                    isCoordinadorFase1Created &&
+                    isCoordinadorFase2Created
+                        ? 'Modificar Informacion'
+                        : 'Guardar'
+                "
                 (click)="createOrUpdateResolucion()"
+                [disabled]="!isReviewed"
             ></button>
         </div>
     </div>
@@ -243,9 +357,7 @@
                                         icon="pi pi-times"
                                         type="button"
                                         (click)="
-                                            onFileClear(
-                                                'linkAnteproyectoFinal'
-                                            )
+                                            onFileClear('linkAnteproyectoFinal')
                                         "
                                     ></button>
                                 </div>
@@ -258,10 +370,7 @@
                                     *ngIf="FileAnteproyectoFinal"
                                 >
                                     {{ FileAnteproyectoFinal.name }} -
-                                    {{
-                                        FileAnteproyectoFinal.size
-                                            | bytesToKb
-                                    }}
+                                    {{ FileAnteproyectoFinal.size | bytesToKb }}
                                     KB
                                 </div>
                             </div>
@@ -272,9 +381,7 @@
                                 type="button"
                                 icon="pi pi-download"
                                 (click)="
-                                    getFileAndSetValue(
-                                        'linkAnteproyectoFinal'
-                                    )
+                                    getFileAndSetValue('linkAnteproyectoFinal')
                                 "
                             ></button>
                         </div>
@@ -365,7 +472,7 @@
                 <div
                     class="field grid"
                     *ngIf="
-                        role.includes('ROLE_COORDINADOR')
+                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
                     "
                 >
                     <div class="col-4 text-right flex align-items-center">
@@ -388,7 +495,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid" *ngIf="role.includes('ROLE_COORDINADOR')">
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
+                    "
+                >
                     <div class="col-4 text-right align-self-center pb-5">
                         <label class="label-required"
                             >Solicitud al concejo de facultad para resolución de
@@ -465,7 +577,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="field grid" *ngIf="role.includes('ROLE_COORDINADOR') && isCoordinadorFase1Created == true">
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created == true
+                    "
+                >
                     <div class="col-4 text-right">
                         <p style="width: 80%; margin-left: 20%">
                             No de resolución generada por el consejo de facultad
@@ -477,9 +595,7 @@
                                 pInputText
                                 formControlName="numeroActaConsejoFacultad"
                             />
-                            <label class="text-right"
-                                >Fecha del acta</label
-                            >
+                            <label class="text-right">Fecha del acta</label>
                             <p-calendar
                                 formControlName="fechaActaConsejoFacultad"
                                 [showIcon]="true"

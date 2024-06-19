@@ -3,29 +3,36 @@
         <div
             class="flex flex-row align-items-center justify-content-evenly header-logo"
         >
-            <h2>
-                Maestría en Computación Facultad de Ingeniería Electrónica y
-                Telecomunicaciones
-            </h2>
+            <div>
+                <h2>Maestría en Computación</h2>
+                <h2>Facultad de Ingeniería Electrónica y Telecomunicaciones</h2>
+            </div>
             <img
                 src="assets/layout/images/logoUnicauca.png"
                 alt="Logo Unicauca"
                 width="120px"
-                height="120px"
+                height="180px"
             />
         </div>
         <div
             class="flex flex-column w-full justify-content-center align-items-center row-gap-4 header-titulo"
         >
-            <span style="font-size: 20px"> ACTA DE EXAMEN DE VALORACION </span>
-            <span>
-                Popayán {{ fechaActual | date : "dd/MM/yyyy HH:mm:ss" }}
+            <span style="font-size: 20px; font-weight: bold">
+                ACTA DE EXAMEN DE VALORACION
             </span>
+            <span> Popayán {{ fechaActual | date : "dd/MM/yyyy" }} </span>
         </div>
     </div>
     <form class="mt-4" [formGroup]="formatoBForm">
         <div class="flex flex-column gap-4">
             <div class="field grid">
+                <!-- FIELD TO PDF -->
+                <div class="body-field p-show">
+                    <label class="uppercase">Programa:</label>
+                    <span>Maestría en Computación</span>
+                </div>
+                <!-- END -->
+
                 <div class="col-2 col-label text-right mr-2 align-self-start">
                     <label
                         class="uppercase font-bold"
@@ -34,15 +41,15 @@
                     >
                 </div>
                 <div class="col-9 col-input">
-                    <p>
+                    <span>
                         Facultad de Ingeniería Electrónica y Telecomunicaciones.
-                    </p>
+                    </span>
                 </div>
             </div>
             <div class="field grid">
                 <!-- FIELD TO PDF -->
                 <div class="body-field p-show">
-                    <label class="uppercase">Titulo</label>
+                    <label class="uppercase">Titulo:</label>
                     <span>{{ formatoBForm.get("titulo").value }}</span>
                 </div>
                 <!-- END -->
@@ -67,7 +74,7 @@
             <div class="field grid">
                 <!-- FIELD TO PDF -->
                 <div class="body-field p-show">
-                    <label class="uppercase">Estudiante</label>
+                    <label class="uppercase">Estudiante:</label>
                     <span>{{ formatoBForm.get("estudiante").value }}</span>
                 </div>
                 <!-- END -->
@@ -97,11 +104,15 @@
                     *ngIf="experto.value; else noEvaluadorSelected"
                 >
                     <!-- FIELD TO PDF -->
-                    <label class="uppercase p-show">Jurado 1</label>
-                    <span class="p-show"
-                        >{{ experto?.value?.nombre }}
-                        {{ experto?.value?.apellido }}</span
-                    >
+                    <div class="body-field p-show">
+                        <label for="">Jurados:</label
+                        ><span
+                            >{{ experto?.value?.nombre }}
+                            {{ experto?.value?.apellido }},
+                            {{ experto?.value?.correo }},
+                            {{ experto?.value?.universidad }}</span
+                        >
+                    </div>
                     <!-- END -->
 
                     <div class="flex align-items-center">
@@ -161,18 +172,22 @@
                     *ngIf="docente.value; else noEvaluadorSelected"
                 >
                     <!-- FIELD TO PDF -->
-                    <label class="uppercase p-show">Jurado 2</label>
-                    <span class="p-show"
-                        >{{ docente?.value?.nombre }}
-                        {{ docente?.value?.apellido }}</span
-                    >
+                    <div class="body-field p-show">
+                        <label for=""></label
+                        ><span
+                            >{{ docente?.value?.nombre }}
+                            {{ docente?.value?.apellido }},
+                            {{ docente?.value?.correo }},
+                            {{ docente?.value?.universidad }}</span
+                        >
+                    </div>
                     <!-- END -->
 
                     <div class="flex align-items-center">
                         <p-card class="w-full max-w-30rem">
                             <div class="flex justify-content-between">
                                 <span class="card-title"
-                                    >Datos del Jurado 2</span
+                                    >Datos del Jurado Interno</span
                                 >
                                 <button
                                     pButton
@@ -215,6 +230,13 @@
                 </div>
             </div>
             <div class="field grid">
+                <!-- FIELD TO PDF -->
+                <div class="body-field p-show">
+                    <label class="uppercase">Fecha:</label>
+                    <span>{{ getFormattedDate() }}</span>
+                </div>
+                <!-- END -->
+
                 <div class="col-2 col-label text-right mr-2 align-self-start">
                     <label class="uppercase font-bold">Fecha</label>
                 </div>
@@ -227,6 +249,13 @@
                 </div>
             </div>
             <div class="field grid">
+                <!-- FIELD TO PDF -->
+                <div class="body-field p-show">
+                    <label class="uppercase">Concepto del Jurado:</label>
+                    <span>{{ formatoBForm.get("conceptoJurado").value }}</span>
+                </div>
+                <!-- END -->
+
                 <div class="col-2 col-label text-right mr-2 align-self-start">
                     <label class="uppercase font-bold"
                         >Concepto de jurado
@@ -244,104 +273,43 @@
                 </div>
             </div>
             <div class="field grid">
-                <div class="col-2 col-label text-right mr-2 align-self-start">
-                    <label class="font-bold">Firman </label>
+                <div
+                    class="col-2 col-label text-right mr-2 align-self-start body-field"
+                >
+                    <label class="font-bold">Firman:</label>
                 </div>
             </div>
             <div class="field grid">
                 <!-- FIELD TO PDF -->
                 <div class="body-image p-show">
-                    <img
-                        [src]="firmaJuradoUno"
-                        alt="Vista Previa de la Firma"
-                        style="max-width: 300px; max-height: 100px"
-                    />
-                    <b
+                    <span style="display: inline"
                         >{{ experto?.value?.nombre }}
-                        {{ experto?.value?.apellido }}</b
+                        {{ experto?.value?.apellido }} -
+                        {{ experto?.value?.universidad }}</span
                     >
+                    <hr style="display: inline" />
                 </div>
                 <!-- END -->
-                <span
-                    class="col-4 col-label--firma text-right align-self-start"
-                >
-                    <b
-                        >{{ experto?.value?.nombre }}
-                        {{ experto?.value?.apellido }}</b
-                    >
+                <span class="col-2 col-label text-right mr-2 align-self-start">
+                    {{ experto?.value?.nombre }}
+                    {{ experto?.value?.apellido }}
                 </span>
-                <div class="col-6 col-input--firma text-center">
-                    <p-fileUpload
-                        name="firmaJuradoUno"
-                        chooseIcon="pi pi-file"
-                        accept=".png"
-                        chooseLabel="Seleccionar"
-                        class="w-full max-w-10rem"
-                        previewWidth="100"
-                        [auto]="true"
-                        (onSelect)="onFirmaJurado($event, 'juradoUno')"
-                    >
-                        <ng-template let-file pTemplate="file">
-                            <div *ngIf="firmaJuradoUno">
-                                <img
-                                    [src]="firmaJuradoUno"
-                                    alt="Vista Previa de la Firma"
-                                    style="
-                                        min-height: 120px;
-                                        min-width: 150px;
-                                        width: 100%;
-                                        height: 100%;
-                                    "
-                                />
-                            </div>
-                        </ng-template>
-                    </p-fileUpload>
-                </div>
             </div>
             <div class="field grid">
                 <!-- FIELD TO PDF -->
                 <div class="body-image p-show">
-                    <img
-                        [src]="firmaJuradoDos"
-                        alt="Vista Previa de la Firma"
-                        style="max-width: 300px; max-height: 100px"
-                    />
-                    <b
+                    <span style="display: inline"
                         >{{ docente?.value?.nombre }}
-                        {{ docente?.value?.apellido }}</b
+                        {{ docente?.value?.apellido }} -
+                        {{ docente?.value?.universidad }}</span
                     >
+                    <hr style="display: inline" />
                 </div>
                 <!-- END -->
-                <span
-                    class="col-4 col-label--firma text-right align-self-start"
+                <span class="col-2 col-label text-right mr-2 align-self-start"
+                    >{{ docente?.value?.nombre }}
+                    {{ docente?.value?.apellido }}</span
                 >
-                    <b
-                        >{{ docente?.value?.nombre }}
-                        {{ docente?.value?.apellido }}</b
-                    >
-                </span>
-                <div class="col-6 col-input--firma text-center">
-                    <p-fileUpload
-                        name="firmaJuradoDos"
-                        chooseIcon="pi pi-file"
-                        accept=".png"
-                        chooseLabel="Seleccionar"
-                        class="w-full max-w-10rem"
-                        previewWidth="100"
-                        [auto]="true"
-                        (onSelect)="onFirmaJurado($event, 'juradoDos')"
-                    >
-                        <ng-template let-file pTemplate="file">
-                            <div *ngIf="firmaJuradoDos">
-                                <img
-                                    [src]="firmaJuradoDos"
-                                    alt="Vista Previa de la Firma"
-                                    style="max-width: 300px; max-height: 100px"
-                                />
-                            </div>
-                        </ng-template>
-                    </p-fileUpload>
-                </div>
             </div>
         </div>
         <div
@@ -356,24 +324,34 @@
             <div
                 class="flex flex-column align-items-center justify-content-center footer-text"
             >
-                <span>
-                    Hacia una Universidad comprometida con la paz territorial
-                </span>
+                <span>Por una Universidad de excelencia y solidaria</span>
                 <hr />
                 <span>
-                    Facultad de Ingeniería Electrónica y Telecomunicaciones
-                    Sector Tulcán Popayán - Cauca - Colombia Conmutador 8209800
-                    Exts. 2145 -2103
+                    Facultad de Ingeniería Electrónica y Telecomunicaciones Cra
+                    2 No. 4N-140 Edif. de Ingenierías - Sector Tulcán Popayán -
+                    Cauca - Colombia Conmutador 8209800 Ext. 2145
+                    maestriacomputacion@unicauca.edu.co - www.unicauca.edu.co
+                    www.unicauca.edu.co/maestriacomputación
                 </span>
             </div>
         </div>
-        <div class="flex align-items-center justify-content-end mt-4">
+        <div
+            class="flex align-items-center justify-content-end mt-4 column-gap-2"
+        >
             <button
                 pButton
                 type="button"
-                icon="pi pi-save"
-                label="Descargar Documento"
-                (click)="onSave()"
+                icon="pi pi-paperclip"
+                label="Adjuntar"
+                (click)="onAdjuntar()"
+                [loading]="loading"
+            ></button>
+            <button
+                pButton
+                type="button"
+                icon="pi pi-download"
+                label="Descargar"
+                (click)="onDownload()"
                 [loading]="loading"
             ></button>
         </div>

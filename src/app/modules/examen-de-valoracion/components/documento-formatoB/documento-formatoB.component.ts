@@ -37,17 +37,16 @@ import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadc
 })
 export class DocumentoFormatoBComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
-    @ViewChild('formatoB') formatoB!: ElementRef;
-    formatoBForm: FormGroup;
-    loading = false;
+    @Output() formatoBPdfGenerated = new EventEmitter<File>();
 
+    @ViewChild('formatoB') formatoB!: ElementRef;
+
+    formatoBForm: FormGroup;
     fechaActual: Date;
 
-    firmaJuradoUno: string | ArrayBuffer;
-    firmaJuradoDos: string | ArrayBuffer;
+    loading = false;
 
     estudianteSeleccionado: Estudiante = {};
-
     estados: string[] = ['Aprobado', 'Aplazado', 'No Aprobado'];
 
     constructor(
@@ -106,8 +105,6 @@ export class DocumentoFormatoBComponent implements OnInit {
             estudiante: [null, Validators.required],
             jurado_interno: [null, Validators.required],
             jurado_externo: [null, Validators.required],
-            firmaJuradoUno: [null, Validators.required],
-            firmaJuradoDos: [null, Validators.required],
             conceptoJurado: [null, Validators.required],
             fecha: [null, Validators.required],
         });
@@ -117,47 +114,65 @@ export class DocumentoFormatoBComponent implements OnInit {
         this.formReady.emit(this.formatoBForm);
     }
 
+    getFormattedDate(): string {
+        const rawDate = new Date(this.formatoBForm.get('fecha').value);
+        const day = rawDate.getDate();
+        const month = rawDate.toLocaleString('default', { month: 'short' });
+        const year = rawDate.getFullYear();
+        return `${day} ${month} ${year}`;
+    }
+
     onCancel() {
         this.router.navigate(['examen-de-valoracion/solicitud']);
     }
 
-    onSave() {
+    onDownload() {
         if (this.formatoBForm.invalid) {
             this.handleWarningMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS);
             return;
         } else {
             const data = document.getElementById('formatoB');
-            this.pdfService.generatePDF(
-                data,
-                `${this.estudianteSeleccionado.codigo} - formatoB.pdf`
-            );
-            this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO);
+            this.pdfService.generatePDF(data).then((pdfBlob: Blob) => {
+                const file = new File(
+                    [pdfBlob],
+                    `${this.estudianteSeleccionado.codigo} - formatoB.pdf`,
+                    {
+                        type: 'application/pdf',
+                    }
+                );
+                const link = document.createElement('a');
+                link.download = file.name;
+                link.href = URL.createObjectURL(file);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO);
+            });
+        }
+    }
+
+    onAdjuntar() {
+        if (this.formatoBForm.invalid) {
+            this.handleWarningMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS);
+            return;
+        } else {
+            const data = document.getElementById('formatoB');
+            this.pdfService.generatePDF(data).then((pdfBlob: Blob) => {
+                const file = new File(
+                    [pdfBlob],
+                    `${this.estudianteSeleccionado.codigo} - formatoB.pdf`,
+                    {
+                        type: 'application/pdf',
+                    }
+                );
+                this.formatoBPdfGenerated.emit(file);
+                this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO);
+            });
         }
     }
 
     getFormControl(formControlName: string): FormControl {
         return this.formatoBForm.get(formControlName) as FormControl;
-    }
-
-    onFirmaJurado(event: any, name: string) {
-        const input = event && event.files ? event : { files: [] };
-
-        const file = input.files[0];
-
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                if (name == 'juradoUno') {
-                    this.firmaJuradoUno = reader.result as string;
-                    this.formatoBForm.patchValue({ firmaJuradoUno: file });
-                }
-                if (name == 'juradoDos') {
-                    this.firmaJuradoDos = reader.result as string;
-                    this.formatoBForm.patchValue({ firmaJuradoDos: file });
-                }
-            };
-            reader.readAsDataURL(file);
-        }
     }
 
     showBuscadorExpertos() {

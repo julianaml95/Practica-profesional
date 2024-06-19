@@ -23,7 +23,7 @@ export class ResolucionService {
         );
     }
 
-    createResolucionCoordinadorFase1(resolucion: Resolucion) {
+    createResolucionCoordinadorFase1(resolucion: any) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
                 'generacion_resolucion/insertarInformacionCoordinadorFase1'
@@ -39,6 +39,18 @@ export class ResolucionService {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
                 'generacion_resolucion/insertarInformacionCoordinadorFase2'
+            ),
+            resolucion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    createResolucionCoordinadorFase3(resolucion: Resolucion) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado(
+                'generacion_resolucion/insertarInformacionCoordinadorFase3'
             ),
             resolucion,
             {
@@ -70,10 +82,10 @@ export class ResolucionService {
         );
     }
 
-    getResolucionCoordinadorFase1(trabajoDeGradoId: number): Observable<any> {
+    getResolucionCoordinadorFase2(trabajoDeGradoId: number): Observable<any> {
         return this.http.get<any>(
             backendGestionTrabajoDeGrado(
-                `generacion_resolucion/listarInformacionCoordinadorFase1/${trabajoDeGradoId}`
+                `generacion_resolucion/listarInformacionCoordinadorFase2/${trabajoDeGradoId}`
             ),
             {
                 headers: getHeaders(),
@@ -81,10 +93,10 @@ export class ResolucionService {
         );
     }
 
-    getResolucionCoordinadorFase2(trabajoDeGradoId: number): Observable<any> {
+    getResolucionCoordinadorFase3(trabajoDeGradoId: number): Observable<any> {
         return this.http.get<any>(
             backendGestionTrabajoDeGrado(
-                `generacion_resolucion/listarInformacionCoordinadorFase2/${trabajoDeGradoId}`
+                `generacion_resolucion/listarInformacionCoordinadorFase3/${trabajoDeGradoId}`
             ),
             {
                 headers: getHeaders(),

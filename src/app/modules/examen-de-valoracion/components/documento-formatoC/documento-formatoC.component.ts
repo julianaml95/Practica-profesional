@@ -6,12 +6,7 @@ import {
     Output,
     ViewChild,
 } from '@angular/core';
-import {
-    FormArray,
-    FormBuilder,
-    FormGroup,
-    Validators,
-} from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
@@ -34,14 +29,16 @@ import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadc
 })
 export class DocumentoFormatoCComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
+    @Output() formatoCPdfGenerated = new EventEmitter<File>();
+
     @ViewChild('formatoC') formatoC!: ElementRef;
+
     formatoCForm: FormGroup;
 
     loading = false;
-    fechaActual: Date;
 
+    fechaActual: Date;
     estudianteSeleccionado: Estudiante = {};
-    firmaJuradoImage: string | ArrayBuffer;
 
     constructor(
         private fb: FormBuilder,
@@ -89,7 +86,6 @@ export class DocumentoFormatoCComponent implements OnInit {
             titulo: [null, Validators.required],
             observaciones: this.fb.array([]),
             recomendaciones: this.fb.array([]),
-            firmaJurado: [null, Validators.required],
             nombreJurado: [null, Validators.required],
             afiliacionJurado: [null, Validators.required],
         });
@@ -102,33 +98,48 @@ export class DocumentoFormatoCComponent implements OnInit {
         this.router.navigate(['examen-de-valoracion/solicitud']);
     }
 
-    onSave() {
+    onDownload() {
         if (this.formatoCForm.invalid) {
             this.handleWarningMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS);
             return;
         } else {
             const data = document.getElementById('formatoC');
-            this.pdfService.generatePDF(
-                data,
-                `${this.estudianteSeleccionado.codigo} - formatoC.pdf`
-            );
-            this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO);
+            this.pdfService.generatePDF(data).then((pdfBlob: Blob) => {
+                const file = new File(
+                    [pdfBlob],
+                    `${this.estudianteSeleccionado.codigo} - formatoC.pdf`,
+                    {
+                        type: 'application/pdf',
+                    }
+                );
+                const link = document.createElement('a');
+                link.download = file.name;
+                link.href = URL.createObjectURL(file);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO);
+            });
         }
     }
 
-    onFirmaJuradoChange(event: any) {
-        const input = event && event.files ? event : { files: [] };
-
-        const file = input.files[0];
-
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                this.firmaJuradoImage = reader.result as string;
-            };
-            reader.readAsDataURL(file);
-
-            this.formatoCForm.patchValue({ firmaJurado: file });
+    onAdjuntar() {
+        if (this.formatoCForm.invalid) {
+            this.handleWarningMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS);
+            return;
+        } else {
+            const data = document.getElementById('formatoC');
+            this.pdfService.generatePDF(data).then((pdfBlob: Blob) => {
+                const file = new File(
+                    [pdfBlob],
+                    `${this.estudianteSeleccionado.codigo} - formatoC.pdf`,
+                    {
+                        type: 'application/pdf',
+                    }
+                );
+                this.formatoCPdfGenerated.emit(file);
+                this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO);
+            });
         }
     }
 

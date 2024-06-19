@@ -79,7 +79,7 @@ export class DocumentoFormatoAComponent implements OnInit {
     }
 
     get docente(): FormControl {
-        return this.formatoAForm.get("evaluadorInterno") as FormControl;
+        return this.formatoAForm.get('evaluadorInterno') as FormControl;
     }
 
     get tipo(): FormControl {
@@ -152,10 +152,7 @@ export class DocumentoFormatoAComponent implements OnInit {
             return;
         } else {
             const data = document.getElementById('formatoA');
-            this.pdfService.generatePDF(
-                data,
-                `${this.estudianteSeleccionado.codigo} - formatoA.pdf`
-            );
+            this.pdfService.generatePDF(data);
             this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO);
         }
     }

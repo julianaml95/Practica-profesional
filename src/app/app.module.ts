@@ -24,6 +24,7 @@ import { AppBreadcrumbComponent } from './core/components/breadcrumb/app.breadcr
 import { BreadcrumbService } from './core/components/breadcrumb/app.breadcrumb.service';
 import { LoginComponent } from './modules/examen-de-valoracion/components/login/login.component';
 import { AuthInterceptor } from './modules/examen-de-valoracion/config/interceptor';
+import { PdfViewerModule } from 'ng2-pdf-viewer';
 
 @NgModule({
     imports: [
@@ -36,6 +37,7 @@ import { AuthInterceptor } from './modules/examen-de-valoracion/config/intercept
         SharedModule,
         GestionEstudiantesModule,
         ReactiveFormsModule,
+        PdfViewerModule
     ],
     declarations: [
         AppComponent,

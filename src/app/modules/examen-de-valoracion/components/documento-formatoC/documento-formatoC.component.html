@@ -3,24 +3,22 @@
         <div
             class="flex flex-row align-items-center justify-content-evenly header-logo"
         >
-            <h2>
-                Maestría en Computación Facultad de Ingeniería Electrónica y
-                Telecomunicaciones
-            </h2>
+            <div>
+                <h2>Maestría en Computación</h2>
+                <h2>Facultad de Ingeniería Electrónica y Telecomunicaciones</h2>
+            </div>
             <img
                 src="assets/layout/images/logoUnicauca.png"
                 alt="Logo Unicauca"
                 width="120px"
-                height="120px"
+                height="180px"
             />
         </div>
         <div
             class="flex flex-column w-full justify-content-center align-items-center row-gap-4 header-titulo"
         >
-            <span style="font-size: 20px"> FORMATO C </span>
-            <span>
-                Popayán {{ fechaActual | date : "dd/MM/yyyy HH:mm:ss" }}
-            </span>
+            <span style="font-size: 20px; font-weight: bold">FORMATO C</span>
+            <span> Popayán {{ fechaActual | date : "dd/MM/yyyy" }} </span>
         </div>
     </div>
     <form class="mt-4" [formGroup]="formatoCForm">
@@ -167,47 +165,11 @@
         </div>
         <div class="flex flex-column gap-2">
             <div class="field grid">
-                <!-- FIELD TO PDF -->
-                <div class="body-image body-image--left p-show">
-                    <img
-                        [src]="firmaJuradoImage"
-                        alt="Vista Previa de la Firma"
-                        style="max-width: 300px; max-height: 100px"
-                    />
-                </div>
-                <!-- END -->
                 <span
                     class="col-2 col-label--firma text-right align-self-start"
                 >
                     <b>Firma Jurado</b>
                 </span>
-                <div class="col-9 col-input--firma text-center max-w-30rem">
-                    <p-fileUpload
-                        name="firmaJurado"
-                        chooseIcon="pi pi-file"
-                        accept=".png"
-                        chooseLabel="Seleccionar"
-                        class="w-full"
-                        previewWidth="150"
-                        [auto]="true"
-                        (onSelect)="onFirmaJuradoChange($event)"
-                    >
-                        <ng-template let-file pTemplate="file">
-                            <div *ngIf="firmaJuradoImage">
-                                <img
-                                    [src]="firmaJuradoImage"
-                                    alt="Vista Previa de la Firma"
-                                    style="
-                                        min-height: 120px;
-                                        min-width: 150px;
-                                        width: 100%;
-                                        height: 100%;
-                                    "
-                                />
-                            </div>
-                        </ng-template>
-                    </p-fileUpload>
-                </div>
             </div>
             <div class="field grid">
                 <!-- FIELD TO PDF -->
@@ -264,24 +226,34 @@
             <div
                 class="flex flex-column align-items-center justify-content-center footer-text"
             >
-                <span>
-                    Hacia una Universidad comprometida con la paz territorial
-                </span>
+                <span>Por una Universidad de excelencia y solidaria</span>
                 <hr />
                 <span>
-                    Facultad de Ingeniería Electrónica y Telecomunicaciones
-                    Sector Tulcán Popayán - Cauca - Colombia Conmutador 8209800
-                    Exts. 2145 -2103
+                    Facultad de Ingeniería Electrónica y Telecomunicaciones Cra
+                    2 No. 4N-140 Edif. de Ingenierías - Sector Tulcán Popayán -
+                    Cauca - Colombia Conmutador 8209800 Ext. 2145
+                    maestriacomputacion@unicauca.edu.co - www.unicauca.edu.co
+                    www.unicauca.edu.co/maestriacomputación
                 </span>
             </div>
         </div>
-        <div class="flex align-items-center justify-content-end mt-4">
+        <div
+            class="flex align-items-center justify-content-end mt-4 column-gap-2"
+        >
             <button
                 pButton
                 type="button"
-                icon="pi pi-save"
-                label="Descargar Documento"
-                (click)="onSave()"
+                icon="pi pi-paperclip"
+                label="Adjuntar"
+                (click)="onAdjuntar()"
+                [loading]="loading"
+            ></button>
+            <button
+                pButton
+                type="button"
+                icon="pi pi-download"
+                label="Descargar"
+                (click)="onDownload()"
                 [loading]="loading"
             ></button>
         </div>

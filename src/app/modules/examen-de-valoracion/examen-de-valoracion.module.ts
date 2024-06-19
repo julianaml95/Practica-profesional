@@ -19,6 +19,8 @@ import { SustentacionExamenComponent } from './components/sustentacion-examen/su
 import { DocumentoFormatoAComponent } from './components/documento-formatoA/documento-formatoA.component';
 import { DocumentoFormatoBComponent } from './components/documento-formatoB/documento-formatoB.component';
 import { DocumentoFormatoCComponent } from './components/documento-formatoC/documento-formatoC.component';
+import { PdfViewerModule } from 'ng2-pdf-viewer';
+import { FileUploadValueAccessorDirective } from './components/respuesta-examen/fileupload-accessor-directive';
 
 @NgModule({
     declarations: [
@@ -32,6 +34,7 @@ import { DocumentoFormatoCComponent } from './components/documento-formatoC/docu
         RespuestaExamenComponent,
         ResolucionExamenComponent,
         SustentacionExamenComponent,
+        FileUploadValueAccessorDirective,
     ],
     imports: [
         CommonModule,
@@ -39,7 +42,9 @@ import { DocumentoFormatoCComponent } from './components/documento-formatoC/docu
         PrimenNgModule,
         ExamenDeValoracionRoutingModule,
         ReactiveFormsModule,
+        PdfViewerModule,
     ],
+    exports: [FileUploadValueAccessorDirective],
     providers: [SolicitudService],
 })
 export class ExamenDeValoracionModule {}

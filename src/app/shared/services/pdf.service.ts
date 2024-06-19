@@ -18,18 +18,17 @@ export class PdfService {
             },
             titleLeft: {
                 alignment: 'left',
-                bold: true,
-                fontSize: 18,
+                fontSize: 16,
                 width: '60%',
+                color: '#3e5270',
             },
             imageRight: {
                 alignment: 'center',
                 width: '40%',
+                color: '#3e5270',
             },
             labelStyle: {
                 alignment: 'left',
-                bold: true,
-                fontFeatures: ['c2sc', 'smcp'],
                 margin: [0, 5, 0, 5],
             },
             contentStyle: {
@@ -46,16 +45,18 @@ export class PdfService {
             },
             centerAlignment: {
                 alignment: 'center',
+                bold: true,
                 margin: [0, 10, 0, 10],
             },
         };
     }
 
-    async generatePDF(htmlContent: any, filename: string) {
+    async generatePDF(htmlContent: any): Promise<Blob> {
         const content = await this.extractContentFromElement(htmlContent);
         const footerContent = await this.extractFooterFromElement(htmlContent);
         const docDefinition = {
             pageSize: 'A4',
+            styles: this.getStyles(),
             pageMargins: [30, 40, 30, 40],
             content: content,
             footer: () => {
@@ -65,13 +66,16 @@ export class PdfService {
                     margin: [30, -60, 30, 0],
                 };
             },
-            styles: this.getStyles(),
             defaultStyle: {
                 font: 'Roboto',
             },
         };
 
-        pdfMake.createPdf(docDefinition).download(filename);
+        return new Promise((resolve, reject) => {
+            pdfMake.createPdf(docDefinition).getBlob((blob) => {
+                resolve(blob);
+            });
+        });
     }
 
     async extractFooterFromElement(element) {
@@ -94,16 +98,13 @@ export class PdfService {
             ) {
                 const bodyFooterContent = [];
                 for (let child of node.childNodes) {
-                    if (
-                        child.nodeType === Node.ELEMENT_NODE &&
-                        child.tagName === 'IMG'
-                    ) {
+                    if (child.tagName === 'IMG') {
                         const imgData = await this.convertImageToDataURL(
                             child.src
                         );
                         bodyFooterContent.push({
                             image: imgData,
-                            width: 100,
+                            width: 120,
                             style: 'titleLeft',
                         });
                     } else if (
@@ -119,6 +120,7 @@ export class PdfService {
                                 divContent.push({
                                     text: ' ' + divChild.textContent.trim(),
                                     style: 'imageRight',
+                                    margin: [5, 0, 0, 0],
                                 });
                             } else if (
                                 divChild.nodeType === Node.ELEMENT_NODE &&
@@ -210,7 +212,7 @@ export class PdfService {
                         bodyFieldContent.push({
                             text: child.innerText.trim(),
                             style: 'contentStyle',
-                            width: '80%',
+                            width: '50%',
                         });
                     }
                 }
@@ -220,39 +222,47 @@ export class PdfService {
                 });
             }
 
-            if (
-                node.classList.contains('body-image--left') ||
-                node.classList.contains('body-image')
-            ) {
+            if (node.classList.contains('body-image')) {
                 const bodyImageContent = [];
 
                 for (let child of node.childNodes) {
                     if (
                         child.nodeType === Node.ELEMENT_NODE &&
-                        child.tagName === 'B'
+                        child.tagName === 'SPAN'
                     ) {
                         bodyImageContent.push({
                             text: ' ' + child.textContent.trim(),
-                            style: 'rightAlignment',
+                            style: 'leftAlignment',
                         });
                     } else if (
                         child.nodeType === Node.ELEMENT_NODE &&
-                        child.tagName === 'IMG'
+                        child.tagName === 'HR'
                     ) {
-                        const imgData = await this.convertImageToDataURL(
-                            child.src
-                        );
                         bodyImageContent.push({
-                            image: imgData,
-                            width: 100,
-                            style: node.classList.contains('body-image--left')
-                                ? 'leftAlignment'
-                                : 'rightAlignment',
+                            canvas: [
+                                {
+                                    type: 'line',
+                                    x1: 0,
+                                    y1: 0,
+                                    x2: 200,
+                                    y2: 0,
+                                    lineWidth: 1,
+                                    color: '#000',
+                                },
+                            ],
+                            alignment: 'left',
+                            display: 'inline',
+                            margin: [0, 15, 0, 5],
                         });
                     }
                 }
 
-                content.push(...bodyImageContent);
+                if (bodyImageContent.length > 0) {
+                    content.push({
+                        columns: bodyImageContent,
+                        columnGap: 5,
+                    });
+                }
             }
 
             if (node.classList.contains('header-logo')) {
@@ -261,12 +271,28 @@ export class PdfService {
                 for (let child of node.childNodes) {
                     if (
                         child.nodeType === Node.ELEMENT_NODE &&
-                        child.tagName === 'H2'
+                        child.tagName === 'DIV'
                     ) {
-                        headerContent.push({
-                            text: ' ' + child.textContent.trim(),
-                            style: 'titleLeft',
-                        });
+                        const divContent = [];
+                        for (let divChild of child.childNodes) {
+                            if (
+                                divChild.nodeType === Node.ELEMENT_NODE &&
+                                divChild.tagName === 'H2'
+                            ) {
+                                divContent.push({
+                                    text: divChild.textContent.trim(),
+                                    width: '100%',
+                                    margin: [0, 2, 0, 2],
+                                });
+                            }
+                        }
+
+                        if (divContent.length > 0) {
+                            headerContent.push({
+                                stack: divContent,
+                                style: 'titleLeft',
+                            });
+                        }
                     } else if (
                         child.nodeType === Node.ELEMENT_NODE &&
                         child.tagName === 'IMG'

@@ -20,8 +20,8 @@
     </div>
     <form [formGroup]="loginForm">
         <div class="p-field p-grid mt-2">
-            <label for="username" class="p-col-fixed">Username</label>
-            <div class="p-col">
+            <label for="username" class="p-col-fixed">Nombre de Usuario</label>
+            <div class="p-col mt-2">
                 <input
                     class="w-full"
                     id="username"
@@ -34,8 +34,8 @@
             </div>
         </div>
         <div class="p-field p-grid mt-2">
-            <label for="password" class="p-col-fixed">Password</label>
-            <div class="p-col">
+            <label for="password" class="p-col-fixed">Contraseña</label>
+            <div class="p-col mt-2">
                 <input
                     class="w-full"
                     id="password"
@@ -48,7 +48,7 @@
             </div>
         </div>
         <div class="p-field p-grid mt-2">
-            <button pButton type="submit" (click)="onSubmit()">Enviar</button>
+            <button pButton (click)="onSubmit()">Enviar</button>
         </div>
     </form>
 </div>

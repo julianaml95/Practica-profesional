@@ -32,12 +32,13 @@
             </div>
             <a
                 *ngIf="isLoggedIn; else loginLink"
+                pRipple
+                class="cursor-pointer"
                 (click)="logout()"
-                style="cursor: pointer"
                 >Cerrar sesión</a
             >
             <ng-template #loginLink>
-                <a routerLink="/login">Iniciar sesión</a>
+                <a routerLink="/login" pRipple>Iniciar sesión</a>
             </ng-template>
         </div>
     </div>

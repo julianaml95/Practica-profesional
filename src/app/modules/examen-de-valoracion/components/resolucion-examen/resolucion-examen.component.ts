@@ -17,7 +17,7 @@ import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadc
 import { Experto } from '../../models/experto';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
-import { Subscription, forkJoin, of, timer } from 'rxjs';
+import { Subscription, forkJoin, lastValueFrom, of, timer } from 'rxjs';
 import { SolicitudService } from '../../services/solicitud.service';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {
@@ -54,20 +54,26 @@ export class ResolucionExamenComponent implements OnInit {
     FileSolicitudComite: File | null;
     FileSolicitudConsejo: File | null;
 
+    displayModal: boolean = false;
     errorMessageShown: boolean = false;
     editMode: boolean = false;
     isLoading: boolean;
     isCoordinadorFase1Created: boolean = false;
     isDocenteCreated: boolean = false;
     isCoordinadorFase2Created: boolean = false;
-    
+    isReviewed: boolean = false;
+    isPdfLoaded: boolean = false;
+
     role: string[];
+    pdfUrls: { name: string; url: string }[] = [];
+
     estado: string;
 
     trabajoDeGradoId: number;
     respuestaId: number;
     resolucionId: number;
     sustentacionId: number;
+    currentPdfIndex: number = 0;
 
     resolucionForm: FormGroup;
 
@@ -105,17 +111,17 @@ export class ResolucionExamenComponent implements OnInit {
         if (this.router.url.includes('editar')) {
             await this.loadEditMode();
         } else {
-            this.checkEstados()
+            this.checkEstados();
         }
         this.setBreadcrumb();
     }
-    
+
     async loadEditMode() {
         this.editMode = true;
         await this.loadResolucion();
         this.checkEstados();
     }
-    
+
     initForm(): void {
         this.resolucionForm = this.fb.group({
             idTrabajoGrados: [null, Validators.required],
@@ -136,13 +142,13 @@ export class ResolucionExamenComponent implements OnInit {
 
     updateFormFields(role: string[]): void {
         const formControls = this.resolucionForm.controls;
-    
+
         for (const control in formControls) {
             formControls[control].disable();
         }
 
-        formControls['idTrabajoGrados'].enable()
-    
+        formControls['idTrabajoGrados'].enable();
+
         if (role.includes('ROLE_DOCENTE')) {
             formControls['titulo'].enable();
             formControls['director'].enable();
@@ -150,9 +156,9 @@ export class ResolucionExamenComponent implements OnInit {
             formControls['linkAnteproyectoFinal'].enable();
             formControls['linkSolicitudComite'].enable();
         }
-    
+
         if (role.includes('ROLE_COORDINADOR')) {
-            if (!this.isCoordinadorFase1Created) {
+            if (this.isDocenteCreated) {
                 formControls['numeroActaSolicitudComite'].enable();
                 formControls['fechaActaSolicitudComite'].enable();
                 formControls['linkSolicitudConsejoFacultad'].enable();
@@ -162,7 +168,6 @@ export class ResolucionExamenComponent implements OnInit {
                 formControls['numeroActaConsejoFacultad'].enable();
                 formControls['fechaActaConsejoFacultad'].enable();
             }
-
         }
     }
 
@@ -178,7 +183,7 @@ export class ResolucionExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
-         this.solicitudService.tituloSeleccionadoSubject$.subscribe({
+        this.solicitudService.tituloSeleccionadoSubject$.subscribe({
             next: (response) => {
                 if (response) {
                     this.tituloSeleccionado = response;
@@ -189,18 +194,19 @@ export class ResolucionExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
-        this.trabajoSeleccionadoSubscription = this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.trabajoDeGradoId = response.id;
-                    this.estado = response.estado;
-                    this.resolucionForm
-                        .get('idTrabajoGrados')
-                        .setValue(response.id);
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
+        this.trabajoSeleccionadoSubscription =
+            this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
+                next: (response) => {
+                    if (response) {
+                        this.trabajoDeGradoId = response.id;
+                        this.estado = response.estado;
+                        this.resolucionForm
+                            .get('idTrabajoGrados')
+                            .setValue(response.id);
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
+            });
         this.solicitudService.resolucionSeleccionadaSubject$.subscribe({
             next: (response) => {
                 if (response) {
@@ -225,18 +231,20 @@ export class ResolucionExamenComponent implements OnInit {
         }
     }
 
-    checkEstados() {    
-        this.updateFormFields(this.role);
-
-        const addMessage = (severity: string, summary: string, detail: string) => {
+    checkEstados() {
+        const addMessage = (
+            severity: string,
+            summary: string,
+            detail: string
+        ) => {
             this.messageService.add({
                 severity,
                 summary,
                 detail,
-                life: 10000
+                life: 10000,
             });
         };
-    
+
         switch (this.estado) {
             // case EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_PARA_CORREGIR:
             //     if (this.isDocenteCreated) {
@@ -245,48 +253,132 @@ export class ResolucionExamenComponent implements OnInit {
             //         addMessage('info', 'Correcciones pendientes', 'Coordinador Fase 1 debe realizar correcciones antes de continuar.');
             //     }
             //     break;
-            
-            case EstadoProceso.EXAMEN_DE_VALORACION_APROBADO:
-                if (!this.isDocenteCreated) {
-                    addMessage('info', 'Información', EstadoProceso.EXAMEN_DE_VALORACION_APROBADO);
-                    this.isDocenteCreated = false;
-                    this.isCoordinadorFase1Created = false;
-                    this.isCoordinadorFase2Created = false;
-                }
-                break;
-    
 
+            case EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2:
+                addMessage(
+                    'info',
+                    'Información',
+                    EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2
+                );
+
+                this.isDocenteCreated = false;
+                this.isCoordinadorFase1Created = false;
+                this.isCoordinadorFase2Created = false;
+
+                if (this.role.includes('ROLE_COORDINADOR')) {
+                    this.router.navigate(['examen-de-valoracion']);
+                }
+                break;
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_GENERACION_RESOLUCION:
-                if (this.isDocenteCreated) {
-                    addMessage('info', 'Información', EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_GENERACION_RESOLUCION);
-                    this.isDocenteCreated = true;
-                    this.isCoordinadorFase1Created = false;
-                    this.isCoordinadorFase2Created = false;
-                } else {
-                    addMessage('error', 'Error', 'El formulario del docente debe ser completado antes de proceder.');
-                }
+                this.isDocenteCreated = false;
+                this.isCoordinadorFase1Created = false;
+                this.isCoordinadorFase2Created = false;
                 break;
-    
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE2_GENERACION_RESOLUCION:
-                if (this.isDocenteCreated && this.isCoordinadorFase1Created) {
-                    addMessage('info', 'Información', EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE2_GENERACION_RESOLUCION);
-                    this.isDocenteCreated = true;
-                    this.isCoordinadorFase1Created = true;
-                    this.isCoordinadorFase2Created = false;
-                } else {
-                    addMessage('error', 'Error', 'El formulario del coordinador en la fase 1 debe ser completado antes de proceder.');
-                }
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = false;
+                this.isCoordinadorFase2Created = false;
                 break;
-    
+            case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE3_GENERACION_RESOLUCION:
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = false;
+                break;
+            case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_DOCENTE_SUSTENTACION:
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = true;
+                this.solicitudService.setResolucionValid(
+                    this.isCoordinadorFase2Created
+                );
+                break;
             default:
-                if (this.isDocenteCreated && this.isCoordinadorFase1Created && this.isCoordinadorFase2Created) {
-                    this.isDocenteCreated = true;
-                    this.isCoordinadorFase1Created = true;
-                    this.isCoordinadorFase2Created = true;
-                }
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = true;
+                this.solicitudService.setResolucionValid(
+                    this.isCoordinadorFase2Created
+                );
                 break;
         }
-    }    
+
+        this.updateFormFields(this.role);
+    }
+
+    //#region PDF VIEWER
+    async loadPdfFiles() {
+        const filesToConvert = [
+            this.FileAnteproyectoFinal,
+            this.FileSolicitudComite,
+            this.FileSolicitudConsejo,
+        ];
+
+        const errorFiles = new Set<File>();
+
+        try {
+            for (const file of filesToConvert) {
+                if (file) {
+                    try {
+                        const url = URL.createObjectURL(file);
+                        this.pdfUrls.push({ name: file.name, url });
+                    } catch (error) {
+                        errorFiles.add(file);
+                    }
+                }
+            }
+
+            if (errorFiles.size > 0) {
+                this.messageService.add(
+                    errorMessage('Error al convertir uno o más archivos PDF.')
+                );
+                this.closeModal();
+            }
+        } catch (generalError) {
+            this.messageService.add(
+                errorMessage(
+                    'Se produjo un error general al cargar los archivos PDF.'
+                )
+            );
+            this.closeModal();
+        }
+    }
+
+    onPdfLoad(pdf: any) {
+        if (pdf.numPages) {
+            this.isPdfLoaded = true;
+            console.log(`PDF loaded with ${pdf.numPages} pages.`);
+        } else {
+            this.isPdfLoaded = false;
+            console.error('Failed to load PDF.');
+        }
+    }
+
+    nextPdf() {
+        if (this.currentPdfIndex < this.pdfUrls.length - 1) {
+            this.isPdfLoaded = false; // Reset the flag when changing PDF
+            this.currentPdfIndex++;
+        }
+    }
+
+    previousPdf() {
+        if (this.currentPdfIndex > 0) {
+            this.isPdfLoaded = false; // Reset the flag when changing PDF
+            this.currentPdfIndex--;
+        }
+    }
+
+    openModal() {
+        if (!this.isLoading) {
+            this.displayModal = true;
+            this.loadPdfFiles();
+        }
+    }
+
+    closeModal() {
+        this.displayModal = false;
+        this.pdfUrls = [];
+    }
+    //#endregion
 
     setup(fieldName: string) {
         if (Object.keys(this.estudianteSeleccionado).length > 0) {
@@ -342,64 +434,93 @@ export class ResolucionExamenComponent implements OnInit {
     loadResolucion(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this.isLoading = true;
-    
-            const docenteObs = this.resolucionService.getResolucionDocente(this.trabajoDeGradoId);
-            const coordinadorFase1Obs = this.role.includes('ROLE_COORDINADOR') ? this.resolucionService.getResolucionCoordinadorFase1(this.trabajoDeGradoId) : of(null);
-            const coordinadorFase2Obs = this.role.includes('ROLE_COORDINADOR') ? this.resolucionService.getResolucionCoordinadorFase2(this.trabajoDeGradoId) : of(null);
-    
+
+            const docenteObs = this.resolucionService.getResolucionDocente(
+                this.trabajoDeGradoId
+            );
+
+            const coordinadorFase2Obs = this.role.includes('ROLE_COORDINADOR')
+                ? this.resolucionService.getResolucionCoordinadorFase2(
+                      this.trabajoDeGradoId
+                  )
+                : of(null);
+            const coordinadorFase3Obs = this.role.includes('ROLE_COORDINADOR')
+                ? this.resolucionService.getResolucionCoordinadorFase3(
+                      this.trabajoDeGradoId
+                  )
+                : of(null);
+
             forkJoin({
                 docente: docenteObs,
-                coordinadorFase1: coordinadorFase1Obs,
-                coordinadorFase2: coordinadorFase2Obs
+                coordinadorFase2: coordinadorFase2Obs,
+                coordinadorFase3: coordinadorFase3Obs,
             }).subscribe({
                 next: (responses) => {
                     if (responses.docente) {
                         const data = responses.docente;
                         this.setValuesForm(data);
-                        this.isDocenteCreated = true;
-                        this.resolucionForm.get('idTrabajoGrados').setValue(this.trabajoDeGradoId);
-                        this.solicitudService.setTituloSeleccionadoSubject(data.titulo);
-    
-                        this.expertoService.obtenerExperto(Number(data.codirector)).subscribe({
-                            next: (response) => {
-                                this.codirectorSeleccionado = this.mapCodirectorLabel(response);
-                                this.codirector.setValue(response.id);
-                            },
-                        });
-    
-                        this.docenteService.obtenerDocente(Number(data.director)).subscribe({
-                            next: (response) => {
-                                this.directorSeleccionado = this.mapDirectorLabel(response);
-                                this.director.setValue(response.id);
-                            },
-                        });
+
+                        this.resolucionForm
+                            .get('idTrabajoGrados')
+                            .setValue(this.trabajoDeGradoId);
+                        this.solicitudService.setTituloSeleccionadoSubject(
+                            data.titulo
+                        );
+
+                        this.expertoService
+                            .obtenerExperto(Number(data.codirector))
+                            .subscribe({
+                                next: (response) => {
+                                    this.codirectorSeleccionado =
+                                        this.mapCodirectorLabel(response);
+                                    this.codirector.setValue(response.id);
+                                },
+                            });
+
+                        this.docenteService
+                            .obtenerDocente(Number(data.director))
+                            .subscribe({
+                                next: (response) => {
+                                    this.directorSeleccionado =
+                                        this.mapDirectorLabel(response);
+                                    this.director.setValue(response.id);
+                                },
+                            });
                     }
-    
-                    if (responses.coordinadorFase1) {
-                        const data = responses.coordinadorFase1;
-                        this.setValuesForm(data);
-                        if (data.fechaActaSolicitudComite !== null && data.numeroActaSolicitudComite !== null) {
-                            this.isCoordinadorFase1Created = true;
-                        }
-                        this.resolucionForm.get('fechaActaSolicitudComite').setValue(data?.fechaActaSolicitudComite ? new Date(data.fechaActaSolicitudComite) : null);
-                    }
-    
+
                     if (responses.coordinadorFase2) {
                         const data = responses.coordinadorFase2;
                         this.setValuesForm(data);
-                        if (data.fechaActaConsejoFacultad !== null && data.numeroActaConsejoFacultad !== null) {
-                            this.isCoordinadorFase2Created = true;
-                        }
-                        this.resolucionForm.get('fechaActaConsejoFacultad').setValue(data?.fechaActaConsejoFacultad ? new Date(data.fechaActaConsejoFacultad) : null);
+
+                        this.resolucionForm
+                            .get('fechaActaSolicitudComite')
+                            .setValue(
+                                data?.fechaActaSolicitudComite
+                                    ? new Date(data.fechaActaSolicitudComite)
+                                    : null
+                            );
+                    }
+
+                    if (responses.coordinadorFase3) {
+                        const data = responses.coordinadorFase3;
+                        this.setValuesForm(data);
+
+                        this.resolucionForm
+                            .get('fechaActaConsejoFacultad')
+                            .setValue(
+                                data?.fechaActaConsejoFacultad
+                                    ? new Date(data.fechaActaConsejoFacultad)
+                                    : null
+                            );
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
                 complete: () => {
-                    if (this.role.includes('ROLE_DOCENTE')){
+                    if (this.role.includes('ROLE_DOCENTE')) {
                         this.setup('linkAnteproyectoFinal');
                         this.setup('linkSolicitudComite');
                     }
-                    if (this.role.includes('ROLE_COORDINADOR')){
+                    if (this.role.includes('ROLE_COORDINADOR')) {
                         this.setup('linkAnteproyectoFinal');
                         this.setup('linkSolicitudComite');
                         this.setup('linkSolicitudConsejoFacultad');
@@ -411,83 +532,83 @@ export class ResolucionExamenComponent implements OnInit {
         });
     }
 
-    updateResolucion(): void {
+    async updateResolucion() {
         const id = Number(this.route.snapshot.paramMap.get('id'));
         this.resolucionId = id;
         this.isLoading = true;
-        // if (
-        //     (this.role.includes('ROLE_COORDINADOR') == true ||
-        //         this.role.includes('ROLE_COMITE') == true) &&
-        //     this.isCoordinadorFase1Created == true &&
-        //     this.isDocenteCreated == true
-        // ) {
-        //     this.resolucionService
-        //         .updateResolucion(this.resolucionForm.value, this.resolucionId)
-        //         .subscribe({
-        //             next: (_) => {},
-        //             error: (e) => this.handlerResponseException(e),
-        //             complete: () => {
-        //                 timer(2000).subscribe(() => {
-        //                     this.isLoading = false;
-        //                     this.messageService.add(
-        //                         infoMessage(Mensaje.ACTUALIZACION_EXITOSA)
-        //                     );
-        //                 });
-        //             },
-        //         });
-        // }
 
-        if (
-            this.role.includes('ROLE_COORDINADOR') == true &&
-            this.isDocenteCreated == true && this.isCoordinadorFase1Created == false && this.isCoordinadorFase2Created == false
-        ) {
-            this.resolucionService
-                .createResolucionCoordinadorFase1(this.resolucionForm.value)
-                .subscribe({
-                    next: (_) => {},
-                    error: (e) => this.handlerResponseException(e),
-                    complete: () => {
-                        timer(2000).subscribe(() => {
-                            this.isLoading = false;
-                            this.messageService.add(
-                                infoMessage(Mensaje.GUARDADO_EXITOSO)
-                            );
-                            this.router.navigate([
-                                `examen-de-valoracion`,
-                            ]);
-                        });
-                    },
-                });
-        }
+        try {
+            if (
+                this.role.includes('ROLE_COORDINADOR') == true &&
+                this.isDocenteCreated == false &&
+                this.isCoordinadorFase1Created == false &&
+                this.isCoordinadorFase2Created == false
+            ) {
+                const solicitudData = this.isReviewed
+                    ? {
+                          idTrabajoGrados: this.trabajoDeGradoId,
+                          conceptoDocumentosCoordinador: true,
+                      }
+                    : {
+                          idTrabajoGrados: this.trabajoDeGradoId,
+                          conceptoDocumentosCoordinador: false,
+                      };
 
-        if (
-            this.role.includes('ROLE_COORDINADOR') == true &&
-            this.isDocenteCreated == true && this.isCoordinadorFase1Created == true && this.isCoordinadorFase2Created == false
-        ) {
-            this.resolucionService
-                .createResolucionCoordinadorFase2(this.resolucionForm.value)
-                .subscribe({
-                    next: (_) => {},
-                    error: (e) => this.handlerResponseException(e),
-                    complete: () => {
-                        timer(2000).subscribe(() => {
-                            this.isLoading = false;
-                            this.messageService.add(
-                                infoMessage(Mensaje.GUARDADO_EXITOSO)
-                            );
-                            this.router.navigate([
-                                `examen-de-valoracion`,
-                            ]);
-                        });
-                    },
-                });
+                await lastValueFrom(
+                    this.resolucionService.createResolucionCoordinadorFase1(
+                        solicitudData
+                    )
+                );
+            } else if (
+                this.role.includes('ROLE_COORDINADOR') == true &&
+                this.isDocenteCreated == true &&
+                this.isCoordinadorFase1Created == false &&
+                this.isCoordinadorFase2Created == false
+            ) {
+                const envioEmailCorrecionesDto = {
+                    idTrabajoGrados: this.trabajoDeGradoId,
+                    asunto: 'Revision documentos al consejo',
+                    mensaje: 'Envio documento para revision',
+                };
+
+                const resolucionData = {
+                    ...this.resolucionForm.value,
+                    envioEmailCorrecionesDto,
+                };
+
+                await lastValueFrom(
+                    this.resolucionService.createResolucionCoordinadorFase2(
+                        resolucionData
+                    )
+                );
+            } else if (
+                this.role.includes('ROLE_COORDINADOR') == true &&
+                this.isDocenteCreated == true &&
+                this.isCoordinadorFase1Created == true &&
+                this.isCoordinadorFase2Created == false
+            ) {
+                await lastValueFrom(
+                    this.resolucionService.createResolucionCoordinadorFase3(
+                        this.resolucionForm.value
+                    )
+                );
+            }
+            this.isLoading = false;
+            this.messageService.add(infoMessage(Mensaje.ACTUALIZACION_EXITOSA));
+            this.router.navigate(['examen-de-valoracion']);
+        } catch (error) {
+            this.isLoading = false;
+            this.messageService.add(
+                errorMessage('Error al actualizar los datos en el backend')
+            );
         }
     }
 
     createResolucion(): void {
         this.isLoading = true;
         if (
-            this.role.includes('ROLE_DOCENTE') == true && this.isDocenteCreated == false
+            this.role.includes('ROLE_DOCENTE') == true &&
+            this.isDocenteCreated == false
         ) {
             this.resolucionService
                 .createResolucionDocente(this.resolucionForm.value)
@@ -499,9 +620,7 @@ export class ResolucionExamenComponent implements OnInit {
                             );
                             timer(2000).subscribe(() => {
                                 this.isLoading = false;
-                                this.router.navigate([
-                                    `examen-de-valoracion/resolucion/editar/${response.idGeneracionResolucion}`,
-                                ]);
+                                this.router.navigate([`examen-de-valoracion`]);
                             });
                         }
                     },
@@ -509,9 +628,7 @@ export class ResolucionExamenComponent implements OnInit {
                 });
         }
 
-        if (
-            this.role.includes('ROLE_COORDINADOR') == true
-        ) {
+        if (this.role.includes('ROLE_COORDINADOR') == true) {
             timer(2000).subscribe(() => {
                 this.isLoading = false;
                 this.messageService.add(
@@ -596,8 +713,10 @@ export class ResolucionExamenComponent implements OnInit {
         if (selectedFiles && selectedFiles.length > 0) {
             const selectedFile = selectedFiles[0];
             if (selectedFile.size > maxFileSize) {
-                this.messageService.add(errorMessage(Aviso.ARCHIVO_DEMASIADO_GRANDE))
-                return null
+                this.messageService.add(
+                    errorMessage(Aviso.ARCHIVO_DEMASIADO_GRANDE)
+                );
+                return null;
             }
             const fileType = selectedFile.type.split('/')[1];
             this.convertFileToBase64(selectedFile)
@@ -656,6 +775,7 @@ export class ResolucionExamenComponent implements OnInit {
             });
     }
 
+    //#region Director and Coodirector
     showBuscadorDocentes() {
         return this.dialogService.open(BuscadorDocentesComponent, {
             header: 'Seleccionar docente',
@@ -730,6 +850,7 @@ export class ResolucionExamenComponent implements OnInit {
         this.director.setValue(null);
         this.directorSeleccionado = null;
     }
+    //#endregion
 
     redirectToSolicitud(trabajoDeGradoId: number) {
         this.router.navigate([

@@ -31,7 +31,11 @@ const routes: Routes = [
                 component: SolicitudExamenComponent,
                 canActivate: [RoleGuard],
                 data: {
-                    roles: ['ROLE_COORDINADOR', 'ROLE_DOCENTE'],
+                    roles: [
+                        'ROLE_COORDINADOR',
+                        'ROLE_DOCENTE',
+                        'ROLE_ESTUDIANTE',
+                    ],
                 },
             },
             {
@@ -75,7 +79,11 @@ const routes: Routes = [
                 component: SustentacionExamenComponent,
                 canActivate: [RoleGuard],
                 data: {
-                    roles: ['ROLE_COORDINADOR', 'ROLE_DOCENTE', 'ROLE_ESTUDIANTE'],
+                    roles: [
+                        'ROLE_COORDINADOR',
+                        'ROLE_DOCENTE',
+                        'ROLE_ESTUDIANTE',
+                    ],
                 },
             },
             {
@@ -83,7 +91,11 @@ const routes: Routes = [
                 component: SustentacionExamenComponent,
                 canActivate: [RoleGuard],
                 data: {
-                    roles: ['ROLE_COORDINADOR', 'ROLE_DOCENTE', 'ROLE_ESTUDIANTE'],
+                    roles: [
+                        'ROLE_COORDINADOR',
+                        'ROLE_DOCENTE',
+                        'ROLE_ESTUDIANTE',
+                    ],
                 },
             },
         ],

@@ -30,6 +30,8 @@ export class SolicitudService {
     private evaluadorExternoSeleccionadoSubject = new BehaviorSubject<Experto>(
         null
     );
+    private respuestaValidSubject = new BehaviorSubject<boolean>(null);
+    private resolucionValidSubject = new BehaviorSubject<boolean>(null);
 
     estudianteSeleccionado$: Observable<Estudiante> =
         this.estudianteSeleccionadoSubject.asObservable();
@@ -61,12 +63,18 @@ export class SolicitudService {
     evaluadorExternoSeleccionadoSubject$: Observable<Experto> =
         this.evaluadorExternoSeleccionadoSubject.asObservable();
 
+    respuestaValid$: Observable<boolean> =
+        this.respuestaValidSubject.asObservable();
+
+    resolucionValid$: Observable<boolean> =
+        this.resolucionValidSubject.asObservable();
+
     setEstudianteSeleccionado(estudiante: Estudiante) {
         this.estudianteSeleccionadoSubject.next(estudiante);
     }
 
-    setTrabajoSeleccionado(sustentacion: any) {
-        this.trabajoSeleccionadoSubject.next(sustentacion);
+    setTrabajoSeleccionado(trabajo: any) {
+        this.trabajoSeleccionadoSubject.next(trabajo);
     }
 
     setSustentacionSeleccionada(sustentacion: any) {
@@ -100,6 +108,14 @@ export class SolicitudService {
         this.evaluadorExternoSeleccionadoSubject.next(experto);
     }
 
+    setRespuestaValid(isValid: boolean) {
+        this.respuestaValidSubject.next(isValid);
+    }
+
+    setResolucionValid(isValid: boolean) {
+        this.resolucionValidSubject.next(isValid);
+    }
+
     getEstudiantes() {
         return this.http.get<Estudiante[]>(
             backendGestionTrabajoDeGrado(`inicio_trabajo_grado`),
@@ -121,6 +137,28 @@ export class SolicitudService {
         return this.http.get<any>(
             backendGestionTrabajoDeGrado(
                 `inicio_trabajo_grado/buscarTrabajoGrado/${id}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    obtenerInformacionFormatoB(trabajoDeGradoId: number) {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `solicitud_examen_valoracion/buscarTrabajoGrado/${trabajoDeGradoId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    obtenerDocumentosParaEvaluador(solicitudId: number) {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `solicitud_examen_valoracion/obtenerDocumentosParaEvaluador/${solicitudId}`
             ),
             {
                 headers: getHeaders(),
@@ -158,10 +196,22 @@ export class SolicitudService {
         );
     }
 
-    createSolicitudCoordinador(solicitud: Solicitud) {
+    createSolicitudCoordinadorFase1(solicitud: Solicitud) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'solicitud_examen_valoracion/insertarInformacionCoordinador'
+                'solicitud_examen_valoracion/insertarInformacionCoordinadorFase1'
+            ),
+            solicitud,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    createSolicitudCoordinadorFase2(solicitud: Solicitud) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado(
+                'solicitud_examen_valoracion/insertarInformacionCoordinadorFase2'
             ),
             solicitud,
             {
@@ -217,12 +267,12 @@ export class SolicitudService {
     }
 
     getFile(rutaArchivo: string): Observable<any> {
-        return this.http.post(
+        const params = new HttpParams().set('rutaArchivo', rutaArchivo);
+        return this.http.get(
             backendGestionTrabajoDeGrado(
                 'solicitud_examen_valoracion/descargarDocumento'
             ),
-            { rutaArchivo },
-            { responseType: 'text' }
+            { params, responseType: 'text' }
         );
     }
 }

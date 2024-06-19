@@ -2,9 +2,9 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { warnMessage } from 'src/app/core/utils/message-util';
-import { Aviso } from 'src/app/core/enums/enums';
+import { Aviso, Mensaje } from 'src/app/core/enums/enums';
+import { MessageService } from 'primeng/api';
 
 @Component({
     selector: 'app-login',
@@ -49,7 +49,9 @@ export class LoginComponent implements OnInit {
                 },
             });
         } else {
-            console.log('Form is invalid');
+            this.messageService.add(
+                warnMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS)
+            );
         }
     }
 }

@@ -3,7 +3,7 @@ export interface Sustentacion {
     linkFormatoF?: string;
     urlDocumentacion?: string;
     linkFormatoG?: string;
-    // linkEstudioHojaVidaAcademica?: string;
+    linkEstudioHojaVidaAcademica?: string;
     juradoExterno?: string;
     juradoInterno?: string;
     numeroActa?: string;
