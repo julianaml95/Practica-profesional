@@ -180,7 +180,7 @@
                 [disabled]="isActiveIndex()"
             ></button>
             <button
-                *ngIf="role.includes('ROLE_ESTUDIANTE') ? false : true"
+                *ngIf="role.includes('ROLE_ESTUDIANTE') ? false : editMode"
                 pButton
                 type="button"
                 icon="pi pi-envelope"
@@ -194,7 +194,7 @@
                 (click)="redirectToRespuesta(respuestaId)"
             ></button>
             <button
-                *ngIf="role.includes('ROLE_ESTUDIANTE') ? false : true"
+                *ngIf="role.includes('ROLE_ESTUDIANTE') ? false : editMode"
                 pButton
                 type="button"
                 icon="pi pi-paperclip"
@@ -206,6 +206,7 @@
                 (click)="redirectToResolucion(resolucionId)"
             ></button>
             <button
+                *ngIf="editMode"
                 pButton
                 type="button"
                 icon="pi pi-paperclip"

@@ -230,21 +230,25 @@ export class ResolucionExamenComponent implements OnInit {
                 if (response) {
                     this.isResolucionValid = response;
                 } else {
-                    this.resolucionService
-                        .getResolucionCoordinadorFase3(this.trabajoDeGradoId)
-                        .subscribe({
-                            next: (response) => {
-                                if (
-                                    response?.numeroActaConsejoFacultad &&
-                                    response?.fechaActaConsejoFacultad
-                                ) {
-                                    this.isResolucionValid = true;
-                                }
-                            },
-                            error: (e) => {
-                                this.handlerResponseException(e);
-                            },
-                        });
+                    if (this.trabajoDeGradoId) {
+                        this.resolucionService
+                            .getResolucionCoordinadorFase3(
+                                this.trabajoDeGradoId
+                            )
+                            .subscribe({
+                                next: (response) => {
+                                    if (
+                                        response?.numeroActaConsejoFacultad &&
+                                        response?.fechaActaConsejoFacultad
+                                    ) {
+                                        this.isResolucionValid = true;
+                                    }
+                                },
+                                error: (e) => {
+                                    this.handlerResponseException(e);
+                                },
+                            });
+                    }
                 }
             },
             error: (e) => this.handlerResponseException(e),

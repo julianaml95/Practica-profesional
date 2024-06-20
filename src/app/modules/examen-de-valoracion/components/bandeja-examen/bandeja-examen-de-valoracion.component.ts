@@ -66,6 +66,9 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                 error: (e) => console.error(e),
             })
             .add(() => (this.loading = false));
+        this.solicitudService.setSustentacionValid(null);
+        this.solicitudService.setResolucionValid(null);
+        this.solicitudService.setRespuestaValid(null);
         this.solicitudService.setSustentacionSeleccionada(null);
         this.solicitudService.setResolucionSeleccionada(null);
         this.solicitudService.setRespuestaSeleccionada(null);

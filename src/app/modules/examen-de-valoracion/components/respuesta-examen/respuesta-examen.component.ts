@@ -173,21 +173,25 @@ export class RespuestaExamenComponent implements OnInit {
                 if (response) {
                     this.isResolucionValid = response;
                 } else {
-                    this.resolucionService
-                        .getResolucionCoordinadorFase3(this.trabajoDeGradoId)
-                        .subscribe({
-                            next: (response) => {
-                                if (
-                                    response?.numeroActaConsejoFacultad &&
-                                    response?.fechaActaConsejoFacultad
-                                ) {
-                                    this.isResolucionValid = true;
-                                }
-                            },
-                            error: (e) => {
-                                this.handlerResponseException(e);
-                            },
-                        });
+                    if (this.trabajoDeGradoId) {
+                        this.resolucionService
+                            .getResolucionCoordinadorFase3(
+                                this.trabajoDeGradoId
+                            )
+                            .subscribe({
+                                next: (response) => {
+                                    if (
+                                        response?.numeroActaConsejoFacultad &&
+                                        response?.fechaActaConsejoFacultad
+                                    ) {
+                                        this.isResolucionValid = true;
+                                    }
+                                },
+                                error: (e) => {
+                                    this.handlerResponseException(e);
+                                },
+                            });
+                    }
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -391,14 +395,14 @@ export class RespuestaExamenComponent implements OnInit {
                 this.messageService.add({
                     severity: 'warn',
                     summary: 'Advertencia',
-                    detail: 'El examen de valoración no está aprobado|aplazado.',
+                    detail: 'El examen de valoración no está aprobado/aplazado.',
                 });
                 break;
             case EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_1:
                 this.isRespuestaValid = false;
                 this.messageService.add({
                     severity: 'info',
-                    summary: 'Advertencia',
+                    summary: 'Informacion',
                     detail: EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_1,
                 });
                 break;
@@ -849,16 +853,16 @@ export class RespuestaExamenComponent implements OnInit {
                 error: (e) => {
                     this.handlerResponseException(e);
                 },
-                complete: async () => {
-                    await this.loadRespuestas();
-                    if (
-                        !this.hasNavigated &&
-                        this.isExamenCreado('expertoEvaluaciones', 0) &&
-                        this.isExamenCreado('docenteEvaluaciones', 0)
-                    ) {
-                        this.router.navigate(['examen-de-valoracion']);
-                        this.hasNavigated = true;
-                    }
+                complete: () => {
+                    // await this.loadRespuestas();
+                    // if (
+                    //     !this.hasNavigated &&
+                    //     this.isExamenCreado('expertoEvaluaciones', 0) &&
+                    //     this.isExamenCreado('docenteEvaluaciones', 0)
+                    // ) {
+                    this.router.navigate(['examen-de-valoracion']);
+                    // this.hasNavigated = true;
+                    // }
                 },
             });
     }

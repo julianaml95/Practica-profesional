@@ -247,19 +247,23 @@ export class SolicitudExamenComponent implements OnInit {
                     this.isRespuestaValid = response;
                 } else {
                     const id = Number(this.route.snapshot.paramMap.get('id'));
-                    this.respuestaService.getRespuestasExamen(id).subscribe({
-                        next: (response) => {
-                            if (
-                                response?.evaluador_externo &&
-                                response?.evaluador_interno
-                            ) {
-                                this.isRespuestaValid = true;
-                            }
-                        },
-                        error: (e) => {
-                            this.handlerResponseException(e);
-                        },
-                    });
+                    if (id) {
+                        this.respuestaService
+                            .getRespuestasExamen(id)
+                            .subscribe({
+                                next: (response) => {
+                                    if (
+                                        response?.evaluador_externo &&
+                                        response?.evaluador_interno
+                                    ) {
+                                        this.isRespuestaValid = true;
+                                    }
+                                },
+                                error: (e) => {
+                                    this.handlerResponseException(e);
+                                },
+                            });
+                    }
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -270,21 +274,23 @@ export class SolicitudExamenComponent implements OnInit {
                     this.isResolucionValid = response;
                 } else {
                     const id = Number(this.route.snapshot.paramMap.get('id'));
-                    this.resolucionService
-                        .getResolucionCoordinadorFase3(id)
-                        .subscribe({
-                            next: (response) => {
-                                if (
-                                    response?.numeroActaConsejoFacultad &&
-                                    response?.fechaActaConsejoFacultad
-                                ) {
-                                    this.isResolucionValid = true;
-                                }
-                            },
-                            error: (e) => {
-                                this.handlerResponseException(e);
-                            },
-                        });
+                    if (id) {
+                        this.resolucionService
+                            .getResolucionCoordinadorFase3(id)
+                            .subscribe({
+                                next: (response) => {
+                                    if (
+                                        response?.numeroActaConsejoFacultad &&
+                                        response?.fechaActaConsejoFacultad
+                                    ) {
+                                        this.isResolucionValid = true;
+                                    }
+                                },
+                                error: (e) => {
+                                    this.handlerResponseException(e);
+                                },
+                            });
+                    }
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -295,21 +301,23 @@ export class SolicitudExamenComponent implements OnInit {
                     this.isSustentacionValid = response;
                 } else {
                     const id = Number(this.route.snapshot.paramMap.get('id'));
-                    this.sustentacionService
-                        .getSustentacionCoordinadorFase3(id)
-                        .subscribe({
-                            next: (response) => {
-                                if (
-                                    response?.numeroActaFinal &&
-                                    response?.fechaActaFinal
-                                ) {
-                                    this.isSustentacionValid = true;
-                                }
-                            },
-                            error: (e) => {
-                                this.handlerResponseException(e);
-                            },
-                        });
+                    if (id) {
+                        this.sustentacionService
+                            .getSustentacionCoordinadorFase3(id)
+                            .subscribe({
+                                next: (response) => {
+                                    if (
+                                        response?.numeroActaFinal &&
+                                        response?.fechaActaFinal
+                                    ) {
+                                        this.isSustentacionValid = true;
+                                    }
+                                },
+                                error: (e) => {
+                                    this.handlerResponseException(e);
+                                },
+                            });
+                    }
                 }
             },
             error: (e) => this.handlerResponseException(e),
