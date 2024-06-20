@@ -93,7 +93,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
                     this.listEmpresas();
                 }
             },
-            error: (e) => console.log(e),
+            error: (e) => console.error(e),
         });
     }
 
@@ -114,7 +114,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
                         this.empresas = response.filter((d) => d.id !== null);
                     }
                 },
-                error: (e) => console.log(e),
+                error: (e) => console.error(e),
             })
             .add(() => (this.loading = false));
     }
@@ -129,7 +129,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
                         this.cursos = response.filter((d) => d.id !== null);
                     }
                 },
-                error: (e) => console.log(e),
+                error: (e) => console.error(e),
             })
             .add(() => (this.loading = false));
     }

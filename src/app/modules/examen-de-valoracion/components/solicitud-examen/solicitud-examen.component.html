@@ -180,26 +180,30 @@
                 [disabled]="isActiveIndex()"
             ></button>
             <button
+                *ngIf="role.includes('ROLE_ESTUDIANTE') ? false : true"
                 pButton
                 type="button"
                 icon="pi pi-envelope"
                 class="w-15rem p-button-secondary"
                 label="Respuesta al examen de valoración"
                 [disabled]="
-                    !this.isCoordinadorFase2Valid ||
-                    role == 'ROLE_DOCENTE' ||
-                    role == 'ROLE_ESTUDIANTE'
+                    !isCoordinadorFase2Valid ||
+                    role.includes('ROLE_DOCENTE') ||
+                    role.includes('ROLE_ESTUDIANTE')
                 "
-                (click)="redirectToRespuesta(this.respuestaId)"
+                (click)="redirectToRespuesta(respuestaId)"
             ></button>
             <button
+                *ngIf="role.includes('ROLE_ESTUDIANTE') ? false : true"
                 pButton
                 type="button"
                 icon="pi pi-paperclip"
                 class="w-15rem p-button-secondary"
                 label="Generacion de resolucion"
-                [disabled]="!this.isRespuestaValid || role == 'ROLE_ESTUDIANTE'"
-                (click)="redirectToResolucion(this.resolucionId)"
+                [disabled]="
+                    !isRespuestaValid || role.includes('ROLE_ESTUDIANTE')
+                "
+                (click)="redirectToResolucion(resolucionId)"
             ></button>
             <button
                 pButton
@@ -207,8 +211,8 @@
                 icon="pi pi-paperclip"
                 class="w-20rem p-button-secondary"
                 label="Sustentación del proyecto de investigación"
-                [disabled]="!this.isResolucionValid"
-                (click)="redirectToSustentacion(this.sustentacionId)"
+                [disabled]="!isResolucionValid"
+                (click)="redirectToSustentacion(sustentacionId)"
             ></button>
         </div>
         <div class="flex align-items-center column-gap-2">

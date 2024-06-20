@@ -44,25 +44,27 @@
                 class="w-15rem p-button-secondary"
                 label="Solicitud examen de valoración"
                 [disabled]="role == 'ROLE_ESTUDIANTE'"
-                (click)="redirectToSolicitud(this.trabajoDeGradoId)"
+                (click)="redirectToSolicitud(trabajoDeGradoId)"
             ></button>
             <button
+                *ngIf="role.includes('ROLE_ESTUDIANTE') ? false : true"
                 pButton
                 type="button"
                 icon="pi pi-envelope"
                 class="w-15rem p-button-secondary"
                 label="Respuesta al examen de valoración"
                 [disabled]="role == 'ROLE_ESTUDIANTE' || role == 'ROLE_DOCENTE'"
-                (click)="redirectToRespuesta(this.respuestaId)"
+                (click)="redirectToRespuesta(respuestaId)"
             ></button>
             <button
+                *ngIf="role.includes('ROLE_ESTUDIANTE') ? false : true"
                 pButton
                 type="button"
                 icon="pi pi-paperclip"
                 class="w-15rem p-button-secondary"
                 label="Generacion de resolucion"
                 [disabled]="role == 'ROLE_ESTUDIANTE'"
-                (click)="redirectToResolucion(this.resolucionId)"
+                (click)="redirectToResolucion(resolucionId)"
             ></button>
             <button
                 pButton

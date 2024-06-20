@@ -141,7 +141,7 @@
                 class="w-15rem p-button-secondary"
                 label="Solicitud examen de valoración"
                 [disabled]="role == 'ROLE_ESTUDIANTE'"
-                (click)="redirectToSolicitud(this.trabajoDeGradoId)"
+                (click)="redirectToSolicitud(trabajoDeGradoId)"
             ></button>
             <button
                 pButton
@@ -150,7 +150,7 @@
                 class="w-15rem p-button-secondary"
                 label="Respuesta al examen de valoración"
                 [disabled]="role == 'ROLE_ESTUDIANTE' || role == 'ROLE_DOCENTE'"
-                (click)="redirectToRespuesta(this.respuestaId)"
+                (click)="redirectToRespuesta(respuestaId)"
             ></button>
             <button
                 pButton
@@ -167,10 +167,8 @@
                 icon="pi pi-paperclip"
                 class="w-20rem p-button-secondary"
                 label="Sustentación del proyecto de investigación"
-                [disabled]="
-                    !isCoordinadorFase2Created || role == 'ROLE_ESTUDIANTE'
-                "
-                (click)="redirectToSustentacion(this.sustentacionId)"
+                [disabled]="!isResolucionValid"
+                (click)="redirectToSustentacion(sustentacionId)"
             ></button>
         </div>
         <div class="flex align-items-center column-gap-2">

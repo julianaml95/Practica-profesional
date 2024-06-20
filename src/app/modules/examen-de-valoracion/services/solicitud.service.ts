@@ -32,6 +32,7 @@ export class SolicitudService {
     );
     private respuestaValidSubject = new BehaviorSubject<boolean>(null);
     private resolucionValidSubject = new BehaviorSubject<boolean>(null);
+    private sustentacionValidSubject = new BehaviorSubject<boolean>(null);
 
     estudianteSeleccionado$: Observable<Estudiante> =
         this.estudianteSeleccionadoSubject.asObservable();
@@ -68,6 +69,9 @@ export class SolicitudService {
 
     resolucionValid$: Observable<boolean> =
         this.resolucionValidSubject.asObservable();
+
+    sustentacionValid$: Observable<boolean> =
+        this.sustentacionValidSubject.asObservable();
 
     setEstudianteSeleccionado(estudiante: Estudiante) {
         this.estudianteSeleccionadoSubject.next(estudiante);
@@ -114,6 +118,10 @@ export class SolicitudService {
 
     setResolucionValid(isValid: boolean) {
         this.resolucionValidSubject.next(isValid);
+    }
+
+    setSustentacionValid(isValid: boolean) {
+        this.sustentacionValidSubject.next(isValid);
     }
 
     getEstudiantes() {

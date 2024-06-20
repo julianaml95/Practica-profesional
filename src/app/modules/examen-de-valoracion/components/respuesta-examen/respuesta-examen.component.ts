@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { AuthService } from '../../services/auth.service';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
+import { ResolucionService } from '../../services/resolucion.service';
 
 @Component({
     selector: 'app-respuesta-examen',
@@ -29,9 +30,10 @@ export class RespuestaExamenComponent implements OnInit {
 
     private trabajoSeleccionadoSubscription: Subscription;
 
+    editMode: boolean = false;
     isLoading: boolean;
     isRespuestaValid: boolean = false;
-    editMode: boolean = false;
+    isResolucionValid: boolean = false;
 
     role: string[];
     estado: string;
@@ -64,6 +66,7 @@ export class RespuestaExamenComponent implements OnInit {
         private breadcrumbService: BreadcrumbService,
         private messageService: MessageService,
         private respuestaService: RespuestaService,
+        private resolucionService: ResolucionService,
         private authService: AuthService
     ) {}
 
@@ -90,10 +93,10 @@ export class RespuestaExamenComponent implements OnInit {
                 if (response) {
                     this.estudianteSeleccionado = response;
                 } else {
-                    this.handleErrorOnce('Estudiante no seleccionado');
+                    this.router.navigate(['examen-de-valoracion']);
                 }
             },
-            error: (e) => this.handleErrorOnce(e),
+            error: (e) => this.handlerResponseException(e),
         });
         this.solicitudService.tituloSeleccionadoSubject$.subscribe({
             next: (response) => {
@@ -113,6 +116,8 @@ export class RespuestaExamenComponent implements OnInit {
                             .setValue(response.id);
                         this.trabajoDeGradoId = response.id;
                         this.checkEstados();
+                    } else {
+                        this.router.navigate(['examen-de-valoracion']);
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
@@ -163,14 +168,30 @@ export class RespuestaExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
-    }
-
-    private handleErrorOnce(error: any) {
-        if (!this.isErrorHandled) {
-            console.error('An error occurred:', error);
-            this.isErrorHandled = true;
-            this.router.navigate(['examen-de-valoracion']);
-        }
+        this.solicitudService.resolucionValid$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.isResolucionValid = response;
+                } else {
+                    this.resolucionService
+                        .getResolucionCoordinadorFase3(this.trabajoDeGradoId)
+                        .subscribe({
+                            next: (response) => {
+                                if (
+                                    response?.numeroActaConsejoFacultad &&
+                                    response?.fechaActaConsejoFacultad
+                                ) {
+                                    this.isResolucionValid = true;
+                                }
+                            },
+                            error: (e) => {
+                                this.handlerResponseException(e);
+                            },
+                        });
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
     }
 
     setup(fieldName: string, formGroup: string) {
@@ -407,7 +428,6 @@ export class RespuestaExamenComponent implements OnInit {
                 this.respuestaForm.patchValue({
                     estadoFinalizado: respuesta.estadoFinalizado,
                 });
-                console.log(respuesta.anexos);
 
                 const evaluacionFormGroup = this.fb.group({
                     ['id']: [

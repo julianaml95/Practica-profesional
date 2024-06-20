@@ -63,7 +63,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                         this.solicitudes = response.trabajoGrado;
                     }
                 },
-                error: (e) => console.log(e),
+                error: (e) => console.error(e),
             })
             .add(() => (this.loading = false));
         this.solicitudService.setSustentacionSeleccionada(null);
@@ -108,7 +108,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                 this.messageService.add(
                     errorMessage(Aviso.SOLICITUD_ELIMINADA_CORRECTAMENTE)
                 ),
-            error: (e) => console.log(e),
+            error: (e) => console.error(e),
             complete: () => {
                 this.listTrabajosDeGrado(this.estudianteSeleccionado.id);
             },

@@ -77,7 +77,7 @@ export class DocumentoFormatoCComponent implements OnInit {
             this.router.navigate(['examen-de-valoracion/respuesta']);
         }
 
-        this.setBreadcrumb();
+        // this.setBreadcrumb();
     }
 
     initForm(): void {
@@ -182,19 +182,19 @@ export class DocumentoFormatoCComponent implements OnInit {
         });
     }
 
-    setBreadcrumb() {
-        this.breadcrumbService.setItems([
-            { label: 'Trabajos de Grado' },
-            {
-                label: 'Examen de Valoracion',
-                routerLink: 'examen-de-valoracion',
-            },
-            {
-                label: 'Respuesta',
-                routerLink: 'examen-de-valoracion/respuesta',
-            },
-        ]);
-    }
+    // setBreadcrumb() {
+    //     this.breadcrumbService.setItems([
+    //         { label: 'Trabajos de Grado' },
+    //         {
+    //             label: 'Examen de Valoracion',
+    //             routerLink: 'examen-de-valoracion',
+    //         },
+    //         {
+    //             label: 'Respuesta',
+    //             routerLink: 'examen-de-valoracion/respuesta',
+    //         },
+    //     ]);
+    // }
 
     private handleSuccessMessage(message: string) {
         this.messageService.add(infoMessage(message));

@@ -63,6 +63,7 @@ export class ResolucionExamenComponent implements OnInit {
     isCoordinadorFase2Created: boolean = false;
     isReviewed: boolean = false;
     isPdfLoaded: boolean = false;
+    isResolucionValid: boolean = false;
 
     role: string[];
     pdfUrls: { name: string; url: string }[] = [];
@@ -107,7 +108,6 @@ export class ResolucionExamenComponent implements OnInit {
     async ngOnInit() {
         this.initForm();
         this.subscribeToObservers();
-        this.updateFormFields(this.role);
         if (this.router.url.includes('editar')) {
             await this.loadEditMode();
         } else {
@@ -203,6 +203,8 @@ export class ResolucionExamenComponent implements OnInit {
                         this.resolucionForm
                             .get('idTrabajoGrados')
                             .setValue(response.id);
+                    } else {
+                        this.router.navigate(['examen-de-valoracion']);
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
@@ -219,6 +221,30 @@ export class ResolucionExamenComponent implements OnInit {
             next: (response) => {
                 if (response) {
                     this.sustentacionId = response.idSustentacionTI;
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+        this.solicitudService.resolucionValid$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.isResolucionValid = response;
+                } else {
+                    this.resolucionService
+                        .getResolucionCoordinadorFase3(this.trabajoDeGradoId)
+                        .subscribe({
+                            next: (response) => {
+                                if (
+                                    response?.numeroActaConsejoFacultad &&
+                                    response?.fechaActaConsejoFacultad
+                                ) {
+                                    this.isResolucionValid = true;
+                                }
+                            },
+                            error: (e) => {
+                                this.handlerResponseException(e);
+                            },
+                        });
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -288,17 +314,11 @@ export class ResolucionExamenComponent implements OnInit {
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = true;
                 this.isCoordinadorFase2Created = true;
-                this.solicitudService.setResolucionValid(
-                    this.isCoordinadorFase2Created
-                );
                 break;
             default:
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = true;
                 this.isCoordinadorFase2Created = true;
-                this.solicitudService.setResolucionValid(
-                    this.isCoordinadorFase2Created
-                );
                 break;
         }
 

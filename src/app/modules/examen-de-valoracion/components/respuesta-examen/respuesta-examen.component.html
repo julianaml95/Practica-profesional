@@ -45,7 +45,7 @@
                 severity="secondary"
                 label="Solicitud examen de valoración"
                 [disabled]="role == 'ROLE_ESTUDIANTE'"
-                (click)="redirectToSolicitud(this.trabajoDeGradoId)"
+                (click)="redirectToSolicitud(trabajoDeGradoId)"
             ></button>
             <button
                 pButton
@@ -62,7 +62,7 @@
                 class="w-15rem p-button-secondary"
                 label="Generacion de resolucion"
                 [disabled]="!isRespuestaValid || role == 'ROLE_ESTUDIANTE'"
-                (click)="redirectToResolucion(this.resolucionId)"
+                (click)="redirectToResolucion(resolucionId)"
             ></button>
             <button
                 pButton
@@ -70,8 +70,8 @@
                 icon="pi pi-paperclip"
                 class="w-20rem p-button-secondary"
                 label="Sustentación del proyecto de investigación"
-                [disabled]="true || role == 'ROLE_ESTUDIANTE'"
-                (click)="redirectToSustentacion(this.sustentacionId)"
+                [disabled]="!isResolucionValid"
+                (click)="redirectToSustentacion(sustentacionId)"
             ></button>
         </div>
     </div>
@@ -747,10 +747,7 @@
                         <strong style="font-size: 16px"
                             >Evaluador Interno</strong
                         >
-                        <span
-                            >Nombre: {{ docenteSeleccionado.nombre }}
-                            {{ docenteSeleccionado.apellido }}</span
-                        >
+                        <span>Nombre: {{ docenteSeleccionado.nombres }}</span>
                         <span
                             >Universidad:
                             {{ docenteSeleccionado.universidad }}</span

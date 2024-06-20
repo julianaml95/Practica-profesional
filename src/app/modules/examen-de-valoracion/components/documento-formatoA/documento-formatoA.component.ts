@@ -152,8 +152,22 @@ export class DocumentoFormatoAComponent implements OnInit {
             return;
         } else {
             const data = document.getElementById('formatoA');
-            this.pdfService.generatePDF(data);
-            this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO);
+            this.pdfService.generatePDF(data).then((pdfBlob: Blob) => {
+                const file = new File(
+                    [pdfBlob],
+                    `${this.estudianteSeleccionado.codigo} - formatoA.pdf`,
+                    {
+                        type: 'application/pdf',
+                    }
+                );
+                const link = document.createElement('a');
+                link.download = file.name;
+                link.href = URL.createObjectURL(file);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO);
+            });
         }
     }
 
@@ -161,18 +175,20 @@ export class DocumentoFormatoAComponent implements OnInit {
         return this.formatoAForm.get(formControlName) as FormControl;
     }
 
+    formatText(text: string): string {
+        if (!text) return '';
+        return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+    }
+
     onFirmaEstudianteChange(event: any) {
         const input = event && event.files ? event : { files: [] };
-
         const file = input.files[0];
-
         if (file) {
             const reader = new FileReader();
             reader.onload = () => {
                 this.firmaEstudiantePreview = reader.result as string;
             };
             reader.readAsDataURL(file);
-
             this.formatoAForm.patchValue({ firmaEstudiante: file });
         }
     }

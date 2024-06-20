@@ -3,15 +3,15 @@
         <div
             class="flex flex-row align-items-center justify-content-evenly header-logo"
         >
-            <h2>
-                Maestría en Computación Facultad de Ingeniería Electrónica y
-                Telecomunicaciones
-            </h2>
+            <div>
+                <h2>Maestría en Computación</h2>
+                <h2>Facultad de Ingeniería Electrónica y Telecomunicaciones</h2>
+            </div>
             <img
                 src="assets/layout/images/logoUnicauca.png"
                 alt="Logo Unicauca"
                 width="120px"
-                height="120px"
+                height="180px"
             />
         </div>
         <div
@@ -20,9 +20,7 @@
             <span style="font-size: 20px">
                 SOLICITUD EXAMEN DE VALORACION
             </span>
-            <span>
-                Popayán {{ fechaActual | date : "dd/MM/yyyy HH:mm:ss" }}
-            </span>
+            <span> Popayán {{ fechaActual | date : "dd/MM/yyyy" }} </span>
         </div>
     </div>
     <form class="mt-4" [formGroup]="formatoAForm">
@@ -51,7 +49,7 @@
             <div class="field grid">
                 <!-- FIELD TO PDF -->
                 <div class="body-field p-show">
-                    <label class="uppercase">Titulo</label>
+                    <label>Titulo:</label>
                     <span>{{ formatoAForm.get("titulo").value }}</span>
                 </div>
                 <!-- END -->
@@ -76,7 +74,7 @@
             <div class="field grid">
                 <!-- FIELD TO PDF -->
                 <div class="body-field p-show">
-                    <label class="uppercase">Estudiante</label>
+                    <label>Estudiante:</label>
                     <span>{{ formatoAForm.get("estudiante").value }}</span>
                 </div>
                 <!-- END -->
@@ -96,23 +94,23 @@
 
             <div class="field grid">
                 <div class="col-2 col-label text-right mr-2 align-self-start">
-                    <label class="pdf-label uppercase font-bold"
+                    <label class="uppercase font-bold"
                         >Tutores y Asesores</label
                     >
                 </div>
                 <div class="col-9 col-input flex flex-column row-gap-6">
-                    <div
-                        *ngFor="let orientador of orientadores; let i = index"
-                        class="body-field"
-                    >
+                    <div *ngFor="let orientador of orientadores; let i = index">
                         <!-- FIELD TO PDF -->
-                        <label class="uppercase p-show"
-                            >{{ orientador.rol }} {{ orientador.tipo }}</label
-                        >
-                        <span class="p-show"
-                            >{{ orientador?.nombre }}
-                            {{ orientador?.apellido }}</span
-                        >
+                        <div class="body-field p-show">
+                            <label>
+                                {{ formatText(orientador?.rol) }}
+                                {{ formatText(orientador?.tipo) }}:
+                            </label>
+                            <span
+                                >{{ orientador?.nombre }}
+                                {{ orientador?.apellido }}</span
+                            >
+                        </div>
                         <!-- END -->
 
                         <div class="flex align-items-center">
@@ -155,9 +153,7 @@
                             </p-card>
                         </div>
                     </div>
-                    <div
-                        class="flex align-items-center column-gap-4 btn-roles"
-                    >
+                    <div class="flex align-items-center column-gap-4 btn-roles">
                         <button
                             pButton
                             icon="pi pi-plus"
@@ -197,16 +193,14 @@
         <div class="flex flex-column gap-2">
             <div class="field grid gap-2">
                 <div class="col-2 col-label text-right mr-2 align-self-start">
-                    <label class="pdf-label uppercase font-bold"
-                        >Evaluador Externo</label
-                    >
+                    <label class="uppercase font-bold">Evaluador Externo</label>
                 </div>
                 <div
                     class="col-9 col-input body-field"
                     *ngIf="experto.value; else noEvaluadorSelected"
                 >
                     <!-- FIELD TO PDF -->
-                    <label class="uppercase p-show">Evaluador Externo</label>
+                    <label class="p-show">Evaluador Externo:</label>
                     <span class="p-show"
                         >{{ experto?.value?.nombre }}
                         {{ experto?.value?.apellido }}</span
@@ -261,16 +255,14 @@
             </div>
             <div class="field grid gap-2">
                 <div class="col-2 col-label text-right mr-2 align-self-start">
-                    <label class="pdf-label uppercase font-bold"
-                        >Evaluador Interno</label
-                    >
+                    <label class="uppercase font-bold">Evaluador Interno</label>
                 </div>
                 <div
                     class="col-9 col-input body-field"
                     *ngIf="docente.value; else noEvaluadorSelected"
                 >
                     <!-- FIELD TO PDF -->
-                    <label class="uppercase p-show">Evaluador Interno</label>
+                    <label class="p-show">Evaluador Interno:</label>
                     <span class="p-show"
                         >{{ docente?.value?.nombre }}
                         {{ docente?.value?.apellido }}</span
@@ -325,13 +317,18 @@
             </div>
             <div class="field grid">
                 <!-- FIELD TO PDF -->
-                <div class="body-image p-show">
+                <div class="estudiante-image p-show">
+                    <b>Firma estudiante</b>
                     <img
                         [src]="firmaEstudiantePreview"
                         alt="Vista Previa de la Firma"
-                        style="max-width: 300px; max-height: 100px"
+                        style="
+                            min-height: 120px;
+                            min-width: 150px;
+                            width: 100%;
+                            height: 100%;
+                        "
                     />
-                    <b>Firma estudiante</b>
                 </div>
                 <!-- END -->
                 <span
@@ -350,7 +347,11 @@
                         [auto]="true"
                         (onSelect)="onFirmaEstudianteChange($event)"
                     >
-                        <ng-template let-file pTemplate="file">
+                        <ng-template
+                            let-file
+                            pTemplate="file"
+                            data-file="firma"
+                        >
                             <div *ngIf="firmaEstudiantePreview">
                                 <img
                                     [src]="firmaEstudiantePreview"
@@ -380,14 +381,14 @@
             <div
                 class="flex flex-column align-items-center justify-content-center footer-text"
             >
-                <span>
-                    Hacia una Universidad comprometida con la paz territorial
-                </span>
+                <span>Por una Universidad de excelencia y solidaria</span>
                 <hr />
                 <span>
-                    Facultad de Ingeniería Electrónica y Telecomunicaciones
-                    Sector Tulcán Popayán - Cauca - Colombia Conmutador 8209800
-                    Exts. 2145 -2103
+                    Facultad de Ingeniería Electrónica y Telecomunicaciones Cra
+                    2 No. 4N-140 Edif. de Ingenierías - Sector Tulcán Popayán -
+                    Cauca - Colombia Conmutador 8209800 Ext. 2145
+                    maestriacomputacion@unicauca.edu.co - www.unicauca.edu.co
+                    www.unicauca.edu.co/maestriacomputación
                 </span>
             </div>
         </div>

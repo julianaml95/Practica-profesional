@@ -37,6 +37,7 @@ import { ExpertoService } from 'src/app/shared/services/experto.service';
 import { AuthService } from '../../services/auth.service';
 import { RespuestaService } from '../../services/respuesta.service';
 import { ResolucionService } from '../../services/resolucion.service';
+import { SustentacionService } from '../../services/sustentacion.service';
 
 @Component({
     selector: 'app-solicitud-examen',
@@ -73,6 +74,7 @@ export class SolicitudExamenComponent implements OnInit {
     isPdfLoaded: boolean = false;
     isRespuestaValid: boolean = false;
     isResolucionValid: boolean = false;
+    isSustentacionValid: boolean = false;
 
     solicitudForm: FormGroup;
     estudianteSeleccionado: Estudiante = {};
@@ -102,6 +104,7 @@ export class SolicitudExamenComponent implements OnInit {
         private solicitudService: SolicitudService,
         private respuestaService: RespuestaService,
         private resolucionService: ResolucionService,
+        private sustentacionService: SustentacionService,
         private authService: AuthService,
         private docenteService: DocenteService,
         private expertoService: ExpertoService
@@ -276,6 +279,31 @@ export class SolicitudExamenComponent implements OnInit {
                                     response?.fechaActaConsejoFacultad
                                 ) {
                                     this.isResolucionValid = true;
+                                }
+                            },
+                            error: (e) => {
+                                this.handlerResponseException(e);
+                            },
+                        });
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+        this.solicitudService.sustentacionValid$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.isSustentacionValid = response;
+                } else {
+                    const id = Number(this.route.snapshot.paramMap.get('id'));
+                    this.sustentacionService
+                        .getSustentacionCoordinadorFase3(id)
+                        .subscribe({
+                            next: (response) => {
+                                if (
+                                    response?.numeroActaFinal &&
+                                    response?.fechaActaFinal
+                                ) {
+                                    this.isSustentacionValid = true;
                                 }
                             },
                             error: (e) => {
@@ -652,6 +680,14 @@ export class SolicitudExamenComponent implements OnInit {
                         this.anexosFiles,
                         'anexos'
                     );
+
+                    if (!this.formatoB || !this.formatoC) {
+                        this.isLoading = false;
+                        return this.messageService.add(
+                            warnMessage('Error: formatos B y C son requeridos.')
+                        );
+                    }
+
                     const formatoB = await this.formatFileString(
                         this.formatoB,
                         'formatoB'
@@ -660,12 +696,6 @@ export class SolicitudExamenComponent implements OnInit {
                         this.formatoC,
                         'formatoC'
                     );
-
-                    if (!this.formatoB || !this.formatoC) {
-                        throw new Error(
-                            'Error: formatoB y formatoC son requeridos.'
-                        );
-                    }
 
                     const { numeroActa, fechaActa, ...restOfFormValues } =
                         this.solicitudForm.value;
@@ -1060,8 +1090,12 @@ export class SolicitudExamenComponent implements OnInit {
         }
     }
 
-    convertFileToBase64(file: File): Promise<string> {
+    convertFileToBase64(file: File | Blob): Promise<string> {
         return new Promise<string>((resolve, reject) => {
+            if (!(file instanceof File || file instanceof Blob)) {
+                reject(new Error('El parámetro no es de tipo File o Blob'));
+                return;
+            }
             const reader = new FileReader();
             reader.onload = () => {
                 const base64String = reader.result as string;
@@ -1129,11 +1163,10 @@ export class SolicitudExamenComponent implements OnInit {
     };
 
     getFileAndSetValue(fieldName: string) {
-        const handleError = () => {
+        const handleError = () =>
             this.messageService.add(
                 warnMessage('Modifica la informacion para ver los cambios.')
             );
-        };
 
         if (fieldName === 'anexos') {
             for (const anexo of this.solicitudForm.get(fieldName).value) {

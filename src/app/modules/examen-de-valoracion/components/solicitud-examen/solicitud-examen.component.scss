@@ -20,6 +20,13 @@
     display: none;
 }
 
+::ng-deep
+    p-fileupload[ng-reflect-name="firmaEstudiante"]
+    .p-fileupload-content
+    .p-fileupload-files.ng-star-inserted {
+    display: block;
+}
+
 .spinner {
     transform: translate(-50%, 50%);
     position: absolute;

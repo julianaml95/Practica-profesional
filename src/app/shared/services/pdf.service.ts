@@ -265,6 +265,31 @@ export class PdfService {
                 }
             }
 
+            if (node.classList.contains('estudiante-image')) {
+                const estudianteImageContent = [];
+
+                for (let child of node.childNodes) {
+                    if (
+                        child.nodeType === Node.ELEMENT_NODE &&
+                        child.tagName === 'B'
+                    ) {
+                        estudianteImageContent.push({
+                            text: ' ' + child.textContent.trim(),
+                        });
+                    } else if (child.tagName === 'IMG') {
+                        const imgData = await this.convertImageToDataURL(
+                            child.src
+                        );
+                        estudianteImageContent.push({
+                            image: imgData,
+                            width: 120,
+                            alignment: 'left',
+                        });
+                    }
+                }
+                content.push(...estudianteImageContent);
+            }
+
             if (node.classList.contains('header-logo')) {
                 const headerContent = [];
 

@@ -224,6 +224,8 @@ export class SustentacionExamenComponent implements OnInit {
                         this.sustentacionForm
                             .get('idTrabajoGrados')
                             .setValue(response.id);
+                    } else {
+                        this.router.navigate(['examen-de-valoracion']);
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
@@ -253,9 +255,6 @@ export class SustentacionExamenComponent implements OnInit {
                     this.messageService.add(
                         warnMessage('Debes seleccionar un evaluador externo')
                     );
-                    this.router.navigate([
-                        `examen-de-valoracion/solicitud/editar/${this.trabajoDeGradoId}`,
-                    ]);
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -269,9 +268,6 @@ export class SustentacionExamenComponent implements OnInit {
                     this.messageService.add(
                         warnMessage('Debes seleccionar un evaluador interno')
                     );
-                    this.router.navigate([
-                        `examen-de-valoracion/solicitud/editar/${this.trabajoDeGradoId}`,
-                    ]);
                 }
             },
             error: (e) => this.handlerResponseException(e),
@@ -371,6 +367,7 @@ export class SustentacionExamenComponent implements OnInit {
                     'Información',
                     EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_DOCENTE_SUSTENTACION
                 );
+
                 this.isDocenteCreated = false;
                 this.isCoordinadorFase1Created = false;
                 this.isCoordinadorFase2Created = false;
@@ -399,11 +396,11 @@ export class SustentacionExamenComponent implements OnInit {
                 break;
 
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_ESTUDIANTE_SUSTENTACION:
-                addMessage(
-                    'info',
-                    'Información',
-                    EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_ESTUDIANTE_SUSTENTACION
-                );
+                // addMessage(
+                //     'info',
+                //     'Información',
+                //     EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_ESTUDIANTE_SUSTENTACION
+                // );
 
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = true;
@@ -764,7 +761,7 @@ export class SustentacionExamenComponent implements OnInit {
                             timer(2000).subscribe(() => {
                                 this.isLoading = false;
                                 this.router.navigate([
-                                    `examen-de-valoracion/sustentacion/editar/${response.idSustentacionTI}`,
+                                    `examen-de-valoracion/sustentacion`,
                                 ]);
                             });
                         }
