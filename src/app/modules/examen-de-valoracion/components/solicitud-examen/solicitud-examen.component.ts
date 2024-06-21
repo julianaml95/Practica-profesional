@@ -790,6 +790,9 @@ export class SolicitudExamenComponent implements OnInit {
                                     localStorage.removeItem(
                                         'solicitudFormState'
                                     );
+                                    this.messageService.add(
+                                        infoMessage(Mensaje.GUARDADO_EXITOSO)
+                                    );
                                     timer(2000).subscribe(() => {
                                         this.isLoading = false;
                                         this.router.navigate([

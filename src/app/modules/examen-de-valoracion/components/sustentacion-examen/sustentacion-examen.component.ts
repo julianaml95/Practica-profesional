@@ -758,11 +758,12 @@ export class SustentacionExamenComponent implements OnInit {
                             this.solicitudService.setSustentacionSeleccionada(
                                 response
                             );
+                            this.messageService.add(
+                                infoMessage(Mensaje.GUARDADO_EXITOSO)
+                            );
                             timer(2000).subscribe(() => {
                                 this.isLoading = false;
-                                this.router.navigate([
-                                    `examen-de-valoracion/sustentacion`,
-                                ]);
+                                this.router.navigate([`examen-de-valoracion`]);
                             });
                         }
                     },

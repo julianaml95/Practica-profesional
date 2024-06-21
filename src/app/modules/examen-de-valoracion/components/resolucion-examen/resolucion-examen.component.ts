@@ -642,6 +642,9 @@ export class ResolucionExamenComponent implements OnInit {
                             this.solicitudService.setResolucionSeleccionada(
                                 response
                             );
+                            this.messageService.add(
+                                infoMessage(Mensaje.GUARDADO_EXITOSO)
+                            );
                             timer(2000).subscribe(() => {
                                 this.isLoading = false;
                                 this.router.navigate([`examen-de-valoracion`]);
