@@ -16,22 +16,22 @@ import { Router } from '@angular/router';
 import { MessageService, SelectItem } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 
+import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { Mensaje } from 'src/app/core/enums/enums';
+import { Rol, TipoRol } from 'src/app/core/enums/domain-enum';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {
     errorMessage,
     infoMessage,
     warnMessage,
 } from 'src/app/core/utils/message-util';
-import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
-import { SolicitudService } from '../../services/solicitud.service';
-import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-expertos/buscador-expertos.component';
-import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
-import { PdfService } from 'src/app/shared/services/pdf.service';
-import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
-import { Rol, TipoRol } from 'src/app/core/enums/domain-enum';
 import { enumToSelectItems } from 'src/app/core/utils/util';
+import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
+import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-expertos/buscador-expertos.component';
+import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { Orientador } from '../../models/orientador';
+import { PdfService } from 'src/app/shared/services/pdf.service';
+import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
 
 @Component({
     selector: 'documento-formatoA',
@@ -40,8 +40,11 @@ import { Orientador } from '../../models/orientador';
 })
 export class DocumentoFormatoAComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
-    @ViewChild('formatoA') formatoA!: ElementRef;
+    @Output() formatoAPdfGenerated = new EventEmitter<File>();
+
     formatoAForm: FormGroup;
+
+    @ViewChild('formatoA') formatoA!: ElementRef;
 
     loading = false;
 
@@ -62,9 +65,13 @@ export class DocumentoFormatoAComponent implements OnInit {
         private dialogService: DialogService,
         private messageService: MessageService,
         private breadcrumbService: BreadcrumbService,
-        private solicitudService: SolicitudService,
+        private trabajoDeGradoService: TrabajoDeGradoService,
         private pdfService: PdfService
     ) {}
+
+    get titulo(): FormControl {
+        return this.formatoAForm.get('titulo') as FormControl;
+    }
 
     get estudiante(): FormControl {
         return this.formatoAForm.get('estudiante') as FormControl;
@@ -91,25 +98,53 @@ export class DocumentoFormatoAComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.setBreadcrumb();
         this.initForm();
         this.fechaActual = new Date();
 
-        this.solicitudService.tituloSeleccionadoSubject$.subscribe(
-            (response) => {
+        this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
+            next: (response) => {
                 if (response) {
-                    this.formatoAForm.get('titulo').setValue(response);
+                    this.titulo.setValue(response);
                 }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+
+        this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.estudianteSeleccionado = response;
+                    this.estudiante.setValue(
+                        this.nombreCompletoEstudiante(response)
+                    );
+                } else {
+                    this.router.navigate(['examen-de-valoracion']);
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+
+        this.trabajoDeGradoService.evaluadorExternoSeleccionadoSubject$.subscribe(
+            {
+                next: (response) => {
+                    if (response) {
+                        this.experto.setValue(response);
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
             }
         );
-
-        this.solicitudService.estudianteSeleccionado$.subscribe((response) => {
-            this.estudianteSeleccionado = response;
-            if (response) {
-                this.estudiante.setValue(
-                    this.nombreCompletoEstudiante(response)
-                );
+        this.trabajoDeGradoService.evaluadorInternoSeleccionadoSubject$.subscribe(
+            {
+                next: (response) => {
+                    if (response) {
+                        this.docente.setValue(response);
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
             }
-        });
+        );
 
         this.tipo.valueChanges.subscribe(
             (response) => (this.tipoSeleccionado = response)
@@ -117,12 +152,6 @@ export class DocumentoFormatoAComponent implements OnInit {
         this.rol.valueChanges.subscribe(
             (response) => (this.rolSeleccionado = response)
         );
-
-        if (!this.estudianteSeleccionado) {
-            this.router.navigate(['examen-de-valoracion/solicitud']);
-        }
-
-        this.setBreadcrumb();
     }
 
     initForm(): void {
@@ -139,6 +168,8 @@ export class DocumentoFormatoAComponent implements OnInit {
 
         this.formatoAForm.get('titulo').disable();
         this.formatoAForm.get('estudiante').disable();
+        this.formatoAForm.get('evaluadorInterno').disable();
+        this.formatoAForm.get('evaluadorExterno').disable();
         this.formReady.emit(this.formatoAForm);
     }
 
@@ -146,7 +177,27 @@ export class DocumentoFormatoAComponent implements OnInit {
         this.router.navigate(['examen-de-valoracion/solicitud']);
     }
 
-    onSave() {
+    onAdjuntar() {
+        if (this.formatoAForm.invalid) {
+            this.handleWarningMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS);
+            return;
+        } else {
+            const data = document.getElementById('formatoA');
+            this.pdfService.generatePDF(data).then((pdfBlob: Blob) => {
+                const file = new File(
+                    [pdfBlob],
+                    `${this.estudianteSeleccionado.codigo} - formatoA.pdf`,
+                    {
+                        type: 'application/pdf',
+                    }
+                );
+                this.formatoAPdfGenerated.emit(file);
+                this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO);
+            });
+        }
+    }
+
+    onDownload() {
         if (this.formatoAForm.invalid) {
             this.handleWarningMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS);
             return;
@@ -200,16 +251,6 @@ export class DocumentoFormatoAComponent implements OnInit {
         });
     }
 
-    mapExpertoLabel(experto: any) {
-        return {
-            id: experto.id,
-            nombre: experto.nombre,
-            apellido: experto.apellido,
-            correo: experto.correoElectronico ?? experto.correo,
-            universidad: experto.universidad,
-        };
-    }
-
     mapOrientadorLabel(orientador: any) {
         return {
             id: orientador.id,
@@ -229,33 +270,6 @@ export class DocumentoFormatoAComponent implements OnInit {
     }
     nombreCompletoEstudiante(e: any) {
         return `${e.nombre} ${e.apellido}`;
-    }
-
-    mapDocenteLabel(docente: any) {
-        const ultimaUniversidad =
-            docente?.titulos?.length > 0
-                ? docente.titulos[docente.titulos.length - 1].universidad
-                : null;
-
-        return {
-            id: docente.id,
-            nombre: docente.nombre,
-            apellido: docente.apellido,
-            correo: docente.correoElectronico ?? docente.correo,
-            universidad: docente.universidad ?? ultimaUniversidad,
-        };
-    }
-
-    onSeleccionarExperto() {
-        const ref = this.showBuscadorExpertos();
-        ref.onClose.subscribe({
-            next: (response) => {
-                if (response) {
-                    const experto = this.mapExpertoLabel(response);
-                    this.experto.setValue(experto);
-                }
-            },
-        });
     }
 
     onSeleccionarOrientador(tipo: string): void {
@@ -278,20 +292,8 @@ export class DocumentoFormatoAComponent implements OnInit {
         });
     }
 
-    onSeleccionarDocente() {
-        const ref = this.showBuscadorDocentes();
-        ref.onClose.subscribe({
-            next: (response) => {
-                if (response) {
-                    const docente = this.mapDocenteLabel(response);
-                    this.docente.setValue(docente);
-                }
-            },
-        });
-    }
-
     handlerResponseException(response: any) {
-        if (response.status !== 501) return;
+        if (response.status !== 500) return;
         const mapException = mapResponseException(response.error);
         mapException.forEach((value) => {
             this.messageService.add(errorMessage(value));
@@ -321,16 +323,8 @@ export class DocumentoFormatoAComponent implements OnInit {
         this.messageService.add(warnMessage(message));
     }
 
-    limpiarDocente() {
-        this.docente.setValue(null);
-    }
-
     limpiarOrientador(index: number) {
         this.orientador.setValue(null);
         this.orientadores.splice(index, 1);
-    }
-
-    limpiarExperto() {
-        this.experto.setValue(null);
     }
 }

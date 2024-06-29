@@ -22,9 +22,10 @@ import { MessageService, SharedModule } from 'primeng/api';
 import { GestionEstudiantesModule } from './modules/gestion-estudiantes/gestion-estudiantes.module';
 import { AppBreadcrumbComponent } from './core/components/breadcrumb/app.breadcrumb.component';
 import { BreadcrumbService } from './core/components/breadcrumb/app.breadcrumb.service';
-import { LoginComponent } from './modules/examen-de-valoracion/components/login/login.component';
-import { AuthInterceptor } from './modules/examen-de-valoracion/config/interceptor';
+import { AuthInterceptor } from './shared/config/interceptor';
 import { PdfViewerModule } from 'ng2-pdf-viewer';
+import { LoginModule } from './modules/login/login.module';
+import { AuthService } from './shared/services/auth.service';
 
 @NgModule({
     imports: [
@@ -37,7 +38,7 @@ import { PdfViewerModule } from 'ng2-pdf-viewer';
         SharedModule,
         GestionEstudiantesModule,
         ReactiveFormsModule,
-        PdfViewerModule
+        PdfViewerModule,
     ],
     declarations: [
         AppComponent,
@@ -48,7 +49,6 @@ import { PdfViewerModule } from 'ng2-pdf-viewer';
         AppMenuitemComponent,
         AppConfigComponent,
         AppBreadcrumbComponent,
-        LoginComponent,
         HomeComponent,
     ],
     providers: [

@@ -28,10 +28,8 @@
         </p-card>
         <div>
             <p-dialog
-                [header]="
-                    currentFormat === 'formatoB' ? 'Formato B' : 'FormatoC'
-                "
-                [(visible)]="displayFormatoB"
+                [header]="currentFormat"
+                [(visible)]="displayFormatos"
                 [style]="{ width: '70vw' }"
                 [modal]="true"
                 [maximizable]="true"
@@ -39,15 +37,24 @@
                 [draggable]="false"
                 [resizable]="false"
             >
-                <ng-container *ngIf="currentFormat === 'formatoB'">
+                <ng-container *ngIf="currentFormat == 'formatoB'">
                     <documento-formatoB
                         (formatoBPdfGenerated)="
                             handleFormatoBPdfGenerated($event)
                         "
                     ></documento-formatoB>
                 </ng-container>
-                <ng-container *ngIf="currentFormat === 'formatoC'">
+                <ng-container *ngIf="currentFormat == 'formatoC1'">
                     <documento-formatoC
+                        [evaluadorNombre]="evaluadorInternoSeleccionado.nombres"
+                        (formatoCPdfGenerated)="
+                            handleFormatoCPdfGenerated($event)
+                        "
+                    ></documento-formatoC>
+                </ng-container>
+                <ng-container *ngIf="currentFormat == 'formatoC2'">
+                    <documento-formatoC
+                        [evaluadorNombre]="evaluadorExternoSeleccionado.nombres"
                         (formatoCPdfGenerated)="
                             handleFormatoCPdfGenerated($event)
                         "
@@ -55,12 +62,41 @@
                 </ng-container>
                 <ng-template pTemplate="footer">
                     <p-button
-                        icon="pi pi-check"
+                        *ngIf="currentFormat != 'formatoB'"
+                        icon="pi pi-chevron-left"
+                        label="Anterior"
+                        styleClass="p-button-text"
+                        (click)="previousFormat()"
+                    ></p-button>
+                    <p-button
+                        *ngIf="currentFormat != 'formatoC2'"
+                        icon="pi pi-chevron-right"
+                        iconPos="right"
                         label="Siguiente"
                         styleClass="p-button-text"
                         (click)="nextFormat()"
                     ></p-button>
                 </ng-template>
+            </p-dialog>
+        </div>
+        <div>
+            <p-dialog
+                header="Formato A"
+                [(visible)]="displayFormatoA"
+                [style]="{ width: '70vw' }"
+                [modal]="true"
+                [maximizable]="true"
+                [baseZIndex]="10000"
+                [draggable]="false"
+                [resizable]="false"
+            >
+                <ng-container>
+                    <documento-formatoA
+                        (formatoAPdfGenerated)="
+                            handleFormatoAPdfGenerated($event)
+                        "
+                    ></documento-formatoA>
+                </ng-container>
             </p-dialog>
         </div>
         <p-dialog
@@ -131,23 +167,6 @@
                             ></button>
                         </div>
                     </div>
-                    <div
-                        style="
-                            margin-top: 1rem;
-                            display: flex;
-                            align-items: center;
-                            column-gap: 0.5rem;
-                        "
-                    >
-                        <input
-                            type="checkbox"
-                            id="reviewedCheckbox"
-                            [(ngModel)]="isReviewed"
-                        />
-                        <label for="reviewedCheckbox"
-                            >Revisé todos los documentos</label
-                        >
-                    </div>
                 </div>
             </ng-template>
             <div class="pdf-container">
@@ -172,6 +191,7 @@
                 ></button>
             </div>
             <button
+                *ngIf="role.includes('ROLE_ESTUDIANTE') ? false : editMode"
                 pButton
                 type="button"
                 icon="pi pi-book"
@@ -187,7 +207,7 @@
                 class="w-15rem p-button-secondary"
                 label="Respuesta al examen de valoración"
                 [disabled]="
-                    !isCoordinadorFase2Valid ||
+                    !isCoordinadorFase2Created ||
                     role.includes('ROLE_DOCENTE') ||
                     role.includes('ROLE_ESTUDIANTE')
                 "
@@ -228,7 +248,7 @@
                 *ngIf="
                     editMode &&
                     role.includes('ROLE_COORDINADOR') &&
-                    isDocenteValid
+                    isCoordinadorFase1Created
                 "
                 pButton
                 pTooltip="Formatos B y C"
@@ -249,15 +269,8 @@
                 *ngIf="editMode"
                 pButton
                 icon="pi pi-pencil"
-                [label]="
-                    isDocenteValid &&
-                    isCoordinadorFase1Valid &&
-                    isCoordinadorFase2Valid
-                        ? 'Modificar Informacion'
-                        : 'Guardar'
-                "
+                [label]="editMode ? 'Modificar Informacion' : 'Guardar'"
                 (click)="updateSolicitudExamen()"
-                [disabled]="!isReviewed"
             ></button>
         </div>
     </div>
@@ -316,7 +329,7 @@
                                     class="flex flex-row w-full justify-content-between"
                                 >
                                     <p-fileUpload
-                                        #fileUpload1
+                                        #FormatoA
                                         name="linkFormatoA"
                                         mode="basic"
                                         [auto]="true"
@@ -324,7 +337,9 @@
                                         chooseIcon="pi pi-file"
                                         class="w-full max-w-30rem"
                                         maxFileSize="2000000"
-                                        (onSelect)="onFileSelectFirst($event)"
+                                        (onSelect)="
+                                            onFileSelectFormatoA($event)
+                                        "
                                         chooseLabel="Buscar documento"
                                         [disabled]="
                                             solicitudForm.get('linkFormatoA')
@@ -333,7 +348,7 @@
                                     >
                                     </p-fileUpload>
                                     <button
-                                        *ngIf="selectedFileFirst"
+                                        *ngIf="FileFormatoA"
                                         pButton
                                         class="p-button-secondary"
                                         icon="pi pi-times"
@@ -343,16 +358,16 @@
                                 </div>
                                 <div
                                     class="mt-2"
-                                    *ngIf="selectedFileFirst"
+                                    *ngIf="FileFormatoA"
                                     style="word-break: break-word"
                                 >
-                                    {{ selectedFileFirst.name }} -
-                                    {{ selectedFileFirst.size | bytesToKb }}
+                                    {{ FileFormatoA.name }} -
+                                    {{ FileFormatoA.size | bytesToKb }}
                                     KB
                                 </div>
                             </div>
                             <button
-                                *ngIf="editMode && selectedFileFirst"
+                                *ngIf="editMode && FileFormatoA"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
@@ -361,16 +376,20 @@
                                 (click)="getFileAndSetValue('linkFormatoA')"
                             ></button>
                             <button
-                                *ngIf="!selectedFileFirst"
+                                *ngIf="!FileFormatoA"
                                 pButton
                                 icon="pi pi-plus"
                                 class="align-self-center"
                                 label="Crear Documento"
-                                (click)="onCrearDocumento()"
+                                (click)="showFormatoA()"
                                 [loading]="loading"
+                                [disabled]="
+                                    !this.evaluadorInternoSeleccionado ||
+                                    !this.evaluadorExternoSeleccionado
+                                "
                             ></button>
                         </div>
-                        <div class="mt-2" *ngIf="!selectedFileFirst">
+                        <div class="mt-2" *ngIf="!FileFormatoA">
                             <p>No has seleccionado ningún documento.</p>
                         </div>
                     </div>
@@ -399,7 +418,7 @@
                                     class="flex flex-row w-full justify-content-between"
                                 >
                                     <p-fileUpload
-                                        #fileUpload2
+                                        #FormatoD
                                         name="linkFormatoD"
                                         mode="basic"
                                         [auto]="true"
@@ -407,7 +426,9 @@
                                         chooseIcon="pi pi-file"
                                         class="w-full max-w-30rem"
                                         maxFileSize="5000000"
-                                        (onSelect)="onFileSelectSecond($event)"
+                                        (onSelect)="
+                                            onFileSelectFormatoD($event)
+                                        "
                                         chooseLabel="Buscar documento"
                                         [disabled]="
                                             solicitudForm.get('linkFormatoD')
@@ -416,7 +437,7 @@
                                     >
                                     </p-fileUpload>
                                     <button
-                                        *ngIf="selectedFileSecond"
+                                        *ngIf="FileFormatoD"
                                         pButton
                                         class="p-button-secondary"
                                         icon="pi pi-times"
@@ -426,16 +447,16 @@
                                 </div>
                                 <div
                                     class="mt-2"
-                                    *ngIf="selectedFileSecond"
+                                    *ngIf="FileFormatoD"
                                     style="word-break: break-word"
                                 >
-                                    {{ selectedFileSecond.name }} -
-                                    {{ selectedFileSecond.size | bytesToKb }}
+                                    {{ FileFormatoD.name }} -
+                                    {{ FileFormatoD.size | bytesToKb }}
                                     KB
                                 </div>
                             </div>
                             <button
-                                *ngIf="editMode && selectedFileSecond"
+                                *ngIf="editMode && FileFormatoD"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
@@ -444,7 +465,7 @@
                                 (click)="getFileAndSetValue('linkFormatoD')"
                             ></button>
                         </div>
-                        <div class="mt-2" *ngIf="!selectedFileSecond">
+                        <div class="mt-2" *ngIf="!FileFormatoD">
                             <p>No has seleccionado ningún documento.</p>
                         </div>
                     </div>
@@ -472,7 +493,7 @@
                                     class="flex flex-row w-full justify-content-between"
                                 >
                                     <p-fileUpload
-                                        #fileUpload3
+                                        #FormatoE
                                         mode="basic"
                                         [auto]="true"
                                         name="linkFormatoE"
@@ -480,7 +501,9 @@
                                         accept=".pdf,.zip,.rar"
                                         class="w-full max-w-30rem"
                                         maxFileSize="5000000"
-                                        (onSelect)="onFileSelectThird($event)"
+                                        (onSelect)="
+                                            onFileSelectFormatoE($event)
+                                        "
                                         chooseLabel="Buscar documento"
                                         [disabled]="
                                             solicitudForm.get('linkFormatoE')
@@ -488,7 +511,7 @@
                                         "
                                     ></p-fileUpload>
                                     <button
-                                        *ngIf="selectedFileThird"
+                                        *ngIf="FileFormatoE"
                                         pButton
                                         class="p-button-secondary"
                                         icon="pi pi-times"
@@ -498,16 +521,16 @@
                                 </div>
                                 <div
                                     class="mt-2"
-                                    *ngIf="selectedFileThird"
+                                    *ngIf="FileFormatoE"
                                     style="word-break: break-word"
                                 >
-                                    {{ selectedFileThird.name }} -
-                                    {{ selectedFileThird.size | bytesToKb }}
+                                    {{ FileFormatoE.name }} -
+                                    {{ FileFormatoE.size | bytesToKb }}
                                     KB
                                 </div>
                             </div>
                             <button
-                                *ngIf="editMode && selectedFileThird"
+                                *ngIf="editMode && FileFormatoE"
                                 pButton
                                 class="p-button-secondary"
                                 type="button"
@@ -516,7 +539,7 @@
                                 (click)="getFileAndSetValue('linkFormatoE')"
                             ></button>
                         </div>
-                        <div class="mt-2" *ngIf="!selectedFileThird">
+                        <div class="mt-2" *ngIf="!FileFormatoE">
                             <p>No has seleccionado ningún documento.</p>
                         </div>
                     </div>
@@ -552,6 +575,11 @@
                                         maxFileSize="5000000"
                                         chooseLabel="Buscar documento"
                                         (onSelect)="onUpload($event)"
+                                        [disabled]="
+                                            editMode &&
+                                            solicitudForm.get('anexos').value &&
+                                            !isChanged
+                                        "
                                     >
                                         <ng-template pTemplate="content">
                                             <div
@@ -758,7 +786,128 @@
                 </div>
                 <div
                     class="field grid"
-                    *ngIf="role.includes('ROLE_COORDINADOR') && isDocenteValid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
+                    "
+                >
+                    <div
+                        class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
+                    >
+                        <div
+                            *ngFor="let estado of estados"
+                            class="field-checkbox"
+                        >
+                            <p-radioButton
+                                [inputId]="estado + 'coordinador'"
+                                [value]="estado"
+                                formControlName="conceptoCoordinadorDocumentos"
+                            ></p-radioButton>
+                            <label
+                                [for]="estado + 'coordinador'"
+                                class="ml-2"
+                                >{{ estado }}</label
+                            >
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
+                    "
+                >
+                    <div class="col-2 col-label text-right align-self-center">
+                        <label class="label-required">Asunto</label>
+                    </div>
+                    <div class="col-9 col-input">
+                        <div class="flex m-4 align-items-center">
+                            <input
+                                class="p-inputtext-md"
+                                style="flex: 0.5"
+                                pInputText
+                                [maxLength]="250"
+                                formControlName="asuntoCoordinador"
+                            />
+                            <span class="p-float-label ml-4" style="flex: 0.5">
+                                <textarea
+                                    id="float-input"
+                                    class="w-full"
+                                    rows="5"
+                                    cols="30"
+                                    pInputTextarea
+                                    [autoResize]="true"
+                                    formControlName="mensajeCoordinador"
+                                ></textarea>
+                                <label for="float-input">Observación</label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created
+                    "
+                >
+                    <div
+                        class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
+                    >
+                        <div
+                            *ngFor="let estado of estados"
+                            class="field-checkbox"
+                        >
+                            <p-radioButton
+                                [inputId]="estado + 'comite'"
+                                [value]="estado"
+                                formControlName="conceptoComite"
+                            ></p-radioButton>
+                            <label [for]="estado + 'comite'" class="ml-2">{{
+                                estado
+                            }}</label>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created
+                    "
+                >
+                    <div class="col-2 col-label text-right align-self-center">
+                        <label class="label-required">Asunto</label>
+                    </div>
+                    <div class="col-9 col-input">
+                        <div class="flex m-4 align-items-center">
+                            <input
+                                class="p-inputtext-md"
+                                style="flex: 0.5"
+                                pInputText
+                                [maxLength]="250"
+                                formControlName="asuntoComite"
+                            />
+                            <span class="p-float-label ml-4" style="flex: 0.5">
+                                <textarea
+                                    id="float-input"
+                                    class="w-full"
+                                    rows="5"
+                                    cols="30"
+                                    pInputTextarea
+                                    [autoResize]="true"
+                                    formControlName="mensajeComite"
+                                ></textarea>
+                                <label for="float-input">Observación</label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created
+                    "
                 >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
@@ -771,7 +920,10 @@
                 </div>
                 <div
                     class="field grid"
-                    *ngIf="role.includes('ROLE_COORDINADOR') && isDocenteValid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created
+                    "
                 >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required">Fecha del Acta</label>
@@ -786,7 +938,11 @@
                 </div>
                 <div
                     class="field grid"
-                    *ngIf="role.includes('ROLE_COORDINADOR') && isDocenteValid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created &&
+                        solicitudForm.get('conceptoComite').value == 'Aceptado'
+                    "
                 >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"
@@ -805,7 +961,7 @@
                                     class="flex flex-row w-full justify-content-between"
                                 >
                                     <p-fileUpload
-                                        #fileUpload4
+                                        #OficioDirigidoEvaluadores
                                         name="linkOficioDirigidoEvaluadores"
                                         mode="basic"
                                         [auto]="true"
@@ -813,7 +969,11 @@
                                         chooseIcon="pi pi-file"
                                         class="w-full max-w-30rem"
                                         maxFileSize="2000000"
-                                        (onSelect)="onFileSelectFourth($event)"
+                                        (onSelect)="
+                                            onFileSelectOficioDirigidoEvaluadores(
+                                                $event
+                                            )
+                                        "
                                         chooseLabel="Buscar documento"
                                         [disabled]="
                                             solicitudForm.get(
@@ -823,7 +983,7 @@
                                     >
                                     </p-fileUpload>
                                     <button
-                                        *ngIf="selectedFileFourth"
+                                        *ngIf="FileOficioDirigidoEvaluadores"
                                         pButton
                                         class="p-button-secondary"
                                         icon="pi pi-times"
@@ -837,16 +997,21 @@
                                 </div>
                                 <div
                                     class="mt-2"
-                                    *ngIf="selectedFileFourth"
+                                    *ngIf="FileOficioDirigidoEvaluadores"
                                     style="word-break: break-word"
                                 >
-                                    {{ selectedFileFourth.name }} -
-                                    {{ selectedFileFourth.size | bytesToKb }}
+                                    {{ FileOficioDirigidoEvaluadores.name }} -
+                                    {{
+                                        FileOficioDirigidoEvaluadores.size
+                                            | bytesToKb
+                                    }}
                                     KB
                                 </div>
                             </div>
                             <button
-                                *ngIf="editMode && selectedFileFourth"
+                                *ngIf="
+                                    editMode && FileOficioDirigidoEvaluadores
+                                "
                                 pButton
                                 type="button"
                                 class="p-button-secondary"
@@ -859,14 +1024,21 @@
                                 "
                             ></button>
                         </div>
-                        <div class="mt-2" *ngIf="!selectedFileFourth">
+                        <div
+                            class="mt-2"
+                            *ngIf="!FileOficioDirigidoEvaluadores"
+                        >
                             <p>No has seleccionado ningún documento.</p>
                         </div>
                     </div>
                 </div>
                 <div
                     class="field grid"
-                    *ngIf="role.includes('ROLE_COORDINADOR') && isDocenteValid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created &&
+                        solicitudForm.get('conceptoComite').value == 'Aceptado'
+                    "
                 >
                     <div class="col-5 col-label text-right align-self-center">
                         <label class="label-required"

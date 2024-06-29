@@ -41,9 +41,7 @@
                     >
                 </div>
                 <div class="col-9 col-input">
-                    <span>
-                        Facultad de Ingeniería Electrónica y Telecomunicaciones.
-                    </span>
+                    <span>Maestría en Computación</span>
                 </div>
             </div>
             <div class="field grid">
@@ -58,17 +56,12 @@
                     <label class="uppercase font-bold">Titulo</label>
                 </div>
                 <div class="col-9 col-input">
-                    <textarea
-                        pInputTextarea
+                    <input
+                        pInputText
                         [maxLength]="250"
-                        class="p-inputtextarea-md w-full p-hide"
+                        class="p-inputtext-md w-full"
                         formControlName="titulo"
-                        [ngClass]="{
-                            'ng-invalid ng-dirty':
-                                getFormControl('titulo').invalid &&
-                                getFormControl('titulo').touched
-                        }"
-                    ></textarea>
+                    />
                 </div>
             </div>
             <div class="field grid">
@@ -107,8 +100,7 @@
                     <div class="body-field p-show">
                         <label for="">Jurados:</label
                         ><span
-                            >{{ experto?.value?.nombre }}
-                            {{ experto?.value?.apellido }},
+                            >{{ experto?.value?.nombres }}
                             {{ experto?.value?.correo }},
                             {{ experto?.value?.universidad }}</span
                         >
@@ -121,21 +113,12 @@
                                 <span class="card-title"
                                     >Datos del Jurado Externo</span
                                 >
-                                <button
-                                    pButton
-                                    icon="pi pi-times"
-                                    style="border: none; font-size: 1.2rem"
-                                    (click)="limpiarExperto()"
-                                ></button>
                             </div>
                             <div
                                 class="mt-2 card-data flex justify-content-between"
                             >
                                 <span>Nombres y Apellidos</span>
-                                <span
-                                    >{{ experto?.value?.nombre }}
-                                    {{ experto?.value?.apellido }}</span
-                                >
+                                <span>{{ experto?.value?.nombres }}</span>
                             </div>
                             <div
                                 class="mt-2 card-data flex justify-content-between"
@@ -152,14 +135,6 @@
                         </p-card>
                     </div>
                 </div>
-                <div class="align-self-center" *ngIf="!experto.value">
-                    <button
-                        pButton
-                        icon="pi pi-plus"
-                        label="Seleccionar Evaluador"
-                        (click)="onSeleccionarExperto()"
-                    ></button>
-                </div>
             </div>
             <div class="field grid gap-2">
                 <div class="col-2 col-label text-right mr-2 align-self-start">
@@ -175,8 +150,7 @@
                     <div class="body-field p-show">
                         <label for=""></label
                         ><span
-                            >{{ docente?.value?.nombre }}
-                            {{ docente?.value?.apellido }},
+                            >{{ docente?.value?.nombres }}
                             {{ docente?.value?.correo }},
                             {{ docente?.value?.universidad }}</span
                         >
@@ -189,21 +163,12 @@
                                 <span class="card-title"
                                     >Datos del Jurado Interno</span
                                 >
-                                <button
-                                    pButton
-                                    icon="pi pi-times"
-                                    style="border: none; font-size: 1.2rem"
-                                    (click)="limpiarDocente()"
-                                ></button>
                             </div>
                             <div
                                 class="mt-2 card-data flex justify-content-between"
                             >
                                 <span>Nombres y Apellidos</span>
-                                <span
-                                    >{{ docente?.value?.nombre }}
-                                    {{ docente?.value?.apellido }}</span
-                                >
+                                <span>{{ docente?.value?.nombres }}</span>
                             </div>
                             <div
                                 class="mt-2 card-data flex justify-content-between"
@@ -219,14 +184,6 @@
                             </div>
                         </p-card>
                     </div>
-                </div>
-                <div class="align-self-center" *ngIf="!docente.value">
-                    <button
-                        pButton
-                        icon="pi pi-plus"
-                        label="Seleccionar Evaluador"
-                        (click)="onSeleccionarDocente()"
-                    ></button>
                 </div>
             </div>
             <div class="field grid">
@@ -283,32 +240,29 @@
                 <!-- FIELD TO PDF -->
                 <div class="body-image p-show">
                     <span style="display: inline"
-                        >{{ experto?.value?.nombre }}
-                        {{ experto?.value?.apellido }} -
+                        >{{ experto?.value?.nombres }} -
                         {{ experto?.value?.universidad }}</span
                     >
                     <hr style="display: inline" />
                 </div>
                 <!-- END -->
                 <span class="col-2 col-label text-right mr-2 align-self-start">
-                    {{ experto?.value?.nombre }}
-                    {{ experto?.value?.apellido }}
+                    {{ experto?.value?.nombres }}
                 </span>
             </div>
             <div class="field grid">
                 <!-- FIELD TO PDF -->
                 <div class="body-image p-show">
                     <span style="display: inline"
-                        >{{ docente?.value?.nombre }}
-                        {{ docente?.value?.apellido }} -
+                        >{{ docente?.value?.nombres }} -
                         {{ docente?.value?.universidad }}</span
                     >
                     <hr style="display: inline" />
                 </div>
                 <!-- END -->
-                <span class="col-2 col-label text-right mr-2 align-self-start"
-                    >{{ docente?.value?.nombre }}
-                    {{ docente?.value?.apellido }}</span
+                <span
+                    class="col-2 col-label text-right mr-2 align-self-start"
+                    >{{ docente?.value?.nombres }}</span
                 >
             </div>
         </div>

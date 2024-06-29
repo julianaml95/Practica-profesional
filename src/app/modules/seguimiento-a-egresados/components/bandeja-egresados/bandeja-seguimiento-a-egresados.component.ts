@@ -13,7 +13,7 @@ import { CursoEgresadoComponent } from '../curso-egresados/curso-egresados.compo
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
 import { SolicitudService } from 'src/app/modules/examen-de-valoracion/services/solicitud.service';
-import { LocalStorageService } from 'src/app/modules/examen-de-valoracion/services/localstorage.service';
+import { LocalStorageService } from 'src/app/shared/services/localstorage.service';
 
 @Component({
     selector: 'app-bandeja-seguimiento-a-egresados',

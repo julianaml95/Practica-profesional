@@ -1,10 +1,11 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../../../shared/services/auth.service';
 import { Router } from '@angular/router';
-import { warnMessage } from 'src/app/core/utils/message-util';
+import { errorMessage, warnMessage } from 'src/app/core/utils/message-util';
 import { Aviso, Mensaje } from 'src/app/core/enums/enums';
 import { MessageService } from 'primeng/api';
+import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 
 @Component({
     selector: 'app-login',
@@ -19,14 +20,16 @@ export class LoginComponent implements OnInit {
         private fb: FormBuilder,
         private messageService: MessageService,
         private authService: AuthService,
-        private router: Router
+        private router: Router,
+        private breadcrumbService: BreadcrumbService
     ) {}
 
-    ngOnInit(): void {
+    ngOnInit() {
+        this.setBreadcrumb();
         this.initForm();
     }
 
-    initForm(): void {
+    initForm() {
         this.loginForm = this.fb.group({
             username: ['', Validators.required],
             password: ['', Validators.required],
@@ -35,23 +38,28 @@ export class LoginComponent implements OnInit {
         this.formReady.emit(this.loginForm);
     }
 
-    onSubmit() {
-        if (this.loginForm.valid) {
-            const { username, password } = this.loginForm.value;
-            this.authService.login(username, password).subscribe({
-                next: (_) => {
-                    this.router.navigate(['/']);
-                },
-                error: (_) => {
-                    this.messageService.add(
-                        warnMessage(Aviso.CREDENCIALES_INCORRECTAS)
-                    );
-                },
-            });
-        } else {
+    onLogin() {
+        if (this.loginForm.invalid) {
             this.messageService.add(
                 warnMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS)
             );
+            return;
         }
+
+        const { username, password } = this.loginForm.value;
+        this.authService.login(username, password).subscribe({
+            next: () => {
+                this.router.navigate(['/']);
+            },
+            error: () => {
+                this.messageService.add(
+                    errorMessage(Aviso.CREDENCIALES_INCORRECTAS)
+                );
+            },
+        });
+    }
+
+    setBreadcrumb() {
+        this.breadcrumbService.setItems([{ label: 'Inicio', routerLink: '/' }]);
     }
 }

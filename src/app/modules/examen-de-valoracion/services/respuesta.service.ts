@@ -11,9 +11,11 @@ import { Respuesta } from '../models/respuesta';
 export class RespuestaService {
     constructor(private http: HttpClient) {}
 
-    createRespuestaExamen(respuesta: Respuesta) {
+    createRespuestaExamen(respuesta: Respuesta, trabajoDeGradoId: number) {
         return this.http.post<any>(
-            backendGestionTrabajoDeGrado('respuesta_examen_valoracion'),
+            backendGestionTrabajoDeGrado(
+                `respuesta_examen_valoracion/${trabajoDeGradoId}`
+            ),
             respuesta,
             {
                 headers: getHeaders(),

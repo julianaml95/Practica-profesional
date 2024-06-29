@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AppMainComponent } from '../main/app.main.component';
 import { MenuItem } from 'primeng/api';
 import { menuItems } from '../../constants/menu-items';
-import { AuthService } from 'src/app/modules/examen-de-valoracion/services/auth.service';
+import { AuthService } from 'src/app/shared/services/auth.service';
 
 @Component({
     selector: 'app-topbar',

@@ -12,29 +12,30 @@ import {
     Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { Subscription, forkJoin, last, lastValueFrom, of, timer } from 'rxjs';
-import { SolicitudService } from '../../services/solicitud.service';
-import { FileUpload } from 'primeng/fileupload';
-import { Estudiante } from '../../../gestion-estudiantes/models/estudiante';
+import { Subscription, forkJoin, lastValueFrom, of, timer } from 'rxjs';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
+import { Aviso, EstadoProceso, Mensaje } from 'src/app/core/enums/enums';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {
     errorMessage,
     infoMessage,
     warnMessage,
 } from 'src/app/core/utils/message-util';
-import { SustentacionService } from '../../services/sustentacion.service';
-import { Aviso, EstadoProceso, Mensaje } from 'src/app/core/enums/enums';
-import { Sustentacion } from '../../models/sustentacion';
-import { AuthService } from '../../services/auth.service';
+import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
 import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-expertos/buscador-expertos.component';
-import { Experto } from '../../models/experto';
-import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
-import { DialogService } from 'primeng/dynamicdialog';
 import { DocenteService } from 'src/app/shared/services/docente.service';
 import { ExpertoService } from 'src/app/shared/services/experto.service';
+import { MessageService } from 'primeng/api';
+import { DialogService } from 'primeng/dynamicdialog';
+import { FileUpload } from 'primeng/fileupload';
+import { Estudiante } from '../../../gestion-estudiantes/models/estudiante';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { SolicitudService } from '../../services/solicitud.service';
+import { SustentacionService } from '../../services/sustentacion.service';
+import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
+import { Experto } from '../../models/experto';
+import { Sustentacion } from '../../models/sustentacion';
 
 @Component({
     selector: 'app-sustentacion-examen',
@@ -43,6 +44,8 @@ import { ExpertoService } from 'src/app/shared/services/experto.service';
 })
 export class SustentacionExamenComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
+    sustentacionForm: FormGroup;
+
     private trabajoSeleccionadoSubscription: Subscription;
 
     @ViewChild('FormatoF') FormatoF!: FileUpload;
@@ -61,15 +64,19 @@ export class SustentacionExamenComponent implements OnInit {
     FileActaSustentacionP: File | null = null;
     FileEstudioHVAGrado: File | null = null;
 
+    editMode: boolean = false;
+    errorMessageShown: boolean = false;
+    displayModal: boolean = false;
+    isPdfLoaded: boolean = false;
     isDocenteCreated: boolean = false;
     isCoordinadorFase1Created: boolean = false;
     isEstudianteCreated: boolean = false;
     isCoordinadorFase2Created: boolean = false;
     isCoordinadorFase3Created: boolean = false;
+    isCoordinadorFase4Created: boolean = false;
     isLoading: boolean = false;
-    errorMessageShown: boolean = false;
-    editMode: boolean = false;
 
+    pdfUrls: { name: string; url: string }[] = [];
     role: string[];
     estado: string;
 
@@ -77,20 +84,21 @@ export class SustentacionExamenComponent implements OnInit {
     respuestaId: number;
     resolucionId: number;
     sustentacionId: number;
-
-    sustentacionForm: FormGroup;
+    currentPdfIndex: number = 0;
 
     estudianteSeleccionado: Estudiante = {};
     juradoExternoSeleccionado: Experto;
     juradoInternoSeleccionado: Docente;
 
-    estados: string[] = ['Aprobado', 'No Aprobado'];
+    estados: string[] = ['Aceptado', 'Rechazado'];
+    respuestas: string[] = ['Aprobado', 'No Aprobado'];
 
     constructor(
         private fb: FormBuilder,
         private router: Router,
         private route: ActivatedRoute,
         private solicitudService: SolicitudService,
+        private trabajoDeGradoService: TrabajoDeGradoService,
         private sustentacionService: SustentacionService,
         private dialogService: DialogService,
         private breadcrumbService: BreadcrumbService,
@@ -108,36 +116,44 @@ export class SustentacionExamenComponent implements OnInit {
         return this.sustentacionForm.get('idJuradoExterno') as FormControl;
     }
 
-    async ngOnInit() {
+    ngOnInit() {
+        this.role = this.authService.getRole();
+        this.setBreadcrumb();
         this.initForm();
         this.subscribeToObservers();
         if (this.router.url.includes('editar')) {
-            await this.loadEditMode();
-        } else {
-            this.checkEstados();
+            this.loadEditMode();
         }
-        this.setBreadcrumb();
+        this.checkEstados();
     }
 
     async loadEditMode() {
         this.editMode = true;
         await this.loadSustentacion();
-        this.checkEstados();
     }
 
     initForm(): void {
         this.sustentacionForm = this.fb.group({
-            idTrabajoGrados: [null, Validators.required],
-            idSustentacionTI: [null, Validators.required],
+            idSustentacionTrabajoInvestigacion: [null, Validators.required],
             linkFormatoF: ['', Validators.required],
             urlDocumentacion: ['', Validators.required],
+            asuntoCoordinador: [null],
+            mensajeCoordinador: [null],
+            conceptoCoordinador: [null, Validators.required],
+            asuntoComite: [null],
+            mensajeComite: [null],
+            conceptoComite: [null, Validators.required],
             linkFormatoG: ['', Validators.required],
             linkEstudioHojaVidaAcademica: ['', Validators.required],
+            numeroActa: ['', Validators.required],
+            fechaActa: ['', Validators.required],
+            asuntoConsejo: [null],
+            mensajeConsejo: [null],
             juradosAceptados: [''],
             idJuradoInterno: ['', Validators.required],
             idJuradoExterno: ['', Validators.required],
-            numeroActa: ['', Validators.required],
-            fechaActa: ['', Validators.required],
+            numeroActaConsejo: ['', Validators.required],
+            fechaActaConsejo: ['', Validators.required],
             linkFormatoH: ['', Validators.required],
             linkFormatoI: ['', Validators.required],
             linkActaSustentacionPublica: ['', Validators.required],
@@ -148,6 +164,96 @@ export class SustentacionExamenComponent implements OnInit {
         });
 
         this.formReady.emit(this.sustentacionForm);
+
+        this.sustentacionForm
+            .get('conceptoCoordinador')
+            .valueChanges.subscribe((value) => {
+                if (value == 'Aceptado') {
+                    this.sustentacionForm
+                        .get('asuntoCoordinador')
+                        .setValue(
+                            'Solicitud de revision sustentacion de valoracion'
+                        );
+
+                    this.sustentacionForm
+                        .get('mensajeCoordinador')
+                        .setValue(
+                            'Solicito comedidamente revisar el sustentacion de valoracion del estudiante para aprobacion.'
+                        );
+                }
+                if (value == 'Rechazado') {
+                    this.sustentacionForm
+                        .get('asuntoCoordinador')
+                        .setValue(
+                            'Correcion solicitud sustentacion de valoracion'
+                        );
+                    this.sustentacionForm
+                        .get('mensajeCoordinador')
+                        .setValue(
+                            'Solicito comedidamente revisar el anteproyecto en el apartado de Introduccion.'
+                        );
+                }
+            });
+
+        this.sustentacionForm
+            .get('conceptoComite')
+            .valueChanges.subscribe((value) => {
+                if (value == 'Aceptado') {
+                    this.sustentacionForm
+                        .get('asuntoComite')
+                        .setValue(
+                            'Solicitud de revision sustentacion de valoracion'
+                        );
+
+                    this.sustentacionForm
+                        .get('mensajeComite')
+                        .setValue(
+                            'Solicito comedidamente revisar el sustentacion de valoracion del estudiante para aprobacion.'
+                        );
+                }
+                if (value == 'Rechazado') {
+                    this.sustentacionForm
+                        .get('asuntoComite')
+                        .setValue(
+                            'Correcion solicitud sustentacion de valoracion'
+                        );
+                    this.sustentacionForm
+                        .get('mensajeComite')
+                        .setValue(
+                            'Solicito comedidamente revisar el anteproyecto en el apartado de Introduccion.'
+                        );
+                }
+            });
+
+        this.sustentacionForm
+            .get('juradosAceptados')
+            .valueChanges.subscribe((value) => {
+                if (value == 'aceptado') {
+                    this.sustentacionForm
+                        .get('asuntoConsejo')
+                        .setValue(
+                            'Solicitud de revision sustentacion de valoracion'
+                        );
+
+                    this.sustentacionForm
+                        .get('mensajeConsejo')
+                        .setValue(
+                            'Solicito comedidamente revisar el sustentacion de valoracion del estudiante para aprobacion.'
+                        );
+                }
+                if (value == 'Rechazado') {
+                    this.sustentacionForm
+                        .get('asuntoConsejo')
+                        .setValue(
+                            'Correcion solicitud sustentacion de valoracion'
+                        );
+                    this.sustentacionForm
+                        .get('mensajeConsejo')
+                        .setValue(
+                            'Solicito comedidamente revisar el anteproyecto en el apartado de Introduccion.'
+                        );
+                }
+            });
     }
 
     updateFormFields(role: string[]): void {
@@ -156,8 +262,6 @@ export class SustentacionExamenComponent implements OnInit {
         for (const control in formControls) {
             formControls[control].disable();
         }
-
-        formControls['idTrabajoGrados'].enable();
 
         if (role.includes('ROLE_DOCENTE')) {
             formControls['linkFormatoF'].enable();
@@ -168,8 +272,8 @@ export class SustentacionExamenComponent implements OnInit {
 
         if (role.includes('ROLE_ESTUDIANTE')) {
             if (
-                this.isCoordinadorFase2Created &&
-                !this.isCoordinadorFase3Created
+                this.isCoordinadorFase3Created &&
+                !this.isCoordinadorFase4Created
             ) {
                 formControls['linkFormatoH'].enable();
                 formControls['linkFormatoI'].enable();
@@ -178,22 +282,38 @@ export class SustentacionExamenComponent implements OnInit {
 
         if (role.includes('ROLE_COORDINADOR')) {
             if (this.isDocenteCreated && !this.isCoordinadorFase1Created) {
-                formControls['linkFormatoG'].enable();
-                formControls['linkEstudioHojaVidaAcademica'].enable();
+                formControls['asuntoCoordinador'].enable();
+                formControls['mensajeCoordinador'].enable();
+                formControls['conceptoCoordinador'].enable();
             }
 
             if (
                 this.isCoordinadorFase1Created &&
                 !this.isCoordinadorFase2Created
             ) {
+                formControls['asuntoComite'].enable();
+                formControls['mensajeComite'].enable();
+                formControls['conceptoComite'].enable();
+                formControls['linkFormatoG'].enable();
+                formControls['linkEstudioHojaVidaAcademica'].enable();
                 formControls['numeroActa'].enable();
                 formControls['fechaActa'].enable();
-                formControls['juradosAceptados'].enable();
-                formControls['idJuradoInterno'].enable();
-                formControls['idJuradoExterno'].enable();
             }
 
-            if (this.isEstudianteCreated) {
+            if (
+                this.isCoordinadorFase2Created &&
+                !this.isCoordinadorFase3Created
+            ) {
+                formControls['juradosAceptados'].enable();
+                formControls['asuntoConsejo'].enable();
+                formControls['mensajeConsejo'].enable();
+                formControls['idJuradoInterno'].enable();
+                formControls['idJuradoExterno'].enable();
+                formControls['numeroActaConsejo'].enable();
+                formControls['fechaActaConsejo'].enable();
+            }
+
+            if (this.isEstudianteCreated && !this.isCoordinadorFase4Created) {
                 formControls['linkActaSustentacionPublica'].enable();
                 formControls['respuestaSustentacion'].enable();
                 formControls['linkEstudioHojaVidaAcademicaGrado'].enable();
@@ -204,8 +324,7 @@ export class SustentacionExamenComponent implements OnInit {
     }
 
     subscribeToObservers() {
-        this.role = this.authService.getRole();
-        this.solicitudService.estudianteSeleccionado$.subscribe({
+        this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
             next: (response) => {
                 if (response) {
                     this.estudianteSeleccionado = response;
@@ -216,21 +335,25 @@ export class SustentacionExamenComponent implements OnInit {
             error: (e) => this.handlerResponseException(e),
         });
         this.trabajoSeleccionadoSubscription =
-            this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
+            this.trabajoDeGradoService.trabajoSeleccionadoSubject$.subscribe({
                 next: (response) => {
                     if (response) {
                         this.trabajoDeGradoId = response.id;
                         this.estado = response.estado;
-                        this.sustentacionForm
-                            .get('idTrabajoGrados')
-                            .setValue(response.id);
+                        if (
+                            this.estado ==
+                                EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_DOCENTE_SUSTENTACION &&
+                            this.role.includes('ROLE_COORDINADOR')
+                        ) {
+                            this.router.navigate(['examen-de-valoracion']);
+                        }
                     } else {
                         this.router.navigate(['examen-de-valoracion']);
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
             });
-        this.solicitudService.resolucionSeleccionadaSubject$.subscribe({
+        this.trabajoDeGradoService.resolucionSeleccionadaSubject$.subscribe({
             next: (response) => {
                 if (response) {
                     this.resolucionId = response.idGeneracionResolucion;
@@ -238,40 +361,37 @@ export class SustentacionExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
-        this.solicitudService.sustentacionSeleccionadaSubject$.subscribe({
+        this.trabajoDeGradoService.sustentacionSeleccionadaSubject$.subscribe({
             next: (response) => {
                 if (response) {
-                    this.sustentacionId = response.idSustentacionTI;
+                    this.sustentacionId =
+                        response.idSustentacionTrabajoInvestigacion;
                 }
             },
             error: (e) => this.handlerResponseException(e),
         });
-        this.solicitudService.evaluadorExternoSeleccionadoSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.juradoExternoSeleccionado = response;
-                    this.juradoExterno?.setValue(response.id);
-                } else {
-                    this.messageService.add(
-                        warnMessage('Debes seleccionar un evaluador externo')
-                    );
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.evaluadorInternoSeleccionadoSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.juradoInternoSeleccionado = response;
-                    this.juradoInterno?.setValue(response.id);
-                } else {
-                    this.messageService.add(
-                        warnMessage('Debes seleccionar un evaluador interno')
-                    );
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
+        this.trabajoDeGradoService.evaluadorExternoSeleccionadoSubject$.subscribe(
+            {
+                next: (response) => {
+                    if (response) {
+                        this.juradoExternoSeleccionado = response;
+                        this.juradoExterno?.setValue(response.id);
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
+            }
+        );
+        this.trabajoDeGradoService.evaluadorInternoSeleccionadoSubject$.subscribe(
+            {
+                next: (response) => {
+                    if (response) {
+                        this.juradoInternoSeleccionado = response;
+                        this.juradoInterno?.setValue(response.id);
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
+            }
+        );
     }
 
     setup(fieldName: string) {
@@ -338,19 +458,6 @@ export class SustentacionExamenComponent implements OnInit {
     }
 
     checkEstados() {
-        const addMessage = (
-            severity: string,
-            summary: string,
-            detail: string
-        ) => {
-            this.messageService.add({
-                severity,
-                summary,
-                detail,
-                life: 5000,
-            });
-        };
-
         switch (this.estado) {
             // case EstadoProceso.DEVUELTO_SUSTENTACION_PARA_CORREGIR_AL_DOCENTE:
             //     addMessage('warn', 'Información', Aviso.CORREGIR_CAMPOS_OBLIGATORIOS);
@@ -362,106 +469,114 @@ export class SustentacionExamenComponent implements OnInit {
             //     break;
 
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_DOCENTE_SUSTENTACION:
-                addMessage(
-                    'info',
-                    'Información',
-                    EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_DOCENTE_SUSTENTACION
-                );
-
+                this.messageService.add({
+                    severity: 'info',
+                    summary: 'Informacion',
+                    detail: EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_DOCENTE_SUSTENTACION,
+                    life: 2000,
+                });
                 this.isDocenteCreated = false;
                 this.isCoordinadorFase1Created = false;
                 this.isCoordinadorFase2Created = false;
-                this.isEstudianteCreated = false;
                 this.isCoordinadorFase3Created = false;
-
-                if (this.role.includes('ROLE_COORDINADOR')) {
-                    this.router.navigate(['examen-de-valoracion']);
-                }
+                this.isEstudianteCreated = false;
+                this.isCoordinadorFase4Created = false;
                 break;
 
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_SUSTENTACION:
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = false;
-                this.isEstudianteCreated = false;
                 this.isCoordinadorFase2Created = false;
                 this.isCoordinadorFase3Created = false;
+                this.isEstudianteCreated = false;
+                this.isCoordinadorFase4Created = false;
                 break;
 
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE2_SUSTENTACION:
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = true;
                 this.isCoordinadorFase2Created = false;
-                this.isEstudianteCreated = false;
                 this.isCoordinadorFase3Created = false;
-                break;
-
-            case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_ESTUDIANTE_SUSTENTACION:
-                // addMessage(
-                //     'info',
-                //     'Información',
-                //     EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_ESTUDIANTE_SUSTENTACION
-                // );
-
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = true;
                 this.isEstudianteCreated = false;
-                this.isCoordinadorFase3Created = false;
-
-                if (
-                    this.role.includes('ROLE_COORDINADOR') ||
-                    this.role.includes('ROLE_DOCENTE')
-                ) {
-                    this.router.navigate(['examen-de-valoracion']);
-                }
+                this.isCoordinadorFase4Created = false;
                 break;
 
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE3_SUSTENTACION:
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = true;
                 this.isCoordinadorFase2Created = true;
-                this.isEstudianteCreated = true;
                 this.isCoordinadorFase3Created = false;
+                this.isEstudianteCreated = false;
+                this.isCoordinadorFase4Created = false;
                 break;
 
+            case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_ESTUDIANTE_SUSTENTACION:
+                this.messageService.add({
+                    severity: 'info',
+                    summary: 'Informacion',
+                    detail: EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_ESTUDIANTE_SUSTENTACION,
+                    life: 2000,
+                });
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = true;
+                this.isCoordinadorFase3Created = true;
+                this.isEstudianteCreated = false;
+                this.isCoordinadorFase4Created = false;
+                break;
+
+            case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE4_SUSTENTACION:
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = true;
+                this.isCoordinadorFase3Created = true;
+                this.isEstudianteCreated = true;
+                this.isCoordinadorFase4Created = false;
+                break;
             case EstadoProceso.SUSTENTACION_APROBADA:
-                addMessage(
-                    'success',
-                    'Información',
-                    EstadoProceso.SUSTENTACION_APROBADA
-                );
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Informacion',
+                    detail: EstadoProceso.SUSTENTACION_APROBADA,
+                    life: 2000,
+                });
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = true;
                 this.isEstudianteCreated = true;
                 this.isCoordinadorFase2Created = true;
                 this.isCoordinadorFase3Created = true;
+                this.isCoordinadorFase4Created = true;
                 break;
 
             case EstadoProceso.SUSTENTACION_NO_APROBADA:
-                addMessage(
-                    'error',
-                    'Información',
-                    EstadoProceso.SUSTENTACION_NO_APROBADA
-                );
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Informacion',
+                    detail: EstadoProceso.SUSTENTACION_NO_APROBADA,
+                    life: 2000,
+                });
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = true;
                 this.isEstudianteCreated = true;
                 this.isCoordinadorFase2Created = true;
                 this.isCoordinadorFase3Created = true;
+                this.isCoordinadorFase4Created = true;
                 break;
 
-            // case EstadoProceso.SUSTENTACION_APLAZADA:
-            //     addMessage(
-            //         'warn',
-            //         'Información',
-            //         EstadoProceso.SUSTENTACION_APLAZADA
-            //     );
-            //     this.isDocenteCreated = true;
-            //     this.isCoordinadorFase1Created = true;
-            //     this.isEstudianteCreated = true;
-            //     this.isCoordinadorFase2Created = true;
-            //     this.isCoordinadorFase3Created = true;
-            //     break;
+            case EstadoProceso.SUSTENTACION_APLAZADA:
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Informacion',
+                    detail: EstadoProceso.SUSTENTACION_APLAZADA,
+                    life: 2000,
+                });
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isEstudianteCreated = true;
+                this.isCoordinadorFase2Created = true;
+                this.isCoordinadorFase3Created = true;
+                this.isCoordinadorFase4Created = true;
+                break;
 
             default:
                 this.isDocenteCreated = true;
@@ -469,11 +584,91 @@ export class SustentacionExamenComponent implements OnInit {
                 this.isEstudianteCreated = true;
                 this.isCoordinadorFase2Created = true;
                 this.isCoordinadorFase3Created = true;
+                this.isCoordinadorFase4Created = true;
                 break;
         }
 
         this.updateFormFields(this.role);
     }
+
+    //#region PDF VIEWER
+    async loadPdfFiles() {
+        const filesToConvert = [
+            this.FileActaSustentacionP,
+            this.FileEstudioHVA,
+            this.FileEstudioHVAGrado,
+            this.FileFormatoF,
+            this.FileFormatoG,
+            this.FileFormatoH,
+            this.FileFormatoI,
+        ];
+
+        const errorFiles = new Set<File>();
+
+        try {
+            for (const file of filesToConvert) {
+                if (file) {
+                    try {
+                        const url = URL.createObjectURL(file);
+                        this.pdfUrls.push({ name: file.name, url });
+                    } catch (error) {
+                        errorFiles.add(file);
+                    }
+                }
+            }
+
+            if (errorFiles.size > 0) {
+                this.messageService.add(
+                    errorMessage('Error al convertir uno o más archivos PDF.')
+                );
+                this.closeModal();
+            }
+        } catch (generalError) {
+            this.messageService.add(
+                errorMessage(
+                    'Se produjo un error general al cargar los archivos PDF.'
+                )
+            );
+            this.closeModal();
+        }
+    }
+
+    onPdfLoad(pdf: any) {
+        if (pdf.numPages) {
+            this.isPdfLoaded = true;
+            console.log(`PDF loaded with ${pdf.numPages} pages.`);
+        } else {
+            this.isPdfLoaded = false;
+            console.error('Failed to load PDF.');
+        }
+    }
+
+    nextPdf() {
+        if (this.currentPdfIndex < this.pdfUrls.length - 1) {
+            this.isPdfLoaded = false; // Reset the flag when changing PDF
+            this.currentPdfIndex++;
+        }
+    }
+
+    previousPdf() {
+        if (this.currentPdfIndex > 0) {
+            this.isPdfLoaded = false; // Reset the flag when changing PDF
+            this.currentPdfIndex--;
+        }
+    }
+
+    openModal() {
+        if (!this.isLoading) {
+            this.displayModal = true;
+            this.loadPdfFiles();
+        }
+    }
+
+    closeModal() {
+        this.displayModal = false;
+        this.pdfUrls = [];
+    }
+    //#endregion
 
     setValuesForm(sustentacion: Sustentacion) {
         this.sustentacionForm.patchValue({
@@ -483,9 +678,13 @@ export class SustentacionExamenComponent implements OnInit {
 
     async loadSustentacion(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            const docenteObs = this.sustentacionService.getSustentacionDocente(
-                this.trabajoDeGradoId
-            );
+            const docenteObs =
+                this.role.includes('ROLE_DOCENTE') ||
+                this.role.includes('ROLE_COORDINADOR')
+                    ? this.sustentacionService.getSustentacionDocente(
+                          this.trabajoDeGradoId
+                      )
+                    : of(null);
             const coordinadorFase1Obs = this.role.includes('ROLE_COORDINADOR')
                 ? this.sustentacionService.getSustentacionCoordinadorFase1(
                       this.trabajoDeGradoId
@@ -496,6 +695,11 @@ export class SustentacionExamenComponent implements OnInit {
                       this.trabajoDeGradoId
                   )
                 : of(null);
+            const coordinadorFase3Obs = this.role.includes('ROLE_COORDINADOR')
+                ? this.sustentacionService.getSustentacionCoordinadorFase3(
+                      this.trabajoDeGradoId
+                  )
+                : of(null);
             const estudianteObs =
                 this.role.includes('ROLE_COORDINADOR') ||
                 this.role.includes('ROLE_ESTUDIANTE')
@@ -503,8 +707,8 @@ export class SustentacionExamenComponent implements OnInit {
                           this.trabajoDeGradoId
                       )
                     : of(null);
-            const coordinadorFase3Obs = this.role.includes('ROLE_COORDINADOR')
-                ? this.sustentacionService.getSustentacionCoordinadorFase3(
+            const coordinadorFase4Obs = this.role.includes('ROLE_COORDINADOR')
+                ? this.sustentacionService.getSustentacionCoordinadorFase4(
                       this.trabajoDeGradoId
                   )
                 : of(null);
@@ -515,29 +719,61 @@ export class SustentacionExamenComponent implements OnInit {
                 coordinadorFase2: coordinadorFase2Obs,
                 estudiante: estudianteObs,
                 coordinadorFase3: coordinadorFase3Obs,
+                coordinadorFase4: coordinadorFase4Obs,
             }).subscribe({
                 next: (responses) => {
                     if (responses.docente) {
                         const data = responses.docente;
                         this.setValuesForm(data);
-                        this.isDocenteCreated = true;
-
-                        this.sustentacionForm
-                            .get('idTrabajoGrados')
-                            .setValue(this.trabajoDeGradoId);
                     }
 
                     if (responses.coordinadorFase1) {
                         const data = responses.coordinadorFase1;
-                        this.setValuesForm(data);
+                        data.conceptoCoordinador
+                            ? this.sustentacionForm
+                                  .get('conceptoCoordinador')
+                                  .setValue('Aceptado')
+                            : this.sustentacionForm
+                                  .get('conceptoCoordinador')
+                                  .setValue('Rechazado');
                     }
 
                     if (responses.coordinadorFase2) {
                         const data = responses.coordinadorFase2;
                         this.setValuesForm(data);
 
+                        const lastIdx: number =
+                            data.actaFechaRespuestaComite.length - 1;
+                        const lastActa = data.actaFechaRespuestaComite[lastIdx];
+
+                        const actaDate = lastActa?.fechaActa;
+                        const actaNumber = lastActa?.numeroActa;
+                        const actaConceptoComite = lastActa?.conceptoComite;
+
+                        this.sustentacionForm
+                            .get('fechaActa')
+                            .setValue(actaDate ? new Date(actaDate) : null);
+
+                        this.sustentacionForm
+                            .get('numeroActa')
+                            .setValue(actaNumber ? actaNumber : null);
+
+                        this.sustentacionForm
+                            .get('conceptoComite')
+                            .setValue(
+                                actaConceptoComite ? 'Aceptado' : 'Rechazado'
+                            );
+                    }
+
+                    if (responses.coordinadorFase3) {
+                        const data = responses.coordinadorFase3;
+                        this.setValuesForm(data);
+
                         this.expertoService
-                            .obtenerExperto(Number(data?.juradoExterno?.id))
+                            .obtenerExperto(
+                                this.sustentacionForm.get('idJuradoExterno')
+                                    .value
+                            )
                             .subscribe({
                                 next: (response) => {
                                     this.juradoExternoSeleccionado =
@@ -547,7 +783,10 @@ export class SustentacionExamenComponent implements OnInit {
                             });
 
                         this.docenteService
-                            .obtenerDocente(Number(data?.juradoInterno?.id))
+                            .obtenerDocente(
+                                this.sustentacionForm.get('idJuradoInterno')
+                                    .value
+                            )
                             .subscribe({
                                 next: (response) => {
                                     this.juradoInternoSeleccionado =
@@ -555,16 +794,6 @@ export class SustentacionExamenComponent implements OnInit {
                                     this.juradoInterno.setValue(response.id);
                                 },
                             });
-                    }
-
-                    if (responses.estudiante) {
-                        const data = responses.estudiante;
-                        this.setValuesForm(data);
-                    }
-
-                    if (responses.coordinadorFase3) {
-                        const data = responses.coordinadorFase3;
-                        this.setValuesForm(data);
 
                         this.sustentacionForm
                             .get('juradosAceptados')
@@ -575,20 +804,22 @@ export class SustentacionExamenComponent implements OnInit {
                             );
 
                         this.sustentacionForm
-                            .get('respuestaSustentacion')
+                            .get('fechaActaConsejo')
                             .setValue(
-                                data?.respuestaSustentacion == 1
-                                    ? 'Aprobado'
-                                    : 'No Aprobado'
-                            );
-
-                        this.sustentacionForm
-                            .get('fechaActa')
-                            .setValue(
-                                data?.fechaActa
-                                    ? new Date(data?.fechaActa)
+                                data?.fechaActaConsejo
+                                    ? new Date(data.fechaActaConsejo)
                                     : null
                             );
+                    }
+
+                    if (responses.estudiante) {
+                        const data = responses.estudiante;
+                        this.setValuesForm(data);
+                    }
+
+                    if (responses.coordinadorFase4) {
+                        const data = responses.coordinadorFase4;
+                        this.setValuesForm(data);
 
                         this.sustentacionForm
                             .get('fechaActaFinal')
@@ -597,13 +828,6 @@ export class SustentacionExamenComponent implements OnInit {
                                     ? new Date(data.fechaActaFinal)
                                     : null
                             );
-                        const respuestaSustentacion =
-                            data?.respuestaSustentacion == true
-                                ? 'Aprobado'
-                                : 'No Aprobado';
-                        this.sustentacionForm
-                            .get('respuestaSustentacion')
-                            .setValue(respuestaSustentacion);
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
@@ -634,29 +858,50 @@ export class SustentacionExamenComponent implements OnInit {
     }
 
     async updateSustentacion() {
-        const id = Number(this.route.snapshot.paramMap.get('id'));
-        this.sustentacionId = id;
         this.isLoading = true;
-
         try {
             if (
                 this.role.includes('ROLE_COORDINADOR') &&
                 this.isDocenteCreated == true &&
                 this.isCoordinadorFase1Created == false
             ) {
-                const envioEmailComiteDto = {
-                    asunto: 'Revision documentos al consejo',
-                    mensaje: 'Envio documento para revision en sustentacion',
-                };
+                const base64FormatoF = await this.formatFileString(
+                    this.FileFormatoF
+                );
 
-                const sustentacionData = {
-                    ...this.sustentacionForm.value,
-                    envioEmailComiteDto,
-                };
+                const sustentacionData =
+                    this.sustentacionForm.get('conceptoCoordinador').value ==
+                    'Aceptado'
+                        ? {
+                              conceptoCoordinador: true,
+                              envioEmailDto: {
+                                  asunto: this.sustentacionForm.get(
+                                      'asuntoCoordinador'
+                                  ).value,
+                                  mensaje:
+                                      this.sustentacionForm.get(
+                                          'mensajeCoordinador'
+                                      ).value,
+                              },
+                              obtenerDocumentosParaEnvioDto: { base64FormatoF },
+                          }
+                        : {
+                              conceptoCoordinador: false,
+                              envioEmailDto: {
+                                  asunto: this.sustentacionForm.get(
+                                      'asuntoCoordinador'
+                                  ).value,
+                                  mensaje:
+                                      this.sustentacionForm.get(
+                                          'mensajeCoordinador'
+                                      ).value,
+                              },
+                          };
 
                 await lastValueFrom(
                     this.sustentacionService.createSustentacionCoordinadorFase1(
-                        sustentacionData
+                        sustentacionData,
+                        this.trabajoDeGradoId
                     )
                 );
             } else if (
@@ -665,27 +910,57 @@ export class SustentacionExamenComponent implements OnInit {
                 this.isCoordinadorFase1Created == true &&
                 this.isCoordinadorFase2Created == false
             ) {
-                const sustentacionData = { ...this.sustentacionForm.value };
-                sustentacionData.juradosAceptados =
-                    sustentacionData.juradosAceptados == 'aceptado'
-                        ? true
-                        : false;
+                const {
+                    fechaActa,
+                    numeroActa,
+                    linkEstudioHojaVidaAcademica,
+                    linkFormatoG,
+                } = this.sustentacionForm.value;
+
+                const sustentacionData =
+                    this.sustentacionForm.get('conceptoComite').value ==
+                    'Aceptado'
+                        ? {
+                              actaFechaRespuestaComite: [
+                                  {
+                                      fechaActa,
+                                      numeroActa,
+                                      conceptoComite: true,
+                                  },
+                              ],
+                              envioEmailDto: {
+                                  asunto: this.sustentacionForm.get(
+                                      'asuntoComite'
+                                  ).value,
+                                  mensaje:
+                                      this.sustentacionForm.get('mensajeComite')
+                                          .value,
+                              },
+                              linkEstudioHojaVidaAcademica,
+                              linkFormatoG,
+                          }
+                        : {
+                              actaFechaRespuestaComite: [
+                                  {
+                                      fechaActa,
+                                      numeroActa,
+                                      conceptoComite: false,
+                                  },
+                              ],
+                              envioEmailDto: {
+                                  asunto: this.sustentacionForm.get(
+                                      'asuntoComite'
+                                  ).value,
+                                  mensaje:
+                                      this.sustentacionForm.get('mensajeComite')
+                                          .value,
+                              },
+                          };
 
                 await lastValueFrom(
                     this.sustentacionService.createSustentacionCoordinadorFase2(
-                        sustentacionData
-                    )
-                );
-            } else if (
-                this.role.includes('ROLE_ESTUDIANTE') &&
-                this.isDocenteCreated == true &&
-                this.isCoordinadorFase1Created == true &&
-                this.isCoordinadorFase2Created == true &&
-                this.isEstudianteCreated == false
-            ) {
-                await lastValueFrom(
-                    this.sustentacionService.createSustentacionEstudiante(
-                        this.sustentacionForm.value
+                        sustentacionData,
+                        this.trabajoDeGradoId
                     )
                 );
             } else if (
@@ -693,18 +968,52 @@ export class SustentacionExamenComponent implements OnInit {
                 this.isDocenteCreated == true &&
                 this.isCoordinadorFase1Created == true &&
                 this.isCoordinadorFase2Created == true &&
-                this.isEstudianteCreated == true &&
-                this.isCoordinadorFase3Created == false
+                this.isCoordinadorFase3Created == false &&
+                this.isEstudianteCreated == false
             ) {
-                const formValue = { ...this.sustentacionForm.value };
-                formValue.respuestaSustentacion =
-                    formValue.respuestaSustentacion == 'Aprobado'
-                        ? true
-                        : false;
+                const {
+                    idJuradoInterno,
+                    idJuradoExterno,
+                    numeroActaConsejo,
+                    fechaActaConsejo,
+                } = this.sustentacionForm.value;
+
+                const sustentacionData =
+                    this.sustentacionForm.get('juradosAceptados').value ==
+                    'aceptado'
+                        ? {
+                              idJuradoInterno,
+                              idJuradoExterno,
+                              juradosAceptados: true,
+                              numeroActaConsejo,
+                              fechaActaConsejo,
+                              envioEmailDto: {
+                                  asunto: this.sustentacionForm.get(
+                                      'asuntoConsejo'
+                                  ).value,
+                                  mensaje:
+                                      this.sustentacionForm.get(
+                                          'mensajeConsejo'
+                                      ).value,
+                              },
+                          }
+                        : {
+                              juradosAceptados: false,
+                              envioEmailDto: {
+                                  asunto: this.sustentacionForm.get(
+                                      'asuntoConsejo'
+                                  ).value,
+                                  mensaje:
+                                      this.sustentacionForm.get(
+                                          'mensajeConsejo'
+                                      ).value,
+                              },
+                          };
 
                 await lastValueFrom(
                     this.sustentacionService.createSustentacionCoordinadorFase3(
-                        formValue
+                        sustentacionData,
+                        this.trabajoDeGradoId
                     )
                 );
             } else if (
@@ -712,6 +1021,36 @@ export class SustentacionExamenComponent implements OnInit {
                 this.isDocenteCreated == true &&
                 this.isCoordinadorFase1Created == true &&
                 this.isCoordinadorFase2Created == true &&
+                this.isCoordinadorFase3Created == true &&
+                this.isEstudianteCreated == false
+            ) {
+                await lastValueFrom(
+                    this.sustentacionService.createSustentacionEstudiante(
+                        this.sustentacionForm.value,
+                        this.trabajoDeGradoId
+                    )
+                );
+            } else if (
+                this.role.includes('ROLE_COORDINADOR') &&
+                this.isDocenteCreated == true &&
+                this.isCoordinadorFase1Created == true &&
+                this.isCoordinadorFase2Created == true &&
+                this.isCoordinadorFase3Created == true &&
+                this.isEstudianteCreated == true &&
+                this.isCoordinadorFase4Created == false
+            ) {
+                await lastValueFrom(
+                    this.sustentacionService.createSustentacionCoordinadorFase4(
+                        this.sustentacionForm.value,
+                        this.trabajoDeGradoId
+                    )
+                );
+            } else if (
+                this.role.includes('ROLE_ESTUDIANTE') &&
+                this.isDocenteCreated == true &&
+                this.isCoordinadorFase1Created == true &&
+                this.isCoordinadorFase2Created == true &&
+                this.isCoordinadorFase3Created == true &&
                 this.isEstudianteCreated == true
             ) {
                 this.isLoading = false;
@@ -719,13 +1058,14 @@ export class SustentacionExamenComponent implements OnInit {
                     errorMessage('No puedes modificar los datos.')
                 );
             } else if (
-                this.role.includes('ROLE_COORDINADOR') ||
-                (this.role.includes('ROLE_DOCENTE') &&
-                    this.isDocenteCreated == true &&
-                    this.isCoordinadorFase1Created == true &&
-                    this.isCoordinadorFase2Created == true &&
-                    this.isEstudianteCreated == true &&
-                    this.isCoordinadorFase3Created == true)
+                (this.role.includes('ROLE_COORDINADOR') ||
+                    this.role.includes('ROLE_DOCENTE')) &&
+                this.isDocenteCreated == true &&
+                this.isCoordinadorFase1Created == true &&
+                this.isCoordinadorFase2Created == true &&
+                this.isCoordinadorFase3Created == true &&
+                this.isEstudianteCreated == true &&
+                this.isCoordinadorFase4Created == true
             ) {
                 this.isLoading = false;
                 return this.messageService.add(
@@ -751,11 +1091,14 @@ export class SustentacionExamenComponent implements OnInit {
             this.isDocenteCreated == false
         )
             this.sustentacionService
-                .createSustentacionDocente(this.sustentacionForm.value)
+                .createSustentacionDocente(
+                    this.sustentacionForm.value,
+                    this.trabajoDeGradoId
+                )
                 .subscribe({
                     next: (response) => {
                         if (response) {
-                            this.solicitudService.setSustentacionSeleccionada(
+                            this.trabajoDeGradoService.setSustentacionSeleccionada(
                                 response
                             );
                             this.messageService.add(
@@ -879,8 +1222,22 @@ export class SustentacionExamenComponent implements OnInit {
         }
     }
 
-    convertFileToBase64(file: File): Promise<string> {
+    async formatFileString(file: any): Promise<any> {
+        try {
+            const base64 = await this.convertFileToBase64(file);
+            return `${base64}`;
+        } catch (error) {
+            console.error('Error al convertir el archivo a base64:', error);
+            throw error;
+        }
+    }
+
+    convertFileToBase64(file: File | Blob): Promise<string> {
         return new Promise<string>((resolve, reject) => {
+            if (!(file instanceof File || file instanceof Blob)) {
+                reject(new Error('El parámetro no es de tipo File o Blob'));
+                return;
+            }
             const reader = new FileReader();
             reader.onload = () => {
                 const base64String = reader.result as string;
@@ -1045,18 +1402,14 @@ export class SustentacionExamenComponent implements OnInit {
         ]);
     }
 
-    redirectToRespuesta(respuestaId: number) {
-        respuestaId
-            ? this.router.navigate([
-                  `examen-de-valoracion/respuesta/editar/${respuestaId}`,
-              ])
-            : this.router.navigate(['examen-de-valoracion/respuesta']);
+    redirectToRespuesta() {
+        this.router.navigate(['examen-de-valoracion/respuesta']);
     }
 
     redirectToResolucion(resolucionId: number) {
         resolucionId
             ? this.router.navigate([
-                  `examen-de-valoracion/resolucion/editar/${resolucionId}`,
+                  `examen-de-valoracion/resolucion/editar/${this.trabajoDeGradoId}`,
               ])
             : this.router.navigate(['examen-de-valoracion/resolucion']);
     }
@@ -1066,7 +1419,7 @@ export class SustentacionExamenComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        if (response.status != 501) return;
+        if (response.status != 500) return;
         const mapException = mapResponseException(response.error);
         mapException.forEach((value, _) => {
             this.messageService.add(errorMessage(value));

@@ -72,7 +72,7 @@ export class PdfService {
         };
 
         return new Promise((resolve, reject) => {
-            pdfMake.createPdf(docDefinition).getBlob((blob) => {
+            pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
                 resolve(blob);
             });
         });

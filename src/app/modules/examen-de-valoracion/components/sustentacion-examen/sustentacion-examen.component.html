@@ -26,6 +26,86 @@
                 >
             </div>
         </p-card>
+        <p-dialog
+            header="PDF Viewer"
+            [(visible)]="displayModal"
+            [style]="{
+                width: '80vw',
+                height: '80vh'
+            }"
+            (onHide)="closeModal()"
+        >
+            <ng-template pTemplate="header">
+                <div
+                    style="
+                        display: flex;
+                        flex: 1;
+                        flex-direction: column;
+                        align-items: center;
+                        padding: 1rem;
+                        border-bottom: 1px solid #ccc;
+                        width: 20rem;
+                    "
+                >
+                    <div
+                        style="
+                            font-size: 1.5rem;
+                            font-weight: bold;
+                            margin-bottom: 0.5rem;
+                            width: 100%;
+                            text-align: center;
+                            word-break: break-all;
+                        "
+                    >
+                        {{ pdfUrls[currentPdfIndex]?.name }}
+                    </div>
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: flex-start;
+                            align-items: center;
+                            width: 100%;
+                        "
+                    >
+                        <span style="font-size: 1rem; margin-right: 1rem"
+                            >Página {{ currentPdfIndex + 1 }} de
+                            {{ pdfUrls?.length }}</span
+                        >
+                        <div
+                            style="
+                                display: flex;
+                                align-items: center;
+                                column-gap: 10px;
+                            "
+                        >
+                            <button
+                                pButton
+                                icon="pi pi-arrow-left"
+                                (click)="previousPdf()"
+                                [disabled]="currentPdfIndex === 0"
+                            ></button>
+                            <button
+                                pButton
+                                icon="pi pi-arrow-right"
+                                (click)="nextPdf()"
+                                [disabled]="
+                                    currentPdfIndex === pdfUrls?.length - 1
+                                "
+                            ></button>
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+            <div class="pdf-container">
+                <pdf-viewer
+                    [render-text]="true"
+                    *ngIf="pdfUrls?.length > 0"
+                    [src]="pdfUrls[currentPdfIndex]?.url"
+                    class="pdf-viewer"
+                    (after-load-complete)="onPdfLoad($event)"
+                ></pdf-viewer>
+            </div>
+        </p-dialog>
     </div>
     <div class="flex mt-4 justify-content-between">
         <div class="flex align-items-center column-gap-4">
@@ -38,6 +118,7 @@
                 ></button>
             </div>
             <button
+                *ngIf="role.includes('ROLE_ESTUDIANTE') ? false : true"
                 pButton
                 type="button"
                 icon="pi pi-book"
@@ -54,7 +135,7 @@
                 class="w-15rem p-button-secondary"
                 label="Respuesta al examen de valoración"
                 [disabled]="role == 'ROLE_ESTUDIANTE' || role == 'ROLE_DOCENTE'"
-                (click)="redirectToRespuesta(respuestaId)"
+                (click)="redirectToRespuesta()"
             ></button>
             <button
                 *ngIf="role.includes('ROLE_ESTUDIANTE') ? false : true"
@@ -84,19 +165,19 @@
                 (click)="createOrUpdateSustentacion()"
             ></button>
             <button
+                *ngIf="editMode && role.includes('ROLE_COORDINADOR')"
+                pButton
+                pTooltip="Revisar documentos"
+                tooltipPosition="top"
+                icon="pi pi-eye"
+                (click)="openModal()"
+            ></button>
+            <button
                 *ngIf="editMode"
                 pButton
                 icon="pi pi-pencil"
-                [label]="
-                    isDocenteCreated &&
-                    isCoordinadorFase1Created &&
-                    isCoordinadorFase2Created &&
-                    isCoordinadorFase3Created
-                        ? 'Modificar Informacion'
-                        : 'Guardar'
-                "
+                label="Modificar Informacion"
                 (click)="createOrUpdateSustentacion()"
-                [disabled]="role.includes('ROLE_DOCENTE')"
             ></button>
         </div>
     </div>
@@ -207,8 +288,126 @@
                 <div
                     class="field grid"
                     *ngIf="
+                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
+                    "
+                >
+                    <div
+                        class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
+                    >
+                        <div
+                            *ngFor="let estado of estados"
+                            class="field-checkbox"
+                        >
+                            <p-radioButton
+                                [inputId]="estado + 'coordinador'"
+                                [value]="estado"
+                                formControlName="conceptoCoordinador"
+                            ></p-radioButton>
+                            <label
+                                [for]="estado + 'coordinador'"
+                                class="ml-2"
+                                >{{ estado }}</label
+                            >
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
+                    "
+                >
+                    <div class="col-2 col-label text-right align-self-center">
+                        <label class="label-required">Asunto</label>
+                    </div>
+                    <div class="col-9 col-input">
+                        <div class="flex m-4 align-items-center">
+                            <input
+                                class="p-inputtext-md"
+                                style="flex: 0.5"
+                                pInputText
+                                [maxLength]="250"
+                                formControlName="asuntoCoordinador"
+                            />
+                            <span class="p-float-label ml-4" style="flex: 0.5">
+                                <textarea
+                                    id="float-input"
+                                    class="w-full"
+                                    rows="5"
+                                    cols="30"
+                                    pInputTextarea
+                                    [autoResize]="true"
+                                    formControlName="mensajeCoordinador"
+                                ></textarea>
+                                <label for="float-input">Observación</label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
                         role.includes('ROLE_COORDINADOR') &&
-                        isDocenteCreated == true
+                        isCoordinadorFase1Created
+                    "
+                >
+                    <div
+                        class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
+                    >
+                        <div
+                            *ngFor="let estado of estados"
+                            class="field-checkbox"
+                        >
+                            <p-radioButton
+                                [inputId]="estado + 'comite'"
+                                [value]="estado"
+                                formControlName="conceptoComite"
+                            ></p-radioButton>
+                            <label [for]="estado + 'comite'" class="ml-2">{{
+                                estado
+                            }}</label>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created
+                    "
+                >
+                    <div class="col-2 col-label text-right align-self-center">
+                        <label class="label-required">Asunto</label>
+                    </div>
+                    <div class="col-9 col-input">
+                        <div class="flex m-4 align-items-center">
+                            <input
+                                class="p-inputtext-md"
+                                style="flex: 0.5"
+                                pInputText
+                                [maxLength]="250"
+                                formControlName="asuntoComite"
+                            />
+                            <span class="p-float-label ml-4" style="flex: 0.5">
+                                <textarea
+                                    id="float-input"
+                                    class="w-full"
+                                    rows="5"
+                                    cols="30"
+                                    pInputTextarea
+                                    [autoResize]="true"
+                                    formControlName="mensajeComite"
+                                ></textarea>
+                                <label for="float-input">Observación</label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created
                     "
                 >
                     <div class="col-4 text-right align-self-center pb-5">
@@ -282,7 +481,7 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') &&
-                        isDocenteCreated == true
+                        isCoordinadorFase1Created
                     "
                 >
                     <div class="col-4 text-right align-self-center pb-5">
@@ -367,6 +566,35 @@
                         isCoordinadorFase1Created == true
                     "
                 >
+                    <div class="col-4 text-right flex align-items-center">
+                        <p
+                            class="label-required"
+                            style="width: 80%; margin-left: 20%"
+                        >
+                            No acta de revisión trabajo
+                        </p>
+                    </div>
+                    <div class="col-8">
+                        <div class="flex align-items-center column-gap-3">
+                            <input pInputText formControlName="numeroActa" />
+                            <label class="text-right label-required"
+                                >Fecha del Acta</label
+                            >
+                            <p-calendar
+                                formControlName="fechaActa"
+                                [showIcon]="true"
+                                dateFormat="dd.mm.yy"
+                            ></p-calendar>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase2Created == true
+                    "
+                >
                     <div class="col-4 text-right align-self-center">
                         <label>Aceptación de Jurados</label>
                     </div>
@@ -396,7 +624,41 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created == true &&
+                        isCoordinadorFase2Created
+                    "
+                >
+                    <div class="col-2 col-label text-right align-self-center">
+                        <label class="label-required">Asunto</label>
+                    </div>
+                    <div class="col-9 col-input">
+                        <div class="flex m-4 align-items-center">
+                            <input
+                                class="p-inputtext-md"
+                                style="flex: 0.5"
+                                pInputText
+                                [maxLength]="250"
+                                formControlName="asuntoConsejo"
+                            />
+                            <span class="p-float-label ml-4" style="flex: 0.5">
+                                <textarea
+                                    id="float-input"
+                                    class="w-full"
+                                    rows="5"
+                                    cols="30"
+                                    pInputTextarea
+                                    [autoResize]="true"
+                                    formControlName="mensajeConsejo"
+                                ></textarea>
+                                <label for="float-input">Observación</label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase2Created == true &&
                         sustentacionForm.get('juradosAceptados')?.value ==
                             'rechazado'
                     "
@@ -439,7 +701,7 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created == true &&
+                        isCoordinadorFase2Created == true &&
                         sustentacionForm.get('juradosAceptados')?.value ==
                             'rechazado'
                     "
@@ -480,7 +742,7 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created == true
+                        isCoordinadorFase2Created == true
                     "
                 >
                     <div class="col-4 text-right flex align-items-center">
@@ -493,12 +755,15 @@
                     </div>
                     <div class="col-8">
                         <div class="flex align-items-center column-gap-3">
-                            <input pInputText formControlName="numeroActa" />
+                            <input
+                                pInputText
+                                formControlName="numeroActaConsejo"
+                            />
                             <label class="text-right label-required"
                                 >Fecha del Acta</label
                             >
                             <p-calendar
-                                formControlName="fechaActa"
+                                formControlName="fechaActaConsejo"
                                 [showIcon]="true"
                                 dateFormat="dd.mm.yy"
                             ></p-calendar>
@@ -510,7 +775,7 @@
                     *ngIf="
                         role.includes('ROLE_ESTUDIANTE') ||
                         (role.includes('ROLE_COORDINADOR') &&
-                            isCoordinadorFase2Created == true)
+                            isCoordinadorFase3Created == true)
                     "
                 >
                     <div class="col-4 text-right align-self-center pb-5">
@@ -585,7 +850,7 @@
                     *ngIf="
                         role.includes('ROLE_ESTUDIANTE') ||
                         (role.includes('ROLE_COORDINADOR') &&
-                            isCoordinadorFase2Created == true)
+                            isCoordinadorFase3Created == true)
                     "
                 >
                     <div class="col-4 text-right align-self-center pb-5">
@@ -751,16 +1016,16 @@
                     </div>
                     <div class="col-8 flex column-gap-4">
                         <div
-                            *ngFor="let estado of estados"
+                            *ngFor="let respuestas of respuestas"
                             class="field-checkbox"
                         >
                             <p-radioButton
-                                [inputId]="estado"
-                                [value]="estado"
+                                [inputId]="respuestas"
+                                [value]="respuestas"
                                 formControlName="respuestaSustentacion"
                             ></p-radioButton>
-                            <label [for]="estado" class="ml-2">{{
-                                estado
+                            <label [for]="respuestas" class="ml-2">{{
+                                respuestas
                             }}</label>
                         </div>
                     </div>

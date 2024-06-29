@@ -2,14 +2,23 @@ import {
     Component,
     ElementRef,
     EventEmitter,
+    Input,
     OnInit,
     Output,
     ViewChild,
 } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import {
+    FormArray,
+    FormBuilder,
+    FormControl,
+    FormGroup,
+    Validators,
+} from '@angular/forms';
 import { MessageService } from 'primeng/api';
 
+import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
+import { PdfService } from 'src/app/shared/services/pdf.service';
+import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
 import { Mensaje } from 'src/app/core/enums/enums';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {
@@ -17,10 +26,6 @@ import {
     infoMessage,
     warnMessage,
 } from 'src/app/core/utils/message-util';
-import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
-import { SolicitudService } from '../../services/solicitud.service';
-import { PdfService } from 'src/app/shared/services/pdf.service';
-import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 
 @Component({
     selector: 'documento-formatoC',
@@ -28,6 +33,7 @@ import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadc
     styleUrls: ['documento-formatoC.component.scss'],
 })
 export class DocumentoFormatoCComponent implements OnInit {
+    @Input() evaluadorNombre: string;
     @Output() formReady = new EventEmitter<FormGroup>();
     @Output() formatoCPdfGenerated = new EventEmitter<File>();
 
@@ -42,12 +48,14 @@ export class DocumentoFormatoCComponent implements OnInit {
 
     constructor(
         private fb: FormBuilder,
-        private router: Router,
         private messageService: MessageService,
-        private breadcrumbService: BreadcrumbService,
-        private solicitudService: SolicitudService,
+        private trabajoDeGradoService: TrabajoDeGradoService,
         private pdfService: PdfService
     ) {}
+
+    get titulo(): FormControl {
+        return this.formatoCForm.get('titulo') as FormControl;
+    }
 
     get observaciones(): FormArray {
         return this.formatoCForm.get('observaciones') as FormArray;
@@ -61,41 +69,39 @@ export class DocumentoFormatoCComponent implements OnInit {
         this.initForm();
         this.fechaActual = new Date();
 
-        this.solicitudService.tituloSeleccionadoSubject$.subscribe(
-            (response) => {
+        this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
+            next: (response) => {
                 if (response) {
-                    this.formatoCForm.get('titulo').setValue(response);
+                    this.titulo.setValue(response);
                 }
-            }
-        );
-
-        this.solicitudService.estudianteSeleccionado$.subscribe((response) => {
-            this.estudianteSeleccionado = response;
+            },
+            error: (e) => this.handlerResponseException(e),
         });
 
-        if (!this.estudianteSeleccionado) {
-            this.router.navigate(['examen-de-valoracion/respuesta']);
-        }
+        this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.estudianteSeleccionado = response;
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
 
-        // this.setBreadcrumb();
+        this.formatoCForm.get('nombreJurado').setValue(this.evaluadorNombre);
     }
 
     initForm(): void {
         this.formatoCForm = this.fb.group({
+            receptor: [null, Validators.required],
             asunto: [null, Validators.required],
             titulo: [null, Validators.required],
-            observaciones: this.fb.array([]),
-            recomendaciones: this.fb.array([]),
+            observaciones: [null, Validators.required],
             nombreJurado: [null, Validators.required],
-            afiliacionJurado: [null, Validators.required],
         });
 
         this.formatoCForm.get('titulo').disable();
+        this.formatoCForm.get('nombreJurado').disable();
         this.formReady.emit(this.formatoCForm);
-    }
-
-    onCancel() {
-        this.router.navigate(['examen-de-valoracion/solicitud']);
     }
 
     onDownload() {
@@ -143,58 +149,13 @@ export class DocumentoFormatoCComponent implements OnInit {
         }
     }
 
-    updateControlNames(formArray: FormArray) {
-        formArray.controls.forEach((control, index) => {
-            const newControls = {};
-            Object.keys(control.value).forEach((key) => {
-                const newName = key.replace(/\d+$/, index.toString());
-                newControls[newName] = control.get(key);
-            });
-            formArray.setControl(index, this.fb.group(newControls));
-        });
-    }
-
-    addItem(formArrayName: string) {
-        const item = this.fb.group({
-            [formArrayName == 'observaciones'
-                ? 'observacion' + this[formArrayName].length
-                : 'recomendacion' + this[formArrayName].length]: [
-                null,
-                Validators.required,
-            ],
-        });
-        this[formArrayName].push(item);
-    }
-
-    deleteItem(formArrayName: string): void {
-        if (this[formArrayName].length > 1) {
-            this[formArrayName].removeAt(this[formArrayName].length - 1);
-            this.updateControlNames(this[formArrayName]);
-        }
-    }
-
     handlerResponseException(response: any) {
-        if (response.status !== 501) return;
-
+        if (response.status !== 500) return;
         const mapException = mapResponseException(response.error);
         mapException.forEach((value) => {
             this.messageService.add(errorMessage(value));
         });
     }
-
-    // setBreadcrumb() {
-    //     this.breadcrumbService.setItems([
-    //         { label: 'Trabajos de Grado' },
-    //         {
-    //             label: 'Examen de Valoracion',
-    //             routerLink: 'examen-de-valoracion',
-    //         },
-    //         {
-    //             label: 'Respuesta',
-    //             routerLink: 'examen-de-valoracion/respuesta',
-    //         },
-    //     ]);
-    // }
 
     private handleSuccessMessage(message: string) {
         this.messageService.add(infoMessage(message));

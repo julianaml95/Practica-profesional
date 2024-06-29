@@ -12,10 +12,11 @@ import {
     FormGroup,
     Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { DialogService } from 'primeng/dynamicdialog';
 
+import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
+import { PdfService } from 'src/app/shared/services/pdf.service';
+import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
 import { Mensaje } from 'src/app/core/enums/enums';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {
@@ -23,12 +24,6 @@ import {
     infoMessage,
     warnMessage,
 } from 'src/app/core/utils/message-util';
-import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
-import { SolicitudService } from '../../services/solicitud.service';
-import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-expertos/buscador-expertos.component';
-import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
-import { PdfService } from 'src/app/shared/services/pdf.service';
-import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 
 @Component({
     selector: 'documento-formatoB',
@@ -51,13 +46,14 @@ export class DocumentoFormatoBComponent implements OnInit {
 
     constructor(
         private fb: FormBuilder,
-        private router: Router,
-        private dialogService: DialogService,
         private messageService: MessageService,
-        private breadcrumbService: BreadcrumbService,
-        private solicitudService: SolicitudService,
+        private trabajoDeGradoService: TrabajoDeGradoService,
         private pdfService: PdfService
     ) {}
+
+    get titulo(): FormControl {
+        return this.formatoBForm.get('titulo') as FormControl;
+    }
 
     get estudiante(): FormControl {
         return this.formatoBForm.get('estudiante') as FormControl;
@@ -75,28 +71,49 @@ export class DocumentoFormatoBComponent implements OnInit {
         this.initForm();
         this.fechaActual = new Date();
 
-        this.solicitudService.tituloSeleccionadoSubject$.subscribe(
-            (response) => {
+        this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
+            next: (response) => {
                 if (response) {
-                    this.formatoBForm.get('titulo').setValue(response);
+                    this.titulo.setValue(response);
                 }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+
+        this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.estudianteSeleccionado = response;
+                    this.estudiante.setValue(
+                        this.nombreCompletoEstudiante(response)
+                    );
+                }
+            },
+            error: (e) => this.handlerResponseException(e),
+        });
+
+        this.trabajoDeGradoService.evaluadorExternoSeleccionadoSubject$.subscribe(
+            {
+                next: (response) => {
+                    if (response) {
+                        this.experto.setValue(response);
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
+            }
+        );
+        this.trabajoDeGradoService.evaluadorInternoSeleccionadoSubject$.subscribe(
+            {
+                next: (response) => {
+                    if (response) {
+                        this.docente.setValue(response);
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
             }
         );
 
-        this.solicitudService.estudianteSeleccionado$.subscribe((response) => {
-            this.estudianteSeleccionado = response;
-            if (response) {
-                this.estudiante.setValue(
-                    this.nombreCompletoEstudiante(response)
-                );
-            }
-        });
-
-        if (!this.estudianteSeleccionado) {
-            this.router.navigate(['examen-de-valoracion/respuesta']);
-        }
-
-        // this.setBreadcrumb();
+        this.formatoBForm.get('fecha').setValue(this.fechaActual);
     }
 
     initForm(): void {
@@ -111,19 +128,18 @@ export class DocumentoFormatoBComponent implements OnInit {
 
         this.formatoBForm.get('titulo').disable();
         this.formatoBForm.get('estudiante').disable();
+        this.formatoBForm.get('jurado_interno').disable();
+        this.formatoBForm.get('jurado_externo').disable();
+        this.formatoBForm.get('fecha').disable();
         this.formReady.emit(this.formatoBForm);
     }
 
     getFormattedDate(): string {
-        const rawDate = new Date(this.formatoBForm.get('fecha').value);
+        const rawDate = new Date();
         const day = rawDate.getDate();
         const month = rawDate.toLocaleString('default', { month: 'short' });
         const year = rawDate.getFullYear();
         return `${day} ${month} ${year}`;
-    }
-
-    onCancel() {
-        this.router.navigate(['examen-de-valoracion/solicitud']);
     }
 
     onDownload() {
@@ -175,94 +191,17 @@ export class DocumentoFormatoBComponent implements OnInit {
         return this.formatoBForm.get(formControlName) as FormControl;
     }
 
-    showBuscadorExpertos() {
-        return this.dialogService.open(BuscadorExpertosComponent, {
-            header: 'Seleccionar experto',
-            width: '40%',
-        });
-    }
-
-    mapExpertoLabel(experto: any) {
-        return {
-            id: experto.id,
-            nombre: experto.nombre,
-            apellido: experto.apellido,
-            correo: experto.correoElectronico ?? experto.correo,
-            universidad: experto.universidad,
-        };
-    }
-
-    showBuscadorDocentes() {
-        return this.dialogService.open(BuscadorDocentesComponent, {
-            header: 'Seleccionar docente',
-            width: '40%',
-        });
-    }
     nombreCompletoEstudiante(e: any) {
         return `${e.nombre} ${e.apellido}`;
     }
 
-    mapDocenteLabel(docente: any) {
-        const ultimaUniversidad =
-            docente?.titulos?.length > 0
-                ? docente.titulos[docente.titulos.length - 1].universidad
-                : null;
-
-        return {
-            id: docente.id,
-            nombre: docente.nombre,
-            apellido: docente.apellido,
-            correo: docente.correoElectronico ?? docente.correo,
-            universidad: docente.universidad ?? ultimaUniversidad,
-        };
-    }
-
-    onSeleccionarExperto() {
-        const ref = this.showBuscadorExpertos();
-        ref.onClose.subscribe({
-            next: (response) => {
-                if (response) {
-                    const experto = this.mapExpertoLabel(response);
-                    this.experto.setValue(experto);
-                }
-            },
-        });
-    }
-
-    onSeleccionarDocente() {
-        const ref = this.showBuscadorDocentes();
-        ref.onClose.subscribe({
-            next: (response) => {
-                if (response) {
-                    const docente = this.mapDocenteLabel(response);
-                    this.docente.setValue(docente);
-                }
-            },
-        });
-    }
-
     handlerResponseException(response: any) {
-        if (response.status !== 501) return;
-
+        if (response.status !== 500) return;
         const mapException = mapResponseException(response.error);
         mapException.forEach((value) => {
             this.messageService.add(errorMessage(value));
         });
     }
-
-    // setBreadcrumb() {
-    //     this.breadcrumbService.setItems([
-    //         { label: 'Trabajos de Grado' },
-    //         {
-    //             label: 'Examen de Valoracion',
-    //             routerLink: 'examen-de-valoracion',
-    //         },
-    //         {
-    //             label: 'Respuesta',
-    //             routerLink: 'examen-de-valoracion/respuesta',
-    //         },
-    //     ]);
-    // }
 
     private handleSuccessMessage(message: string) {
         this.messageService.add(infoMessage(message));
@@ -271,13 +210,5 @@ export class DocumentoFormatoBComponent implements OnInit {
     private handleWarningMessage(message: string) {
         this.messageService.clear();
         this.messageService.add(warnMessage(message));
-    }
-
-    limpiarDocente() {
-        this.docente.setValue(null);
-    }
-
-    limpiarExperto() {
-        this.experto.setValue(null);
     }
 }

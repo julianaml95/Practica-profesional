@@ -11,10 +11,12 @@ import {
     FormGroup,
     Validators,
 } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
+import { Subscription, forkJoin, lastValueFrom, of, timer } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid';
 import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
-import { v4 as uuidv4 } from 'uuid';
+import { FileUpload } from 'primeng/fileupload';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { Aviso, EstadoProceso, Mensaje } from 'src/app/core/enums/enums';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
@@ -24,20 +26,18 @@ import {
     warnMessage,
 } from 'src/app/core/utils/message-util';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
+import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
 import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-expertos/buscador-expertos.component';
-import { Experto } from '../../models/experto';
-import { SolicitudService } from '../../services/solicitud.service';
-import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
-import { Subscription, forkJoin, lastValueFrom, of, timer } from 'rxjs';
-import { Solicitud } from '../../models/solicitud';
-import { FileUpload } from 'primeng/fileupload';
 import { DocenteService } from 'src/app/shared/services/docente.service';
 import { ExpertoService } from 'src/app/shared/services/experto.service';
-import { AuthService } from '../../services/auth.service';
+import { Experto } from '../../models/experto';
+import { Solicitud } from '../../models/solicitud';
+import { AuthService } from '../../../../shared/services/auth.service';
 import { RespuestaService } from '../../services/respuesta.service';
 import { ResolucionService } from '../../services/resolucion.service';
-import { SustentacionService } from '../../services/sustentacion.service';
+import { SolicitudService } from '../../services/solicitud.service';
+import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
 
 @Component({
     selector: 'app-solicitud-examen',
@@ -46,12 +46,22 @@ import { SustentacionService } from '../../services/sustentacion.service';
 })
 export class SolicitudExamenComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
-    @ViewChild('fileUpload1') fileUpload1!: FileUpload;
-    @ViewChild('fileUpload2') fileUpload2!: FileUpload;
-    @ViewChild('fileUpload3') fileUpload3!: FileUpload;
-    @ViewChild('fileUpload4') fileUpload4!: FileUpload;
+    solicitudForm: FormGroup;
 
+    @ViewChild('FormatoA') FormatoA!: FileUpload;
+    @ViewChild('FormatoD') FormatoD!: FileUpload;
+    @ViewChild('FormatoE') FormatoE!: FileUpload;
+    @ViewChild('OficioDirigidoEvaluadores')
+    OficioDirigidoEvaluadores!: FileUpload;
+
+    private estudianteSubscription: Subscription;
     private trabajoSeleccionadoSubscription: Subscription;
+    private resolucionSubscription: Subscription;
+    private respuestaSubscription: Subscription;
+    private sustentacionSubscription: Subscription;
+    private solicitudSubscription: Subscription;
+    private respuestaValidSubscription: Subscription;
+    private resolucionValidSubscription: Subscription;
 
     trabajoDeGradoId: number;
     solicitudId: number;
@@ -60,51 +70,52 @@ export class SolicitudExamenComponent implements OnInit {
     sustentacionId: number;
     currentPdfIndex: number = 0;
 
-    role: string[];
-    estado: string;
-
+    displayFormatos: boolean = false;
+    displayFormatoA: boolean = false;
     displayModal: boolean = false;
     errorMessageShown: boolean = false;
     editMode: boolean = false;
     isLoading: boolean;
-    isDocenteValid: boolean = false;
-    isCoordinadorFase1Valid: boolean = false;
-    isCoordinadorFase2Valid: boolean = false;
-    isReviewed: boolean = false;
+    isChanged: boolean = false;
+    isDocenteCreated: boolean = false;
+    isCoordinadorFase1Created: boolean = false;
+    isCoordinadorFase2Created: boolean = false;
     isPdfLoaded: boolean = false;
     isRespuestaValid: boolean = false;
     isResolucionValid: boolean = false;
     isSustentacionValid: boolean = false;
 
-    solicitudForm: FormGroup;
     estudianteSeleccionado: Estudiante = {};
     evaluadorInternoSeleccionado: Docente;
     evaluadorExternoSeleccionado: Experto;
 
+    formatoA: File | null;
     formatoB: File | null;
     formatoC: File | null;
-    selectedFileFirst: File | null;
-    selectedFileSecond: File | null;
-    selectedFileThird: File | null;
-    selectedFileFourth: File | null;
+    FileFormatoA: File | null;
+    FileFormatoD: File | null;
+    FileFormatoE: File | null;
+    FileOficioDirigidoEvaluadores: File | null;
+
+    role: string[];
     anexosFiles: File[] = [];
     anexosBase64: { linkAnexo: string }[] = [];
     pdfUrls: { name: string; url: string }[] = [];
+    estados: string[] = ['Aceptado', 'Rechazado'];
 
-    displayFormatoB: boolean = false;
-    currentFormat: 'formatoB' | 'formatoC' = 'formatoB';
+    estado: string;
+    currentFormat: string = 'formatoB';
 
     constructor(
         private fb: FormBuilder,
         private router: Router,
-        private route: ActivatedRoute,
         private breadcrumbService: BreadcrumbService,
         private messageService: MessageService,
         private dialogService: DialogService,
+        private trabajoDeGradoService: TrabajoDeGradoService,
         private solicitudService: SolicitudService,
         private respuestaService: RespuestaService,
         private resolucionService: ResolucionService,
-        private sustentacionService: SustentacionService,
         private authService: AuthService,
         private docenteService: DocenteService,
         private expertoService: ExpertoService
@@ -118,26 +129,29 @@ export class SolicitudExamenComponent implements OnInit {
         return this.solicitudForm.get('idEvaluadorInterno') as FormControl;
     }
 
-    async ngOnInit() {
-        this.initForm();
-        this.subscribeToObservers();
-        if (this.router.url.includes('editar')) {
-            await this.loadEditMode();
-        } else {
-            this.checkEstados();
-        }
+    ngOnInit() {
         this.setBreadcrumb();
+        this.subscribeToEstudiante();
+        this.initializeComponent();
+    }
+
+    async initializeComponent() {
+        this.role = this.authService.getRole();
+        this.initForm();
+        if (this.router.url.includes('editar')) {
+            await this.subscribeToObservers();
+            this.loadEditMode();
+        }
+        this.checkEstados();
     }
 
     async loadEditMode() {
         this.editMode = true;
         await this.loadSolicitud();
-        this.checkEstados();
     }
 
     initForm(): void {
         this.solicitudForm = this.fb.group({
-            idTrabajoGrados: [null],
             titulo: [null, Validators.required],
             linkFormatoA: [null, Validators.required],
             linkFormatoD: [null, Validators.required],
@@ -145,6 +159,12 @@ export class SolicitudExamenComponent implements OnInit {
             anexos: [[], Validators.required],
             idEvaluadorExterno: [null, Validators.required],
             idEvaluadorInterno: [null, Validators.required],
+            asuntoCoordinador: [null],
+            mensajeCoordinador: [null],
+            asuntoComite: [null],
+            mensajeComite: [null],
+            conceptoCoordinadorDocumentos: [null, Validators.required],
+            conceptoComite: [null, Validators.required],
             numeroActa: [null, Validators.required],
             fechaActa: [null, Validators.required],
             linkOficioDirigidoEvaluadores: [null, Validators.required],
@@ -152,6 +172,251 @@ export class SolicitudExamenComponent implements OnInit {
         });
 
         this.formReady.emit(this.solicitudForm);
+
+        this.solicitudForm
+            .get('conceptoCoordinadorDocumentos')
+            .valueChanges.subscribe((value) => {
+                if (value == 'Aceptado') {
+                    this.solicitudForm
+                        .get('asuntoCoordinador')
+                        .setValue('Solicitud de revision examen de valoracion');
+
+                    this.solicitudForm
+                        .get('mensajeCoordinador')
+                        .setValue(
+                            'Solicito comedidamente revisar el examen de valoracion del estudiante Julio Mellizo para aprobacion.'
+                        );
+                }
+                if (value == 'Rechazado') {
+                    this.solicitudForm
+                        .get('asuntoCoordinador')
+                        .setValue('Correcion solicitud examen de valoracion');
+                    this.solicitudForm
+                        .get('mensajeCoordinador')
+                        .setValue(
+                            'Solicito comedidamente revisar el anteproyecto en el apartado de Introduccion.'
+                        );
+                }
+            });
+
+        this.solicitudForm
+            .get('conceptoComite')
+            .valueChanges.subscribe((value) => {
+                if (value == 'Aceptado') {
+                    this.solicitudForm
+                        .get('asuntoComite')
+                        .setValue('Envio evaluadores');
+                    this.solicitudForm
+                        .get('mensajeComite')
+                        .setValue(
+                            'Envio documentos para que por favor los revisen y den respuesta oportuna.'
+                        );
+                }
+                if (value == 'Rechazado') {
+                    this.solicitudForm
+                        .get('asuntoComite')
+                        .setValue('Envio correcion por parte del comite');
+                    this.solicitudForm
+                        .get('mensajeComite')
+                        .setValue(
+                            'Por favor corregir el apartado de metolodogia y dar respuesta oportuna a las correciones.'
+                        );
+                }
+            });
+
+        if (!this.router.url.includes('editar')) {
+            this.solicitudForm.valueChanges.subscribe((value) => {
+                localStorage.setItem(
+                    'solicitudFormState',
+                    JSON.stringify(value)
+                );
+                this.trabajoDeGradoService.setTituloSeleccionadoSubject(
+                    value.titulo
+                );
+            });
+
+            const savedState = localStorage.getItem('solicitudFormState');
+            if (savedState) {
+                const data = JSON.parse(savedState);
+                this.solicitudForm.get('titulo').setValue(data.titulo);
+                this.trabajoDeGradoService.setTituloSeleccionadoSubject(
+                    data.titulo
+                );
+                if (data?.idEvaluadorExterno) {
+                    this.expertoService
+                        .obtenerExperto(data?.idEvaluadorExterno)
+                        .subscribe({
+                            next: (response) => {
+                                this.evaluadorExternoSeleccionado =
+                                    this.mapEvaluadorExternoLabel(response);
+                                this.trabajoDeGradoService.setEvaluadorExternoSeleccionadoSubject(
+                                    this.evaluadorExternoSeleccionado
+                                );
+                                this.evaluadorExterno.setValue(response.id);
+                            },
+                        });
+                }
+                if (data?.idEvaluadorInterno) {
+                    this.docenteService
+                        .obtenerDocente(data?.idEvaluadorInterno)
+                        .subscribe({
+                            next: (response) => {
+                                this.evaluadorInternoSeleccionado =
+                                    this.mapEvaluadorInternoLabel(response);
+                                this.trabajoDeGradoService.setEvaluadorInternoSeleccionadoSubject(
+                                    this.evaluadorInternoSeleccionado
+                                );
+                                this.evaluadorInterno.setValue(response.id);
+                            },
+                        });
+                }
+            }
+        }
+    }
+
+    subscribeToEstudiante() {
+        this.estudianteSubscription =
+            this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
+                next: (response) => {
+                    if (response) {
+                        this.estudianteSeleccionado = response;
+                    } else {
+                        this.router.navigate(['examen-de-valoracion']);
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
+            });
+    }
+
+    subscribeToObservers(): Promise<void> {
+        return new Promise<void>((resolve) => {
+            let pendingObservables = 5;
+
+            const checkCompletion = () => {
+                pendingObservables--;
+                if (pendingObservables === 0) {
+                    resolve();
+                }
+            };
+
+            this.trabajoSeleccionadoSubscription =
+                this.trabajoDeGradoService.trabajoSeleccionadoSubject$.subscribe(
+                    {
+                        next: (response) => {
+                            if (response) {
+                                this.trabajoDeGradoId = response.id;
+                                this.estado = response.estado;
+
+                                this.respuestaValidSubscription =
+                                    this.respuestaService
+                                        .getRespuestasExamen(
+                                            this.trabajoDeGradoId
+                                        )
+                                        .subscribe({
+                                            next: (response) => {
+                                                if (
+                                                    response?.evaluador_externo &&
+                                                    response?.evaluador_interno
+                                                ) {
+                                                    this.isRespuestaValid =
+                                                        true;
+                                                }
+                                            },
+                                        });
+
+                                this.resolucionValidSubscription =
+                                    this.resolucionService
+                                        .getResolucionCoordinadorFase3(
+                                            this.trabajoDeGradoId
+                                        )
+                                        .subscribe({
+                                            next: (response) => {
+                                                if (
+                                                    response?.numeroActaConsejoFacultad &&
+                                                    response?.fechaActaConsejoFacultad
+                                                ) {
+                                                    this.isResolucionValid =
+                                                        true;
+                                                }
+                                            },
+                                        });
+
+                                checkCompletion();
+                            }
+                        },
+                        error: (e) => {
+                            this.handlerResponseException(e);
+                            checkCompletion();
+                        },
+                    }
+                );
+
+            this.solicitudSubscription =
+                this.trabajoDeGradoService.solicitudSeleccionadaSubject$.subscribe(
+                    {
+                        next: (response) => {
+                            if (response) {
+                                this.solicitudId = response.idExamenValoracion;
+                                checkCompletion();
+                            }
+                        },
+                        error: (e) => {
+                            this.handlerResponseException(e);
+                            checkCompletion();
+                        },
+                    }
+                );
+
+            this.respuestaSubscription =
+                this.trabajoDeGradoService.respuestaSeleccionadaSubject$.subscribe(
+                    {
+                        next: (response) => {
+                            if (response) {
+                                this.respuestaId = response.id;
+                            }
+                            checkCompletion();
+                        },
+                        error: (e) => {
+                            this.handlerResponseException(e);
+                            checkCompletion();
+                        },
+                    }
+                );
+
+            this.resolucionSubscription =
+                this.trabajoDeGradoService.resolucionSeleccionadaSubject$.subscribe(
+                    {
+                        next: (response) => {
+                            if (response) {
+                                this.resolucionId =
+                                    response.idGeneracionResolucion;
+                            }
+                            checkCompletion();
+                        },
+                        error: (e) => {
+                            this.handlerResponseException(e);
+                            checkCompletion();
+                        },
+                    }
+                );
+
+            this.sustentacionSubscription =
+                this.trabajoDeGradoService.sustentacionSeleccionadaSubject$.subscribe(
+                    {
+                        next: (response) => {
+                            if (response) {
+                                this.sustentacionId =
+                                    response.idSustentacionTrabajoInvestigacion;
+                            }
+                            checkCompletion();
+                        },
+                        error: (e) => {
+                            this.handlerResponseException(e);
+                            checkCompletion();
+                        },
+                    }
+                );
+        });
     }
 
     updateFormFields(role: string[]): void {
@@ -160,8 +425,6 @@ export class SolicitudExamenComponent implements OnInit {
         for (const control in formControls) {
             formControls[control].disable();
         }
-
-        formControls['idTrabajoGrados'].enable();
 
         if (role.includes('ROLE_DOCENTE')) {
             this.solicitudForm.get('titulo').enable();
@@ -174,312 +437,133 @@ export class SolicitudExamenComponent implements OnInit {
         }
 
         if (role.includes('ROLE_COORDINADOR')) {
-            if (this.isDocenteValid == true) {
+            this.solicitudForm
+                .get('conceptoComite')
+                .valueChanges.subscribe((value) => {
+                    if (value == 'Aceptado') {
+                        this.solicitudForm
+                            .get('linkOficioDirigidoEvaluadores')
+                            .enable();
+                        this.solicitudForm
+                            .get('fechaMaximaEvaluacion')
+                            .enable();
+                    } else if (value == 'Rechazado') {
+                        this.solicitudForm
+                            .get('linkOficioDirigidoEvaluadores')
+                            .disable();
+                        this.solicitudForm
+                            .get('fechaMaximaEvaluacion')
+                            .disable();
+                    }
+                });
+            if (this.isDocenteCreated && !this.isCoordinadorFase1Created) {
+                this.solicitudForm
+                    .get('conceptoCoordinadorDocumentos')
+                    .enable();
+                this.solicitudForm.get('asuntoCoordinador').enable();
+                this.solicitudForm.get('mensajeCoordinador').enable();
+            }
+            if (
+                this.isCoordinadorFase1Created &&
+                !this.isCoordinadorFase2Created
+            ) {
+                this.solicitudForm.get('conceptoComite').enable();
+                this.solicitudForm.get('asuntoComite').enable();
+                this.solicitudForm.get('mensajeComite').enable();
                 this.solicitudForm.get('numeroActa').enable();
                 this.solicitudForm.get('fechaActa').enable();
-                this.solicitudForm
-                    .get('linkOficioDirigidoEvaluadores')
-                    .enable();
-                this.solicitudForm.get('fechaMaximaEvaluacion').enable();
-            }
-        }
-    }
-
-    subscribeToObservers() {
-        this.role = this.authService.getRole();
-        this.solicitudService.estudianteSeleccionado$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.estudianteSeleccionado = response;
-                } else {
-                    this.router.navigate(['examen-de-valoracion']);
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.trabajoSeleccionadoSubscription =
-            this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
-                next: (response) => {
-                    if (response) {
-                        this.estado = response.estado;
-                        this.solicitudForm
-                            .get('idTrabajoGrados')
-                            .setValue(response.id);
-                    }
-                },
-                error: (e) => this.handlerResponseException(e),
-            });
-        this.solicitudService.solicitudSeleccionadaSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.solicitudId = response.idExamenValoracion;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.respuestaSeleccionadaSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.respuestaId = response.id;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.resolucionSeleccionadaSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.resolucionId = response.idGeneracionResolucion;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.sustentacionSeleccionadaSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.sustentacionId = response.idSustentacionTI;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.respuestaValid$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.isRespuestaValid = response;
-                } else {
-                    const id = Number(this.route.snapshot.paramMap.get('id'));
-                    if (id) {
-                        this.respuestaService
-                            .getRespuestasExamen(id)
-                            .subscribe({
-                                next: (response) => {
-                                    if (
-                                        response?.evaluador_externo &&
-                                        response?.evaluador_interno
-                                    ) {
-                                        this.isRespuestaValid = true;
-                                    }
-                                },
-                                error: (e) => {
-                                    this.handlerResponseException(e);
-                                },
-                            });
-                    }
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.resolucionValid$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.isResolucionValid = response;
-                } else {
-                    const id = Number(this.route.snapshot.paramMap.get('id'));
-                    if (id) {
-                        this.resolucionService
-                            .getResolucionCoordinadorFase3(id)
-                            .subscribe({
-                                next: (response) => {
-                                    if (
-                                        response?.numeroActaConsejoFacultad &&
-                                        response?.fechaActaConsejoFacultad
-                                    ) {
-                                        this.isResolucionValid = true;
-                                    }
-                                },
-                                error: (e) => {
-                                    this.handlerResponseException(e);
-                                },
-                            });
-                    }
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.sustentacionValid$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.isSustentacionValid = response;
-                } else {
-                    const id = Number(this.route.snapshot.paramMap.get('id'));
-                    if (id) {
-                        this.sustentacionService
-                            .getSustentacionCoordinadorFase3(id)
-                            .subscribe({
-                                next: (response) => {
-                                    if (
-                                        response?.numeroActaFinal &&
-                                        response?.fechaActaFinal
-                                    ) {
-                                        this.isSustentacionValid = true;
-                                    }
-                                },
-                                error: (e) => {
-                                    this.handlerResponseException(e);
-                                },
-                            });
-                    }
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        if (!this.router.url.includes('editar')) {
-            this.solicitudForm.valueChanges.subscribe((value) => {
-                localStorage.setItem(
-                    'solicitudFormState',
-                    JSON.stringify(value)
-                );
-            });
-
-            const savedState = localStorage.getItem('solicitudFormState');
-            if (savedState) {
-                const data = JSON.parse(savedState);
-                this.setValuesForm(data);
-                this.setDateField('fechaActa', data?.fechaActa);
-                this.setDateField(
-                    'fechaMaximaEvaluacion',
-                    data?.fechaMaximaEvaluacion
-                );
-                if (data?.evaluadorExterno) {
-                    this.expertoService
-                        .obtenerExperto(data?.evaluadorExterno?.id)
-                        .subscribe({
-                            next: (response) => {
-                                this.evaluadorExternoSeleccionado =
-                                    this.mapEvaluadorExternoLabel(response);
-                                this.solicitudService.setEvaluadorExternoSeleccionadoSubject(
-                                    this.evaluadorExternoSeleccionado
-                                );
-                                this.evaluadorExterno.setValue(response.id);
-                            },
-                        });
-                }
-                if (data?.evaluadorInterno) {
-                    this.docenteService
-                        .obtenerDocente(data?.evaluadorInterno?.id)
-                        .subscribe({
-                            next: (response) => {
-                                this.evaluadorInternoSeleccionado =
-                                    this.mapEvaluadorInternoLabel(response);
-                                this.solicitudService.setEvaluadorInternoSeleccionadoSubject(
-                                    this.evaluadorInternoSeleccionado
-                                );
-                                this.evaluadorInterno.setValue(response.id);
-                            },
-                        });
-                }
-                this.processFileField('linkFormatoA', data.linkFormatoA);
-                this.processFileField('linkFormatoD', data.linkFormatoD);
-                this.processFileField('linkFormatoE', data.linkFormatoE);
-                this.processFileField(
-                    'linkOficioDirigidoEvaluadores',
-                    data.linkOficioDirigidoEvaluadores
-                );
             }
         }
     }
 
     ngOnDestroy() {
+        if (this.estudianteSubscription) {
+            this.estudianteSubscription.unsubscribe();
+        }
         if (this.trabajoSeleccionadoSubscription) {
             this.trabajoSeleccionadoSubscription.unsubscribe();
+        }
+        if (this.solicitudSubscription) {
+            this.solicitudSubscription.unsubscribe();
+        }
+        if (this.respuestaSubscription) {
+            this.respuestaSubscription.unsubscribe();
+        }
+        if (this.respuestaValidSubscription) {
+            this.respuestaValidSubscription.unsubscribe();
+        }
+        if (this.resolucionSubscription) {
+            this.resolucionSubscription.unsubscribe();
+        }
+        if (this.resolucionValidSubscription) {
+            this.resolucionValidSubscription.unsubscribe();
+        }
+        if (this.sustentacionSubscription) {
+            this.sustentacionSubscription.unsubscribe();
         }
     }
 
     checkEstados() {
         switch (this.estado) {
             case EstadoProceso.SIN_REGISTRAR_SOLICITUD_EXAMEN_DE_VALORACION:
-                this.isDocenteValid = false;
-                this.isCoordinadorFase1Valid = false;
-                this.isCoordinadorFase2Valid = false;
+                this.isDocenteCreated = false;
+                this.isCoordinadorFase1Created = false;
+                this.isCoordinadorFase2Created = false;
                 break;
             case EstadoProceso.PENDIENTE_REVISION_COORDINADOR:
-                this.isDocenteValid = false;
-                this.isCoordinadorFase1Valid = false;
-                this.isCoordinadorFase2Valid = false;
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = false;
+                this.isCoordinadorFase2Created = false;
                 break;
             case EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COORDINADOR:
                 this.messageService.add({
                     severity: 'warn',
                     summary: 'Advertencia',
                     detail: EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COORDINADOR,
-                    life: 4000,
+                    life: 2000,
                 });
-                this.isDocenteValid = false;
-                this.isCoordinadorFase1Valid = false;
-                this.isCoordinadorFase2Valid = false;
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = false;
+                this.isCoordinadorFase2Created = false;
                 break;
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR:
-                this.isDocenteValid = true;
-                this.isCoordinadorFase1Valid = false;
-                this.isCoordinadorFase2Valid = false;
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = false;
                 break;
             case EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COMITE:
                 this.messageService.add({
                     severity: 'warn',
                     summary: 'Advertencia',
                     detail: EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COMITE,
-                    life: 4000,
+                    life: 2000,
                 });
-                this.isDocenteValid = true;
-                this.isCoordinadorFase1Valid = false;
-                this.isCoordinadorFase2Valid = false;
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = true;
                 break;
             case EstadoProceso.PENDIENTE_RESULTADO_EXAMEN_DE_VALORACION:
-                this.isDocenteValid = true;
-                this.isCoordinadorFase1Valid = true;
-                this.isCoordinadorFase2Valid = true;
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = true;
                 break;
             default:
-                this.isDocenteValid = true;
-                this.isCoordinadorFase1Valid = true;
-                this.isCoordinadorFase2Valid = true;
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = true;
                 break;
         }
 
         this.updateFormFields(this.role);
     }
 
-    private processFileField(fieldName: string, fieldValue: string) {
-        if (fieldValue) {
-            const base64 = fieldValue.slice(fieldValue.indexOf('-') + 1);
-            const byteCharacters = atob(base64);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            const file = new File([byteArray], fieldName);
-            switch (fieldName) {
-                case 'linkFormatoA':
-                    this.selectedFileFirst = file;
-                    break;
-                case 'linkFormatoD':
-                    this.selectedFileSecond = file;
-                    break;
-                case 'linkFormatoE':
-                    this.selectedFileThird = file;
-                    break;
-                case 'linkOficioDirigidoEvaluadores':
-                    this.selectedFileFourth = file;
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    private setDateField(fieldName: string, dateValue: string) {
-        this.solicitudForm
-            .get(fieldName)
-            .setValue(dateValue ? new Date(dateValue) : null);
-    }
-
     //#region PDF VIEWER
     async loadPdfFiles() {
         const filesToConvert = [
-            this.selectedFileFirst,
-            this.selectedFileSecond,
-            this.selectedFileThird,
-            this.selectedFileFourth,
+            this.FileFormatoA,
+            this.FileFormatoD,
+            this.FileFormatoE,
+            this.FileOficioDirigidoEvaluadores,
             this.formatoB,
             this.formatoC,
             ...this.anexosFiles,
@@ -527,14 +611,14 @@ export class SolicitudExamenComponent implements OnInit {
 
     nextPdf() {
         if (this.currentPdfIndex < this.pdfUrls.length - 1) {
-            this.isPdfLoaded = false; // Reset the flag when changing PDF
+            this.isPdfLoaded = false;
             this.currentPdfIndex++;
         }
     }
 
     previousPdf() {
         if (this.currentPdfIndex > 0) {
-            this.isPdfLoaded = false; // Reset the flag when changing PDF
+            this.isPdfLoaded = false;
             this.currentPdfIndex--;
         }
     }
@@ -552,29 +636,57 @@ export class SolicitudExamenComponent implements OnInit {
     }
     //#endregion
 
-    //#region Modal FormatoB and FormatoC
+    //#region Modal FormatoA, FormatoB and FormatoC
+    showFormatoA() {
+        this.displayFormatoA = true;
+    }
+
     showFormatoB() {
-        this.displayFormatoB = true;
+        this.displayFormatos = true;
         this.currentFormat = 'formatoB';
     }
 
-    nextFormat() {
-        if (this.currentFormat === 'formatoB') {
-            this.currentFormat = 'formatoC';
-        } else {
-            this.displayFormatoB = false;
+    previousFormat() {
+        if (this.currentFormat == 'formatoC2') {
+            this.currentFormat = 'formatoC1';
+        } else if (this.currentFormat === 'formatoC1') {
+            this.currentFormat = 'formatoB';
         }
     }
 
-    handleFormatoBPdfGenerated(pdfBlob: Blob) {
-        const pdfFile = new File([pdfBlob], 'formatoB.pdf', {
+    nextFormat() {
+        if (this.currentFormat == 'formatoB') {
+            this.currentFormat = 'formatoC1';
+        } else if (this.currentFormat == 'formatoC1') {
+            this.currentFormat = 'formatoC2';
+        }
+    }
+
+    handleFormatoAPdfGenerated(file: File) {
+        const pdfFile = new File([file], 'formatoA.pdf', {
+            type: 'application/pdf',
+        });
+        this.FileFormatoA = pdfFile;
+        this.convertFileToBase64(pdfFile)
+            .then((base64) => {
+                this.solicitudForm
+                    .get('linkFormatoA')
+                    .setValue(`linkFormatoA.pdf-${base64}`);
+            })
+            .catch((error) => {
+                console.error('Error al convertir el archivo a base64:', error);
+            });
+    }
+
+    handleFormatoBPdfGenerated(file: File) {
+        const pdfFile = new File([file], 'formatoB.pdf', {
             type: 'application/pdf',
         });
         this.formatoB = pdfFile;
     }
 
-    handleFormatoCPdfGenerated(pdfBlob: Blob) {
-        const pdfFile = new File([pdfBlob], 'formatoC.pdf', {
+    handleFormatoCPdfGenerated(file: File) {
+        const pdfFile = new File([file], 'formatoC.pdf', {
             type: 'application/pdf',
         });
         this.formatoC = pdfFile;
@@ -614,6 +726,7 @@ export class SolicitudExamenComponent implements OnInit {
     }
 
     removeFile(index: number) {
+        this.isChanged = true;
         this.anexosFiles.splice(index, 1);
         this.anexosBase64.splice(index, 1);
     }
@@ -632,56 +745,88 @@ export class SolicitudExamenComponent implements OnInit {
 
         try {
             if (this.role.includes('ROLE_DOCENTE')) {
-                await lastValueFrom(
-                    this.solicitudService.updateSolicitudDocente(
-                        this.solicitudForm.value,
-                        this.solicitudId
-                    )
-                );
+                if (
+                    this.estado ==
+                        EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COORDINADOR ||
+                    this.estado ==
+                        EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COMITE
+                ) {
+                    const formatoA = await this.formatFileString(
+                        this.FileFormatoA,
+                        'linkFormatoA'
+                    );
+
+                    const formatoD = await this.formatFileString(
+                        this.FileFormatoD,
+                        'linkFormatoD'
+                    );
+
+                    const formatoE = await this.formatFileString(
+                        this.FileFormatoE,
+                        'linkFormatoE'
+                    );
+
+                    const anexos = await this.formatFileString(
+                        this.anexosFiles,
+                        'anexos'
+                    );
+
+                    const anexosBase64 = anexos.map(
+                        (anexo: string, index: number) => ({
+                            linkAnexo: `Anexos${index}.pdf-${anexo}`,
+                        })
+                    );
+
+                    const solicitudData = {
+                        ...this.solicitudForm.value,
+                        linkFormatoA: `formatoA.pdf-${formatoA}`,
+                        linkFormatoD: `formatoD.pdf-${formatoD}`,
+                        linkFormatoE: `formatoE.pdf-${formatoE}`,
+                        anexos: anexosBase64,
+                    };
+
+                    await lastValueFrom(
+                        this.solicitudService.updateSolicitudDocente(
+                            solicitudData,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else {
+                    this.isLoading = false;
+                    return this.messageService.add(
+                        errorMessage('No puedes modificar los datos.')
+                    );
+                }
             }
 
             if (this.role.includes('ROLE_COORDINADOR')) {
                 if (
-                    this.isCoordinadorFase2Valid &&
-                    this.isCoordinadorFase1Valid &&
-                    this.isDocenteValid
+                    this.estado ==
+                        EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COORDINADOR ||
+                    this.estado ==
+                        EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COMITE
                 ) {
-                    await lastValueFrom(
-                        this.solicitudService.updateSolicitudCoordinador(
-                            this.solicitudForm.value,
-                            this.solicitudId
-                        )
+                    this.isLoading = false;
+                    return this.messageService.add(
+                        errorMessage('No puedes modificar los datos.')
                     );
                 } else if (
-                    !this.isCoordinadorFase2Valid &&
-                    !this.isCoordinadorFase1Valid &&
-                    !this.isDocenteValid
+                    this.isDocenteCreated &&
+                    this.isCoordinadorFase1Created &&
+                    !this.isCoordinadorFase2Created &&
+                    this.estado == EstadoProceso.PENDIENTE_REVISION_COORDINADOR
                 ) {
-                    const solicitudData = this.isReviewed
-                        ? {
-                              idExamenValoracion: this.trabajoDeGradoId,
-                              conceptoCoordinadorDocumentos: 'Aprobado',
-                          }
-                        : {
-                              idExamenValoracion: this.trabajoDeGradoId,
-                              conceptoCoordinadorDocumentos: 'No Aprobado',
-                          };
-                    await lastValueFrom(
-                        this.solicitudService.createSolicitudCoordinadorFase1(
-                            solicitudData
-                        )
+                    const formatoA = await this.formatFileString(
+                        this.FileFormatoA,
+                        'linkFormatoA'
                     );
-                } else if (
-                    !this.isCoordinadorFase2Valid &&
-                    !this.isCoordinadorFase1Valid &&
-                    this.isDocenteValid
-                ) {
+
                     const formatoD = await this.formatFileString(
-                        this.selectedFileSecond,
+                        this.FileFormatoD,
                         'linkFormatoD'
                     );
                     const formatoE = await this.formatFileString(
-                        this.selectedFileThird,
+                        this.FileFormatoE,
                         'linkFormatoE'
                     );
                     const anexos = await this.formatFileString(
@@ -689,50 +834,347 @@ export class SolicitudExamenComponent implements OnInit {
                         'anexos'
                     );
 
-                    if (!this.formatoB || !this.formatoC) {
-                        this.isLoading = false;
-                        return this.messageService.add(
-                            warnMessage('Error: formatos B y C son requeridos.')
+                    const mailData =
+                        this.solicitudForm.get('conceptoCoordinadorDocumentos')
+                            .value == 'Aceptado'
+                            ? {
+                                  conceptoCoordinadorDocumentos: true,
+                                  envioEmail: {
+                                      asunto: this.solicitudForm.get(
+                                          'asuntoCoordinador'
+                                      ).value,
+                                      mensaje:
+                                          this.solicitudForm.get(
+                                              'mensajeCoordinador'
+                                          ).value,
+                                  },
+                                  documentosEnvioComiteDto: {
+                                      b64FormatoA: formatoA,
+                                      b64FormatoD: formatoD,
+                                      b64FormatoE: formatoE,
+                                      b64Anexos: anexos,
+                                  },
+                              }
+                            : {
+                                  conceptoCoordinadorDocumentos: false,
+                                  envioEmail: {
+                                      asunto: this.solicitudForm.get(
+                                          'asuntoCoordinador'
+                                      ).value,
+                                      mensaje:
+                                          this.solicitudForm.get(
+                                              'mensajeCoordinador'
+                                          ).value,
+                                  },
+                              };
+
+                    const {
+                        asuntoCoordinador,
+                        mensajeCoordinador,
+                        ...restData
+                    } = this.solicitudForm.value;
+
+                    const solicitudData = {
+                        ...restData,
+                        ...mailData,
+                    };
+
+                    await lastValueFrom(
+                        this.solicitudService.updateSolicitudCoordinadorFase1(
+                            solicitudData,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else if (
+                    this.isDocenteCreated &&
+                    !this.isCoordinadorFase1Created &&
+                    !this.isCoordinadorFase2Created
+                ) {
+                    const formatoA = await this.formatFileString(
+                        this.FileFormatoA,
+                        'linkFormatoA'
+                    );
+
+                    const formatoD = await this.formatFileString(
+                        this.FileFormatoD,
+                        'linkFormatoD'
+                    );
+                    const formatoE = await this.formatFileString(
+                        this.FileFormatoE,
+                        'linkFormatoE'
+                    );
+                    const anexos = await this.formatFileString(
+                        this.anexosFiles,
+                        'anexos'
+                    );
+
+                    const mailData =
+                        this.solicitudForm.get('conceptoCoordinadorDocumentos')
+                            .value == 'Aceptado'
+                            ? {
+                                  conceptoCoordinadorDocumentos: true,
+                                  envioEmail: {
+                                      asunto: this.solicitudForm.get(
+                                          'asuntoCoordinador'
+                                      ).value,
+                                      mensaje:
+                                          this.solicitudForm.get(
+                                              'mensajeCoordinador'
+                                          ).value,
+                                  },
+                                  documentosEnvioComiteDto: {
+                                      b64FormatoA: formatoA,
+                                      b64FormatoD: formatoD,
+                                      b64FormatoE: formatoE,
+                                      b64Anexos: anexos,
+                                  },
+                              }
+                            : {
+                                  conceptoCoordinadorDocumentos: false,
+                                  envioEmail: {
+                                      asunto: this.solicitudForm.get(
+                                          'asuntoCoordinador'
+                                      ).value,
+                                      mensaje:
+                                          this.solicitudForm.get(
+                                              'mensajeCoordinador'
+                                          ).value,
+                                  },
+                              };
+
+                    const {
+                        asuntoCoordinador,
+                        mensajeCoordinador,
+                        ...restData
+                    } = this.solicitudForm.value;
+
+                    const solicitudData = {
+                        ...restData,
+                        ...mailData,
+                    };
+
+                    await lastValueFrom(
+                        this.solicitudService.createSolicitudCoordinadorFase1(
+                            solicitudData,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else if (
+                    this.isDocenteCreated &&
+                    this.isCoordinadorFase1Created &&
+                    !this.isCoordinadorFase2Created &&
+                    this.estado ==
+                        EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR
+                ) {
+                    const b64FormatoD = await this.formatFileString(
+                        this.FileFormatoD,
+                        'linkFormatoD'
+                    );
+                    const b64FormatoE = await this.formatFileString(
+                        this.FileFormatoE,
+                        'linkFormatoE'
+                    );
+                    const b64Anexos = await this.formatFileString(
+                        this.anexosFiles,
+                        'anexos'
+                    );
+
+                    const {
+                        numeroActa,
+                        fechaActa,
+                        conceptoComite,
+                        ...restOfFormValues
+                    } = this.solicitudForm.value;
+
+                    let b64FormatoB = '';
+                    let b64FormatoC = '';
+                    let b64Oficio = '';
+
+                    if (conceptoComite == 'Aceptado') {
+                        if (!this.formatoB || !this.formatoC) {
+                            this.isLoading = false;
+                            return this.messageService.add(
+                                warnMessage(
+                                    'Error: formatos B y C son requeridos.'
+                                )
+                            );
+                        }
+                        b64FormatoB = await this.formatFileString(
+                            this.formatoB,
+                            'formatoB'
+                        );
+                        b64FormatoC = await this.formatFileString(
+                            this.formatoC,
+                            'formatoC'
+                        );
+                        b64Oficio = await this.formatFileString(
+                            this.FileOficioDirigidoEvaluadores,
+                            'linkOficioDirigidoEvaluadores'
                         );
                     }
 
-                    const formatoB = await this.formatFileString(
-                        this.formatoB,
-                        'formatoB'
-                    );
-                    const formatoC = await this.formatFileString(
-                        this.formatoC,
-                        'formatoC'
-                    );
-
-                    const { numeroActa, fechaActa, ...restOfFormValues } =
-                        this.solicitudForm.value;
-
-                    const solicitudData = {
-                        ...restOfFormValues,
-                        actaFechaRespuestaComite: [
-                            {
-                                conceptoComite: 'Aprobado',
-                                numeroActa: numeroActa,
-                                fechaActa: fechaActa,
-                            },
-                        ],
-                        envioEmailDto: {
-                            asunto: 'Envio evaluadores',
-                            mensaje: 'Buenos dias, envio documentos',
-                        },
-                        informacionEnvioEvaluador: {
-                            formatoD,
-                            formatoE,
-                            anexos,
-                            formatoB,
-                            formatoC,
-                        },
-                    };
+                    const solicitudData =
+                        conceptoComite == 'Aceptado'
+                            ? {
+                                  ...restOfFormValues,
+                                  actaFechaRespuestaComite: [
+                                      {
+                                          conceptoComite: true,
+                                          numeroActa,
+                                          fechaActa,
+                                      },
+                                  ],
+                                  envioEmailDto: {
+                                      asunto: this.solicitudForm.get(
+                                          'asuntoComite'
+                                      ).value,
+                                      mensaje:
+                                          this.solicitudForm.get(
+                                              'mensajeComite'
+                                          ).value,
+                                  },
+                                  informacionEnvioEvaluador: {
+                                      b64FormatoD,
+                                      b64FormatoE,
+                                      b64Anexos,
+                                      b64Oficio,
+                                      b64FormatoB,
+                                      b64FormatoC,
+                                  },
+                              }
+                            : {
+                                  actaFechaRespuestaComite: [
+                                      {
+                                          conceptoComite: false,
+                                          numeroActa,
+                                          fechaActa,
+                                      },
+                                  ],
+                                  envioEmailDto: {
+                                      asunto: this.solicitudForm.get(
+                                          'asuntoComite'
+                                      ).value,
+                                      mensaje:
+                                          this.solicitudForm.get(
+                                              'mensajeComite'
+                                          ).value,
+                                  },
+                              };
                     await lastValueFrom(
                         this.solicitudService.createSolicitudCoordinadorFase2(
-                            solicitudData
+                            solicitudData,
+                            this.trabajoDeGradoId
                         )
+                    );
+                } else if (
+                    this.isDocenteCreated &&
+                    this.isCoordinadorFase1Created &&
+                    this.isCoordinadorFase2Created
+                ) {
+                    const b64FormatoD = await this.formatFileString(
+                        this.FileFormatoD,
+                        'linkFormatoD'
+                    );
+                    const b64FormatoE = await this.formatFileString(
+                        this.FileFormatoE,
+                        'linkFormatoE'
+                    );
+                    const b64Anexos = await this.formatFileString(
+                        this.anexosFiles,
+                        'anexos'
+                    );
+
+                    const {
+                        numeroActa,
+                        fechaActa,
+                        conceptoComite,
+                        ...restOfFormValues
+                    } = this.solicitudForm.value;
+
+                    let b64FormatoB = '';
+                    let b64FormatoC = '';
+                    let b64Oficio = '';
+
+                    if (conceptoComite == 'Aceptado') {
+                        if (!this.formatoB || !this.formatoC) {
+                            this.isLoading = false;
+                            return this.messageService.add(
+                                warnMessage(
+                                    'Error: formatos B y C son requeridos.'
+                                )
+                            );
+                        }
+                        b64FormatoB = await this.formatFileString(
+                            this.formatoB,
+                            'formatoB'
+                        );
+                        b64FormatoC = await this.formatFileString(
+                            this.formatoC,
+                            'formatoC'
+                        );
+                        b64Oficio = await this.formatFileString(
+                            this.FileOficioDirigidoEvaluadores,
+                            'linkOficioDirigidoEvaluadores'
+                        );
+                    }
+
+                    const solicitudData =
+                        conceptoComite == 'Aceptado'
+                            ? {
+                                  ...restOfFormValues,
+                                  actaFechaRespuestaComite: [
+                                      {
+                                          conceptoComite: true,
+                                          numeroActa,
+                                          fechaActa,
+                                      },
+                                  ],
+                                  envioEmailDto: {
+                                      asunto: this.solicitudForm.get(
+                                          'asuntoComite'
+                                      ).value,
+                                      mensaje:
+                                          this.solicitudForm.get(
+                                              'mensajeComite'
+                                          ).value,
+                                  },
+                                  informacionEnvioEvaluador: {
+                                      b64FormatoD,
+                                      b64FormatoE,
+                                      b64Anexos,
+                                      b64Oficio,
+                                      b64FormatoB,
+                                      b64FormatoC,
+                                  },
+                              }
+                            : {
+                                  actaFechaRespuestaComite: [
+                                      {
+                                          conceptoComite: false,
+                                          numeroActa,
+                                          fechaActa,
+                                      },
+                                  ],
+                                  envioEmailDto: {
+                                      asunto: this.solicitudForm.get(
+                                          'asuntoComite'
+                                      ).value,
+                                      mensaje:
+                                          this.solicitudForm.get(
+                                              'mensajeComite'
+                                          ).value,
+                                  },
+                              };
+                    await lastValueFrom(
+                        this.solicitudService.updateSolicitudCoordinadorFase2(
+                            solicitudData,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else {
+                    this.isLoading = false;
+                    return this.messageService.add(
+                        errorMessage('No puedes modificar los datos.')
                     );
                 }
             }
@@ -757,15 +1199,15 @@ export class SolicitudExamenComponent implements OnInit {
             return;
         }
         this.isLoading = true;
-        this.solicitudService
+        this.trabajoDeGradoService
             .createTrabajoDeGrado(this.estudianteSeleccionado.id)
             .subscribe({
                 next: (response) => {
                     if (response) {
-                        this.solicitudService.setTrabajoSeleccionado(response);
-                        this.solicitudForm
-                            .get('idTrabajoGrados')
-                            .setValue(response.id);
+                        this.trabajoDeGradoId = response.id;
+                        this.trabajoDeGradoService.setTrabajoSeleccionado(
+                            response
+                        );
                     }
                 },
                 error: (e) => {
@@ -777,7 +1219,10 @@ export class SolicitudExamenComponent implements OnInit {
                 complete: () => {
                     if (this.role.includes('ROLE_DOCENTE') == true) {
                         this.solicitudService
-                            .createSolicitudDocente(this.solicitudForm.value)
+                            .createSolicitudDocente(
+                                this.solicitudForm.value,
+                                this.trabajoDeGradoId
+                            )
                             .subscribe({
                                 next: (_) => {},
                                 error: (e) => {
@@ -810,7 +1255,7 @@ export class SolicitudExamenComponent implements OnInit {
         if (Object.keys(this.estudianteSeleccionado).length > 0) {
             if (fieldName == 'anexos') {
                 for (let anexo of this.solicitudForm.get(fieldName).value) {
-                    this.solicitudService.getFile(anexo.linkAnexo).subscribe({
+                    this.solicitudService.getFile(anexo).subscribe({
                         next: (response: any) => {
                             if (response) {
                                 const byteCharacters = atob(response);
@@ -862,16 +1307,16 @@ export class SolicitudExamenComponent implements OnInit {
                             });
                             switch (fieldName) {
                                 case 'linkFormatoA':
-                                    this.selectedFileFirst = file;
+                                    this.FileFormatoA = file;
                                     break;
                                 case 'linkFormatoD':
-                                    this.selectedFileSecond = file;
+                                    this.FileFormatoD = file;
                                     break;
                                 case 'linkFormatoE':
-                                    this.selectedFileThird = file;
+                                    this.FileFormatoE = file;
                                     break;
                                 case 'linkOficioDirigidoEvaluadores':
-                                    this.selectedFileFourth = file;
+                                    this.FileOficioDirigidoEvaluadores = file;
                                     break;
                                 default:
                                     break;
@@ -894,35 +1339,41 @@ export class SolicitudExamenComponent implements OnInit {
         this.solicitudForm.patchValue({
             ...solicitud,
         });
-        this.solicitudForm
-            .get('idTrabajoGrados')
-            .setValue(this.trabajoDeGradoId);
     }
 
     loadSolicitud() {
         return new Promise<void>((resolve, reject) => {
-            const id = Number(this.route.snapshot.paramMap.get('id'));
             this.isLoading = true;
-            this.trabajoDeGradoId = id;
 
-            const docenteObs = this.solicitudService.getSolicitudDocente(
-                this.trabajoDeGradoId
-            );
+            const docenteObs =
+                this.role.includes('ROLE_DOCENTE') ||
+                this.role.includes('ROLE_COORDINADOR')
+                    ? this.solicitudService.getSolicitudDocente(
+                          this.trabajoDeGradoId
+                      )
+                    : of(null);
 
-            const coordinadorObs = this.role.includes('ROLE_COORDINADOR')
-                ? this.solicitudService.getSolicitudCoordinador(
+            const coordinadorObsFase1 = this.role.includes('ROLE_COORDINADOR')
+                ? this.solicitudService.getSolicitudCoordinadorFase1(
+                      this.trabajoDeGradoId
+                  )
+                : of(null);
+
+            const coordinadorObsFase2 = this.role.includes('ROLE_COORDINADOR')
+                ? this.solicitudService.getSolicitudCoordinadorFase2(
                       this.trabajoDeGradoId
                   )
                 : of(null);
 
             forkJoin({
                 docente: docenteObs,
-                coordinador: coordinadorObs,
+                coordinadorFase1: coordinadorObsFase1,
+                coordinadorFase2: coordinadorObsFase2,
             }).subscribe({
                 next: (responses) => {
                     if (responses.docente) {
                         const data = responses.docente;
-                        this.solicitudService.setTituloSeleccionadoSubject(
+                        this.trabajoDeGradoService.setTituloSeleccionadoSubject(
                             data.titulo
                         );
                         this.setValuesForm(data);
@@ -931,7 +1382,7 @@ export class SolicitudExamenComponent implements OnInit {
                             this.mapEvaluadorInternoLabel(
                                 data.evaluadorInterno
                             );
-                        this.solicitudService.setEvaluadorInternoSeleccionadoSubject(
+                        this.trabajoDeGradoService.setEvaluadorInternoSeleccionadoSubject(
                             this.evaluadorInternoSeleccionado
                         );
                         this.evaluadorInterno.setValue(
@@ -942,7 +1393,7 @@ export class SolicitudExamenComponent implements OnInit {
                             this.mapEvaluadorExternoLabel(
                                 data.evaluadorExterno
                             );
-                        this.solicitudService.setEvaluadorExternoSeleccionadoSubject(
+                        this.trabajoDeGradoService.setEvaluadorExternoSeleccionadoSubject(
                             this.evaluadorExternoSeleccionado
                         );
                         this.evaluadorExterno.setValue(
@@ -950,38 +1401,20 @@ export class SolicitudExamenComponent implements OnInit {
                         );
                     }
 
-                    if (responses.coordinador) {
-                        const data = responses.coordinador;
-                        this.solicitudService.setTituloSeleccionadoSubject(
-                            data.titulo
-                        );
+                    if (responses.coordinadorFase1) {
+                        const data = responses.coordinadorFase1;
+                        this.solicitudForm
+                            .get('conceptoCoordinadorDocumentos')
+                            .setValue(
+                                data.conceptoCoordinadorDocumentos
+                                    ? 'Aceptado'
+                                    : 'Rechazado'
+                            );
+                    }
+
+                    if (responses.coordinadorFase2) {
+                        const data = responses.coordinadorFase2;
                         this.setValuesForm(data);
-
-                        this.expertoService
-                            .obtenerExperto(data?.evaluadorExterno.id)
-                            .subscribe({
-                                next: (response) => {
-                                    this.evaluadorExternoSeleccionado =
-                                        this.mapEvaluadorExternoLabel(response);
-                                    this.solicitudService.setEvaluadorExternoSeleccionadoSubject(
-                                        this.evaluadorExternoSeleccionado
-                                    );
-                                    this.evaluadorExterno.setValue(response.id);
-                                },
-                            });
-
-                        this.docenteService
-                            .obtenerDocente(data?.evaluadorInterno.id)
-                            .subscribe({
-                                next: (response) => {
-                                    this.evaluadorInternoSeleccionado =
-                                        this.mapEvaluadorInternoLabel(response);
-                                    this.solicitudService.setEvaluadorInternoSeleccionadoSubject(
-                                        this.evaluadorInternoSeleccionado
-                                    );
-                                    this.evaluadorInterno.setValue(response.id);
-                                },
-                            });
 
                         const lastIdx: number =
                             data.actaFechaRespuestaComite.length - 1;
@@ -989,6 +1422,7 @@ export class SolicitudExamenComponent implements OnInit {
 
                         const actaDate = lastActa?.fechaActa;
                         const actaNumber = lastActa?.numeroActa;
+                        const actaConceptoComite = lastActa?.conceptoComite;
 
                         this.solicitudForm
                             .get('fechaActa')
@@ -997,6 +1431,12 @@ export class SolicitudExamenComponent implements OnInit {
                         this.solicitudForm
                             .get('numeroActa')
                             .setValue(actaNumber ? actaNumber : null);
+
+                        this.solicitudForm
+                            .get('conceptoComite')
+                            .setValue(
+                                actaConceptoComite ? 'Aceptado' : 'Rechazado'
+                            );
 
                         this.solicitudForm
                             .get('fechaMaximaEvaluacion')
@@ -1030,29 +1470,20 @@ export class SolicitudExamenComponent implements OnInit {
         });
     }
 
-    onFileSelectFirst(event: any) {
-        this.selectedFileFirst = this.uploadFileAndSetValue(
-            'linkFormatoA',
-            event
-        );
+    onFileSelectFormatoA(event: any) {
+        this.FileFormatoA = this.uploadFileAndSetValue('linkFormatoA', event);
     }
 
-    onFileSelectSecond(event: any) {
-        this.selectedFileSecond = this.uploadFileAndSetValue(
-            'linkFormatoD',
-            event
-        );
+    onFileSelectFormatoD(event: any) {
+        this.FileFormatoD = this.uploadFileAndSetValue('linkFormatoD', event);
     }
 
-    onFileSelectThird(event: any) {
-        this.selectedFileThird = this.uploadFileAndSetValue(
-            'linkFormatoE',
-            event
-        );
+    onFileSelectFormatoE(event: any) {
+        this.FileFormatoE = this.uploadFileAndSetValue('linkFormatoE', event);
     }
 
-    onFileSelectFourth(event: any) {
-        this.selectedFileFourth = this.uploadFileAndSetValue(
+    onFileSelectOficioDirigidoEvaluadores(event: any) {
+        this.FileOficioDirigidoEvaluadores = this.uploadFileAndSetValue(
             'linkOficioDirigidoEvaluadores',
             event
         );
@@ -1060,23 +1491,23 @@ export class SolicitudExamenComponent implements OnInit {
 
     onFileClear(field: string) {
         if (field == 'linkFormatoA') {
-            this.selectedFileFirst = null;
-            this.fileUpload1.clear();
+            this.FileFormatoA = null;
+            this.FormatoA.clear();
             this.solicitudForm.get('linkFormatoA').reset();
         }
         if (field == 'linkFormatoD') {
-            this.selectedFileSecond = null;
-            this.fileUpload2.clear();
+            this.FileFormatoD = null;
+            this.FormatoD.clear();
             this.solicitudForm.get('linkFormatoD').reset();
         }
         if (field == 'linkFormatoE') {
-            this.selectedFileThird = null;
-            this.fileUpload3.clear();
+            this.FileFormatoE = null;
+            this.FormatoE.clear();
             this.solicitudForm.get('linkFormatoE').reset();
         }
         if (field == 'linkOficioDirigidoEvaluadores') {
-            this.selectedFileFourth = null;
-            this.fileUpload4.clear();
+            this.FileOficioDirigidoEvaluadores = null;
+            this.OficioDirigidoEvaluadores.clear();
             this.solicitudForm.get('linkOficioDirigidoEvaluadores').reset();
         }
     }
@@ -1181,9 +1612,9 @@ export class SolicitudExamenComponent implements OnInit {
 
         if (fieldName === 'anexos') {
             for (const anexo of this.solicitudForm.get(fieldName).value) {
-                this.solicitudService.getFile(anexo.linkAnexo).subscribe({
+                this.solicitudService.getFile(anexo).subscribe({
                     next: (response: string) =>
-                        this.downloadFile(response, anexo.linkAnexo, fieldName),
+                        this.downloadFile(response, anexo, fieldName),
                     error: handleError,
                 });
             }
@@ -1222,7 +1653,7 @@ export class SolicitudExamenComponent implements OnInit {
                 if (response) {
                     const docente = this.mapEvaluadorInternoLabel(response);
                     this.evaluadorInternoSeleccionado = docente;
-                    this.solicitudService.setEvaluadorInternoSeleccionadoSubject(
+                    this.trabajoDeGradoService.setEvaluadorInternoSeleccionadoSubject(
                         this.evaluadorInternoSeleccionado
                     );
                     this.evaluadorInterno.setValue(docente.id);
@@ -1238,22 +1669,13 @@ export class SolicitudExamenComponent implements OnInit {
                 if (response) {
                     const experto = this.mapEvaluadorExternoLabel(response);
                     this.evaluadorExternoSeleccionado = experto;
-                    this.solicitudService.setEvaluadorExternoSeleccionadoSubject(
+                    this.trabajoDeGradoService.setEvaluadorExternoSeleccionadoSubject(
                         this.evaluadorExternoSeleccionado
                     );
                     this.evaluadorExterno.setValue(experto.id);
                 }
             },
         });
-    }
-
-    onCrearDocumento() {
-        this.solicitudService.setTituloSeleccionadoSubject(
-            this.solicitudForm.get('titulo').value
-        );
-        this.router.navigate([
-            'examen-de-valoracion/solicitud/documentoFormatoA',
-        ]);
     }
 
     limpiarEvaluadorExterno() {
@@ -1273,7 +1695,7 @@ export class SolicitudExamenComponent implements OnInit {
     redirectToResolucion(resolucionId: number) {
         resolucionId
             ? this.router.navigate([
-                  `examen-de-valoracion/resolucion/editar/${resolucionId}`,
+                  `examen-de-valoracion/resolucion/editar/${this.trabajoDeGradoId}`,
               ])
             : this.router.navigate(['examen-de-valoracion/resolucion']);
     }
@@ -1281,7 +1703,7 @@ export class SolicitudExamenComponent implements OnInit {
     redirectToSustentacion(sustentacionId: number) {
         sustentacionId
             ? this.router.navigate([
-                  `examen-de-valoracion/sustentacion/editar/${sustentacionId}`,
+                  `examen-de-valoracion/sustentacion/editar/${this.trabajoDeGradoId}`,
               ])
             : this.router.navigate(['examen-de-valoracion/sustentacion']);
     }
@@ -1291,7 +1713,7 @@ export class SolicitudExamenComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        if (response.status != 501) return;
+        if (response.status != 500) return;
         const mapException = mapResponseException(response.error);
         mapException.forEach((value, _) => {
             this.messageService.add(errorMessage(value));

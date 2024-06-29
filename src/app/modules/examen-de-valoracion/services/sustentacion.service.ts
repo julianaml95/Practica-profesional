@@ -11,10 +11,13 @@ import { Sustentacion } from '../models/sustentacion';
 export class SustentacionService {
     constructor(private http: HttpClient) {}
 
-    createSustentacionDocente(sustentacion: Sustentacion) {
+    createSustentacionDocente(
+        sustentacion: Sustentacion,
+        idTrabajoGrado: number
+    ) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'sustentacion_proyecto_investigacion/insertarInformacionDocente'
+                `sustentacion_proyecto_investigacion/insertarInformacionDocente/${idTrabajoGrado}`
             ),
             sustentacion,
             {
@@ -23,10 +26,13 @@ export class SustentacionService {
         );
     }
 
-    createSustentacionEstudiante(sustentacion: Sustentacion) {
+    createSustentacionEstudiante(
+        sustentacion: Sustentacion,
+        idTrabajoGrado: number
+    ) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'sustentacion_proyecto_investigacion/insertarInformacionEstudiante'
+                `sustentacion_proyecto_investigacion/insertarInformacionEstudiante/${idTrabajoGrado}`
             ),
             sustentacion,
             {
@@ -35,10 +41,13 @@ export class SustentacionService {
         );
     }
 
-    createSustentacionCoordinadorFase1(sustentacion: Sustentacion) {
+    createSustentacionCoordinadorFase1(
+        sustentacion: any,
+        idTrabajoGrado: number
+    ) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase1'
+                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase1/${idTrabajoGrado}`
             ),
             sustentacion,
             {
@@ -47,10 +56,13 @@ export class SustentacionService {
         );
     }
 
-    createSustentacionCoordinadorFase2(sustentacion: Sustentacion) {
+    createSustentacionCoordinadorFase2(
+        sustentacion: Sustentacion,
+        idTrabajoGrado: number
+    ) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase2'
+                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase2/${idTrabajoGrado}`
             ),
             sustentacion,
             {
@@ -59,10 +71,28 @@ export class SustentacionService {
         );
     }
 
-    createSustentacionCoordinadorFase3(sustentacion: Sustentacion) {
+    createSustentacionCoordinadorFase3(
+        sustentacion: any,
+        idTrabajoGrado: number
+    ) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase3'
+                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase3/${idTrabajoGrado}`
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    createSustentacionCoordinadorFase4(
+        sustentacion: Sustentacion,
+        idTrabajoGrado: number
+    ) {
+        return this.http.post<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase4/${idTrabajoGrado}`
             ),
             sustentacion,
             {
@@ -83,9 +113,7 @@ export class SustentacionService {
     //     );
     // }
 
-    getSustentacionDocente(
-        trabajoDeGradoId: number
-    ): Observable<Sustentacion> {
+    getSustentacionDocente(trabajoDeGradoId: number): Observable<Sustentacion> {
         return this.http.get<Sustentacion>(
             backendGestionTrabajoDeGrado(
                 `sustentacion_proyecto_investigacion/listarInformacionDocente/${trabajoDeGradoId}`
@@ -96,9 +124,7 @@ export class SustentacionService {
         );
     }
 
-    getSustentacionEstudiante(
-        trabajoDeGradoId: number
-    ): Observable<any> {
+    getSustentacionEstudiante(trabajoDeGradoId: number): Observable<any> {
         return this.http.get<any>(
             backendGestionTrabajoDeGrado(
                 `sustentacion_proyecto_investigacion/listarInformacionEstudiante/${trabajoDeGradoId}`
@@ -109,9 +135,7 @@ export class SustentacionService {
         );
     }
 
-    getSustentacionCoordinadorFase1(
-        trabajoDeGradoId: number
-    ): Observable<any> {
+    getSustentacionCoordinadorFase1(trabajoDeGradoId: number): Observable<any> {
         return this.http.get<any>(
             backendGestionTrabajoDeGrado(
                 `sustentacion_proyecto_investigacion/listarInformacionCoordinadorFase1/${trabajoDeGradoId}`
@@ -122,9 +146,7 @@ export class SustentacionService {
         );
     }
 
-    getSustentacionCoordinadorFase2(
-        trabajoDeGradoId: number
-    ): Observable<any> {
+    getSustentacionCoordinadorFase2(trabajoDeGradoId: number): Observable<any> {
         return this.http.get<any>(
             backendGestionTrabajoDeGrado(
                 `sustentacion_proyecto_investigacion/listarInformacionCoordinadorFase2/${trabajoDeGradoId}`
@@ -135,12 +157,21 @@ export class SustentacionService {
         );
     }
 
-    getSustentacionCoordinadorFase3(
-        trabajoDeGradoId: number
-    ): Observable<any> {
+    getSustentacionCoordinadorFase3(trabajoDeGradoId: number): Observable<any> {
         return this.http.get<any>(
             backendGestionTrabajoDeGrado(
                 `sustentacion_proyecto_investigacion/listarInformacionCoordinadorFase3/${trabajoDeGradoId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    getSustentacionCoordinadorFase4(trabajoDeGradoId: number): Observable<any> {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/listarInformacionCoordinadorFase4/${trabajoDeGradoId}`
             ),
             {
                 headers: getHeaders(),

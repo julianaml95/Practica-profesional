@@ -1,5 +1,5 @@
 export interface Sustentacion {
-    idSustentacionTI?: number;
+    idSustentacionTrabajoInvestigacion?: number;
     linkFormatoF?: string;
     urlDocumentacion?: string;
     linkFormatoG?: string;

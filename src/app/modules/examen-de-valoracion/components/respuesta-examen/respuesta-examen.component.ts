@@ -16,9 +16,10 @@ import { Experto } from '../../models/experto';
 import { Subscription } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../../../shared/services/auth.service';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import { ResolucionService } from '../../services/resolucion.service';
+import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
 
 @Component({
     selector: 'app-respuesta-examen',
@@ -55,15 +56,14 @@ export class RespuestaExamenComponent implements OnInit {
     expertoSeleccionado: Experto;
     docenteSeleccionado: Docente;
 
-    estados: string[] = ['Aprobado', 'Aplazado', 'No Aprobado'];
-
-    private isErrorHandled: boolean = false;
+    estados: string[] = ['Aprobado', 'Aplazado', 'No aprobado'];
 
     constructor(
-        private solicitudService: SolicitudService,
         private router: Router,
         private fb: FormBuilder,
         private breadcrumbService: BreadcrumbService,
+        private trabajoDeGradoService: TrabajoDeGradoService,
+        private solicitudService: SolicitudService,
         private messageService: MessageService,
         private respuestaService: RespuestaService,
         private resolucionService: ResolucionService,
@@ -78,124 +78,167 @@ export class RespuestaExamenComponent implements OnInit {
         return this.respuestaForm.get('docenteEvaluaciones') as FormArray;
     }
 
-    async ngOnInit() {
-        this.initForm();
-        this.subscribeToObservers();
+    ngOnInit() {
+        this.role = this.authService.getRole();
         this.setBreadcrumb();
+        this.initializeComponent();
+    }
+
+    async initializeComponent() {
+        this.initForm();
+        await this.subscribeToObservers();
+        this.checkEstados();
+        this.loadData();
+    }
+
+    async loadData() {
         await this.loadRespuestas();
     }
 
-    subscribeToObservers() {
-        this.role = this.authService.getRole();
+    // TODO
+    subscribeToObservers(): Promise<void[]> {
+        return Promise.all([
+            new Promise<void>((resolve, reject) => {
+                this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
+                    next: (response) => {
+                        if (response) {
+                            this.estudianteSeleccionado = response;
+                            resolve();
+                        } else {
+                            this.router.navigate(['examen-de-valoracion']);
+                            reject();
+                        }
+                    },
+                    error: (e) => {
+                        this.handlerResponseException(e);
+                    },
+                });
+            }),
+            new Promise<void>((resolve, reject) => {
+                this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe(
+                    {
+                        next: (response) => {
+                            if (response) {
+                                this.tituloSeleccionado = response;
+                                resolve();
+                            } else {
+                                resolve();
+                            }
+                        },
+                        error: (e) => {
+                            this.handlerResponseException(e);
+                        },
+                    }
+                );
+            }),
+            new Promise<void>((resolve, reject) => {
+                this.trabajoDeGradoService.trabajoSeleccionadoSubject$.subscribe(
+                    {
+                        next: (response) => {
+                            if (response) {
+                                this.estado = response.estado;
+                                this.trabajoDeGradoId = response.id;
 
-        this.solicitudService.estudianteSeleccionado$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.estudianteSeleccionado = response;
-                } else {
-                    this.router.navigate(['examen-de-valoracion']);
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.tituloSeleccionadoSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.tituloSeleccionado = response;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.trabajoSeleccionadoSubscription =
-            this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
-                next: (response) => {
-                    if (response) {
-                        this.estado = response.estado;
-                        this.respuestaForm
-                            .get('idTrabajoGrados')
-                            .setValue(response.id);
-                        this.trabajoDeGradoId = response.id;
-                        this.checkEstados();
-                    } else {
-                        this.router.navigate(['examen-de-valoracion']);
+                                this.resolucionService
+                                    .getResolucionCoordinadorFase3(
+                                        this.trabajoDeGradoId
+                                    )
+                                    .subscribe({
+                                        next: (response) => {
+                                            if (
+                                                response?.numeroActaConsejoFacultad &&
+                                                response?.fechaActaConsejoFacultad
+                                            ) {
+                                                this.isResolucionValid = true;
+                                            }
+                                        },
+                                    });
+
+                                resolve();
+                            } else {
+                                this.router.navigate(['examen-de-valoracion']);
+                                reject();
+                            }
+                        },
+                        error: (e) => {
+                            this.handlerResponseException(e);
+                        },
                     }
-                },
-                error: (e) => this.handlerResponseException(e),
-            });
-        this.solicitudService.resolucionSeleccionadaSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.resolucionId = response.idGeneracionResolucion;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.sustentacionSeleccionadaSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.sustentacionId = response.idSustentacionTI;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.evaluadorExternoSeleccionadoSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.expertoSeleccionado = response;
-                } else {
-                    this.messageService.add(
-                        warnMessage('Debes seleccionar un evaluador externo')
-                    );
-                    this.router.navigate([
-                        `examen-de-valoracion/solicitud/editar/${this.trabajoDeGradoId}`,
-                    ]);
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.evaluadorInternoSeleccionadoSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.docenteSeleccionado = response;
-                } else {
-                    this.messageService.add(
-                        warnMessage('Debes seleccionar un evaluador interno')
-                    );
-                    this.router.navigate([
-                        `examen-de-valoracion/solicitud/editar/${this.trabajoDeGradoId}`,
-                    ]);
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.solicitudService.resolucionValid$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.isResolucionValid = response;
-                } else {
-                    if (this.trabajoDeGradoId) {
-                        this.resolucionService
-                            .getResolucionCoordinadorFase3(
-                                this.trabajoDeGradoId
-                            )
-                            .subscribe({
-                                next: (response) => {
-                                    if (
-                                        response?.numeroActaConsejoFacultad &&
-                                        response?.fechaActaConsejoFacultad
-                                    ) {
-                                        this.isResolucionValid = true;
-                                    }
-                                },
-                                error: (e) => {
-                                    this.handlerResponseException(e);
-                                },
-                            });
+                );
+            }),
+            new Promise<void>((resolve, reject) => {
+                this.trabajoDeGradoService.evaluadorExternoSeleccionadoSubject$.subscribe(
+                    {
+                        next: (response) => {
+                            if (response) {
+                                this.expertoSeleccionado = response;
+                                resolve();
+                            } else {
+                                this.router.navigate([`examen-de-valoracion`]);
+                                reject();
+                            }
+                        },
+                        error: (e) => {
+                            this.handlerResponseException(e);
+                        },
                     }
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
+                );
+            }),
+            new Promise<void>((resolve, reject) => {
+                this.trabajoDeGradoService.evaluadorInternoSeleccionadoSubject$.subscribe(
+                    {
+                        next: (response) => {
+                            if (response) {
+                                this.docenteSeleccionado = response;
+                                resolve();
+                            } else {
+                                this.router.navigate([`examen-de-valoracion`]);
+                                reject();
+                            }
+                        },
+                        error: (e) => {
+                            this.handlerResponseException(e);
+                        },
+                    }
+                );
+            }),
+            new Promise<void>((resolve, reject) => {
+                this.trabajoDeGradoService.resolucionSeleccionadaSubject$.subscribe(
+                    {
+                        next: (response) => {
+                            if (response) {
+                                this.resolucionId =
+                                    response.idGeneracionResolucion;
+                                resolve();
+                            } else {
+                                resolve();
+                            }
+                        },
+                        error: (e) => {
+                            this.handlerResponseException(e);
+                        },
+                    }
+                );
+            }),
+            new Promise<void>((resolve, reject) => {
+                this.trabajoDeGradoService.sustentacionSeleccionadaSubject$.subscribe(
+                    {
+                        next: (response) => {
+                            if (response) {
+                                this.sustentacionId =
+                                    response.idSustentacionTrabajoInvestigacion;
+                                resolve();
+                            } else {
+                                resolve();
+                            }
+                        },
+                        error: (e) => {
+                            this.handlerResponseException(e);
+                        },
+                    }
+                );
+            }),
+        ]);
     }
 
     setup(fieldName: string, formGroup: string) {
@@ -374,7 +417,6 @@ export class RespuestaExamenComponent implements OnInit {
 
     initForm(): void {
         this.respuestaForm = this.fb.group({
-            idTrabajoGrados: [null, Validators.required],
             expertoEvaluaciones: this.fb.array([]),
             docenteEvaluaciones: this.fb.array([]),
             estadoFinalizado: [false, Validators.required],
@@ -408,11 +450,15 @@ export class RespuestaExamenComponent implements OnInit {
                 break;
             case EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2:
                 this.isRespuestaValid = true;
-                this.solicitudService.setRespuestaValid(this.isRespuestaValid);
+                this.trabajoDeGradoService.setRespuestaValid(
+                    this.isRespuestaValid
+                );
                 break;
             default:
                 this.isRespuestaValid = true;
-                this.solicitudService.setRespuestaValid(this.isRespuestaValid);
+                this.trabajoDeGradoService.setRespuestaValid(
+                    this.isRespuestaValid
+                );
                 break;
         }
     }
@@ -457,17 +503,17 @@ export class RespuestaExamenComponent implements OnInit {
                         respuesta.respuestaExamenValoracion,
                         Validators.required,
                     ],
-                    ['fechaMaximaEntrega' + indexExperto]: [
-                        respuesta.fechaMaximaEntrega,
-                    ],
+                    // ['fechaMaximaEntrega' + indexExperto]: [
+                    //     respuesta.fechaMaximaEntrega,
+                    // ],
                 });
                 this.expertoEvaluaciones.push(evaluacionFormGroup);
-                this.expertoEvaluaciones.at(indexExperto).patchValue({
-                    ['fechaMaximaEntrega' + indexExperto]:
-                        respuesta?.fechaMaximaEntrega
-                            ? new Date(respuesta.fechaMaximaEntrega)
-                            : null,
-                });
+                // this.expertoEvaluaciones.at(indexExperto).patchValue({
+                //     ['fechaMaximaEntrega' + indexExperto]:
+                //         respuesta?.fechaMaximaEntrega
+                //             ? new Date(respuesta.fechaMaximaEntrega)
+                //             : null,
+                // });
                 this.setup('linkFormatoB', 'expertoEvaluaciones');
                 this.setup('linkFormatoC', 'expertoEvaluaciones');
                 this.setup('linkObservaciones', 'expertoEvaluaciones');
@@ -511,17 +557,17 @@ export class RespuestaExamenComponent implements OnInit {
                         respuesta.respuestaExamenValoracion,
                         Validators.required,
                     ],
-                    ['fechaMaximaEntrega' + indexDocente]: [
-                        respuesta.fechaMaximaEntrega,
-                    ],
+                    // ['fechaMaximaEntrega' + indexDocente]: [
+                    //     respuesta.fechaMaximaEntrega,
+                    // ],
                 });
                 this.docenteEvaluaciones.push(evaluacionFormGroup);
-                this.docenteEvaluaciones.at(indexDocente).patchValue({
-                    ['fechaMaximaEntrega' + indexDocente]:
-                        respuesta?.fechaMaximaEntrega
-                            ? new Date(respuesta.fechaMaximaEntrega)
-                            : null,
-                });
+                // this.docenteEvaluaciones.at(indexDocente).patchValue({
+                //     ['fechaMaximaEntrega' + indexDocente]:
+                //         respuesta?.fechaMaximaEntrega
+                //             ? new Date(respuesta.fechaMaximaEntrega)
+                //             : null,
+                // });
                 this.setup('linkFormatoB', 'docenteEvaluaciones');
                 this.setup('linkFormatoC', 'docenteEvaluaciones');
                 this.setup('linkObservaciones', 'docenteEvaluaciones');
@@ -616,19 +662,17 @@ export class RespuestaExamenComponent implements OnInit {
             const docenteValue = this.docenteEvaluaciones
                 .at(index)
                 .get('respuestaExamenValoracionDocente' + index)?.value;
-            return ['Aplazado', 'No Aprobado'].includes(docenteValue);
+            return ['Aplazado', 'No aprobado'].includes(docenteValue);
         }
         if (this.expertoEvaluaciones.length > 0) {
             const index = this.expertoEvaluaciones.length - 1;
             const expertoValue = this.expertoEvaluaciones
                 .at(index)
                 .get('respuestaExamenValoracionExperto' + index)?.value;
-            return ['Aplazado', 'No Aprobado'].includes(expertoValue);
+            return ['Aplazado', 'No aprobado'].includes(expertoValue);
         }
         return false;
     }
-
-    private hasNavigated = false;
 
     loadRespuestas(): Promise<void> {
         return new Promise((resolve, reject) => {
@@ -681,7 +725,7 @@ export class RespuestaExamenComponent implements OnInit {
                 formArrayName === 'expertoEvaluaciones'
                     ? evaluacion['respuestaExamenValoracionExperto' + i]
                     : evaluacion['respuestaExamenValoracionDocente' + i],
-            fechaMaximaEntrega: evaluacion['fechaMaximaEntrega' + i],
+            // fechaMaximaEntrega: evaluacion['fechaMaximaEntrega' + i],
         };
     }
 
@@ -699,8 +743,8 @@ export class RespuestaExamenComponent implements OnInit {
                 : this.evaluacionDocenteIds[index];
         const evaluacionData = this.mapEvaluacion(formArrayName, index);
 
-        if (evaluacionData.respuestaExamenValoracion == 'Aprobado')
-            evaluacionData.fechaMaximaEntrega = '';
+        // if (evaluacionData.respuestaExamenValoracion == 'Aprobado')
+        //     evaluacionData.fechaMaximaEntrega = '';
 
         const formatoB = await this.formatFileString(
             this.selectedFiles[`${formArrayName}.${'linkFormatoB' + index}`],
@@ -736,7 +780,7 @@ export class RespuestaExamenComponent implements OnInit {
             .subscribe({
                 next: (response) => {
                     if (response) {
-                        this.solicitudService.setRespuestaSeleccionada(
+                        this.trabajoDeGradoService.setRespuestaSeleccionada(
                             response
                         );
                         this[formArrayName]
@@ -800,9 +844,6 @@ export class RespuestaExamenComponent implements OnInit {
         }
         const evaluacionData = this.mapEvaluacion(formArrayName, index);
 
-        if (evaluacionData.respuestaExamenValoracion == 'Aprobado')
-            evaluacionData.fechaMaximaEntrega = '';
-
         const formatoB = await this.formatFileString(
             this.selectedFiles[`${formArrayName}.${'linkFormatoB' + index}`],
             'linkFormatoB'
@@ -813,6 +854,7 @@ export class RespuestaExamenComponent implements OnInit {
             'linkFormatoC'
         );
 
+        // TODO
         const respuestaMail = {
             informacionEnvioDto: {
                 asunto: 'Envio respuesta evaluadores',
@@ -829,15 +871,18 @@ export class RespuestaExamenComponent implements OnInit {
             estadoFinalizado: Number(rest.estadoFinalizado),
         };
         this.respuestaService
-            .createRespuestaExamen({
-                ...castBit,
-                ...evaluacionData,
-                ...respuestaMail,
-            })
+            .createRespuestaExamen(
+                {
+                    ...castBit,
+                    ...evaluacionData,
+                    ...respuestaMail,
+                },
+                this.trabajoDeGradoId
+            )
             .subscribe({
                 next: (response) => {
                     if (response) {
-                        this.solicitudService.setRespuestaSeleccionada(
+                        this.trabajoDeGradoService.setRespuestaSeleccionada(
                             response
                         );
                         this[formArrayName]
@@ -854,15 +899,7 @@ export class RespuestaExamenComponent implements OnInit {
                     this.handlerResponseException(e);
                 },
                 complete: () => {
-                    // await this.loadRespuestas();
-                    // if (
-                    //     !this.hasNavigated &&
-                    //     this.isExamenCreado('expertoEvaluaciones', 0) &&
-                    //     this.isExamenCreado('docenteEvaluaciones', 0)
-                    // ) {
                     this.router.navigate(['examen-de-valoracion']);
-                    // this.hasNavigated = true;
-                    // }
                 },
             });
     }
@@ -1047,7 +1084,7 @@ export class RespuestaExamenComponent implements OnInit {
     redirectToResolucion(resolucionId: number) {
         resolucionId
             ? this.router.navigate([
-                  `examen-de-valoracion/resolucion/editar/${resolucionId}`,
+                  `examen-de-valoracion/resolucion/editar/${this.trabajoDeGradoId}`,
               ])
             : this.router.navigate(['examen-de-valoracion/resolucion']);
     }
@@ -1055,7 +1092,7 @@ export class RespuestaExamenComponent implements OnInit {
     redirectToSustentacion(sustentacionId: number) {
         sustentacionId
             ? this.router.navigate([
-                  `examen-de-valoracion/sustentacion/editar/${sustentacionId}`,
+                  `examen-de-valoracion/sustentacion/editar/${this.trabajoDeGradoId}`,
               ])
             : this.router.navigate(['examen-de-valoracion/sustentacion']);
     }
@@ -1065,7 +1102,7 @@ export class RespuestaExamenComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        if (response.status != 501) return;
+        if (response.status != 500) return;
         const mapException = mapResponseException(response.error);
         mapException.forEach((value, _) => {
             this.messageService.add(errorMessage(value));

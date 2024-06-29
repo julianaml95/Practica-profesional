@@ -11,10 +11,10 @@ import { Resolucion } from '../models/resolucion';
 export class ResolucionService {
     constructor(private http: HttpClient) {}
 
-    createResolucionDocente(resolucion: Resolucion) {
+    createResolucionDocente(resolucion: Resolucion, trabajoDeGradoId: number) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'generacion_resolucion/insertarInformacionDocente'
+                `generacion_resolucion/insertarInformacionDocente/${trabajoDeGradoId}`
             ),
             resolucion,
             {
@@ -23,10 +23,13 @@ export class ResolucionService {
         );
     }
 
-    createResolucionCoordinadorFase1(resolucion: any) {
+    createResolucionCoordinadorFase1(
+        resolucion: any,
+        trabajoDeGradoId: number
+    ) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'generacion_resolucion/insertarInformacionCoordinadorFase1'
+                `generacion_resolucion/insertarInformacionCoordinadorFase1/${trabajoDeGradoId}`
             ),
             resolucion,
             {
@@ -35,10 +38,13 @@ export class ResolucionService {
         );
     }
 
-    createResolucionCoordinadorFase2(resolucion: Resolucion) {
+    createResolucionCoordinadorFase2(
+        resolucion: Resolucion,
+        trabajoDeGradoId: number
+    ) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'generacion_resolucion/insertarInformacionCoordinadorFase2'
+                `generacion_resolucion/insertarInformacionCoordinadorFase2/${trabajoDeGradoId}`
             ),
             resolucion,
             {
@@ -47,10 +53,13 @@ export class ResolucionService {
         );
     }
 
-    createResolucionCoordinadorFase3(resolucion: Resolucion) {
+    createResolucionCoordinadorFase3(
+        resolucion: Resolucion,
+        trabajoDeGradoId: number
+    ) {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                'generacion_resolucion/insertarInformacionCoordinadorFase3'
+                `generacion_resolucion/insertarInformacionCoordinadorFase3/${trabajoDeGradoId}`
             ),
             resolucion,
             {
@@ -59,22 +68,33 @@ export class ResolucionService {
         );
     }
 
-    // updateResolucion(resolucion: Resolucion, resolucionId: number) {
-    //     return this.http.put<any>(
-    //         backendGestionTrabajoDeGrado(
-    //             `generacion_resolucion/${resolucionId}`
-    //         ),
-    //         resolucion,
-    //         {
-    //             headers: getHeaders(),
-    //         }
-    //     );
-    // }
+    updateResolucionDocente(resolucion: Resolucion, resolucionId: number) {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `generacion_resolucion/actualizarInformacionDocente/${resolucionId}`
+            ),
+            resolucion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
 
     getResolucionDocente(trabajoDeGradoId: number): Observable<any> {
         return this.http.get<any>(
             backendGestionTrabajoDeGrado(
                 `generacion_resolucion/listarInformacionDocente/${trabajoDeGradoId}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    getResolucionCoordinadorFase1(trabajoDeGradoId: number): Observable<any> {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `generacion_resolucion/listarInformacionCoordinadorFase1/${trabajoDeGradoId}`
             ),
             {
                 headers: getHeaders(),

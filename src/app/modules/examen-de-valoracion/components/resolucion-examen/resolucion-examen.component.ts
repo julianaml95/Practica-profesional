@@ -11,7 +11,7 @@ import {
     FormGroup,
     Validators,
 } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { Experto } from '../../models/experto';
@@ -32,9 +32,10 @@ import { Aviso, EstadoProceso, Mensaje } from 'src/app/core/enums/enums';
 import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-expertos/buscador-expertos.component';
 import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
 import { DialogService } from 'primeng/dynamicdialog';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../../../shared/services/auth.service';
 import { ExpertoService } from 'src/app/shared/services/experto.service';
 import { DocenteService } from 'src/app/shared/services/docente.service';
+import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
 
 @Component({
     selector: 'app-resolucion-examen',
@@ -43,6 +44,8 @@ import { DocenteService } from 'src/app/shared/services/docente.service';
 })
 export class ResolucionExamenComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();
+
+    resolucionForm: FormGroup;
 
     private trabajoSeleccionadoSubscription: Subscription;
 
@@ -57,18 +60,17 @@ export class ResolucionExamenComponent implements OnInit {
     displayModal: boolean = false;
     errorMessageShown: boolean = false;
     editMode: boolean = false;
-    isLoading: boolean;
-    isCoordinadorFase1Created: boolean = false;
-    isDocenteCreated: boolean = false;
-    isCoordinadorFase2Created: boolean = false;
-    isReviewed: boolean = false;
     isPdfLoaded: boolean = false;
+    isLoading: boolean;
+    isDocenteCreated: boolean = false;
+    isCoordinadorFase1Created: boolean = false;
+    isCoordinadorFase2Created: boolean = false;
+    isCoordinadorFase3Created: boolean = false;
     isResolucionValid: boolean = false;
 
     role: string[];
     pdfUrls: { name: string; url: string }[] = [];
-
-    estado: string;
+    estados: string[] = ['Aceptado', 'Rechazado'];
 
     trabajoDeGradoId: number;
     respuestaId: number;
@@ -76,8 +78,7 @@ export class ResolucionExamenComponent implements OnInit {
     sustentacionId: number;
     currentPdfIndex: number = 0;
 
-    resolucionForm: FormGroup;
-
+    estado: string;
     tituloSeleccionado: string;
     estudianteSeleccionado: Estudiante = {};
     codirectorSeleccionado: Experto;
@@ -86,7 +87,7 @@ export class ResolucionExamenComponent implements OnInit {
     constructor(
         private fb: FormBuilder,
         private router: Router,
-        private route: ActivatedRoute,
+        private trabajoDeGradoService: TrabajoDeGradoService,
         private resolucionService: ResolucionService,
         private solicitudService: SolicitudService,
         private breadcrumbService: BreadcrumbService,
@@ -105,39 +106,97 @@ export class ResolucionExamenComponent implements OnInit {
         return this.resolucionForm.get('codirector') as FormControl;
     }
 
-    async ngOnInit() {
+    ngOnInit() {
+        this.role = this.authService.getRole();
+        this.setBreadcrumb();
         this.initForm();
         this.subscribeToObservers();
         if (this.router.url.includes('editar')) {
-            await this.loadEditMode();
-        } else {
-            this.checkEstados();
+            this.loadEditMode();
         }
-        this.setBreadcrumb();
+        this.checkEstados();
     }
 
     async loadEditMode() {
         this.editMode = true;
         await this.loadResolucion();
-        this.checkEstados();
     }
 
     initForm(): void {
         this.resolucionForm = this.fb.group({
-            idTrabajoGrados: [null, Validators.required],
-            titulo: ['', Validators.required],
-            director: ['', Validators.required],
-            codirector: ['', Validators.required],
-            linkAnteproyectoFinal: ['', Validators.required],
+            director: [null, Validators.required],
+            codirector: [null, Validators.required],
+            linkAnteproyectoFinal: [null, Validators.required],
             linkSolicitudComite: [null, Validators.required],
-            numeroActaSolicitudComite: ['', Validators.required],
-            fechaActaSolicitudComite: ['', Validators.required],
-            linkSolicitudConsejoFacultad: ['', Validators.required],
-            numeroActaConsejoFacultad: ['', Validators.required],
+            asuntoCoordinador: [null],
+            mensajeCoordinador: [null],
+            asuntoComite: [null],
+            mensajeComite: [null],
+            conceptoDocumentosCoordinador: [null, Validators.required],
+            conceptoComite: [null, Validators.required],
+            numeroActa: [null, Validators.required],
+            fechaActa: [null, Validators.required],
+            linkSolicitudConsejoFacultad: [null, Validators.required],
+            numeroActaConsejoFacultad: [null, Validators.required],
             fechaActaConsejoFacultad: [null, Validators.required],
         });
 
         this.formReady.emit(this.resolucionForm);
+
+        this.resolucionForm
+            .get('conceptoDocumentosCoordinador')
+            .valueChanges.subscribe((value) => {
+                if (value == 'Aceptado') {
+                    this.resolucionForm
+                        .get('asuntoCoordinador')
+                        .setValue(
+                            'Solicitud de revision resolucion de valoracion'
+                        );
+
+                    this.resolucionForm
+                        .get('mensajeCoordinador')
+                        .setValue(
+                            'Solicito comedidamente revisar el resolucion de valoracion del estudiante para aprobacion.'
+                        );
+                }
+                if (value == 'Rechazado') {
+                    this.resolucionForm
+                        .get('asuntoCoordinador')
+                        .setValue(
+                            'Correcion solicitud resolucion de valoracion'
+                        );
+                    this.resolucionForm
+                        .get('mensajeCoordinador')
+                        .setValue(
+                            'Solicito comedidamente revisar el anteproyecto en el apartado de Introduccion.'
+                        );
+                }
+            });
+
+        this.resolucionForm
+            .get('conceptoComite')
+            .valueChanges.subscribe((value) => {
+                if (value == 'Aceptado') {
+                    this.resolucionForm
+                        .get('asuntoComite')
+                        .setValue('Envio evaluadores');
+                    this.resolucionForm
+                        .get('mensajeComite')
+                        .setValue(
+                            'Envio documentos para que por favor los revisen y den respuesta oportuna.'
+                        );
+                }
+                if (value == 'Rechazado') {
+                    this.resolucionForm
+                        .get('asuntoComite')
+                        .setValue('Envio correcion por parte del comite');
+                    this.resolucionForm
+                        .get('mensajeComite')
+                        .setValue(
+                            'Por favor corregir el apartado de metolodogia y dar respuesta oportuna a las correciones.'
+                        );
+                }
+            });
     }
 
     updateFormFields(role: string[]): void {
@@ -147,10 +206,7 @@ export class ResolucionExamenComponent implements OnInit {
             formControls[control].disable();
         }
 
-        formControls['idTrabajoGrados'].enable();
-
         if (role.includes('ROLE_DOCENTE')) {
-            formControls['titulo'].enable();
             formControls['director'].enable();
             formControls['codirector'].enable();
             formControls['linkAnteproyectoFinal'].enable();
@@ -158,13 +214,25 @@ export class ResolucionExamenComponent implements OnInit {
         }
 
         if (role.includes('ROLE_COORDINADOR')) {
-            if (this.isDocenteCreated) {
-                formControls['numeroActaSolicitudComite'].enable();
-                formControls['fechaActaSolicitudComite'].enable();
+            if (this.isDocenteCreated && !this.isCoordinadorFase1Created) {
+                formControls['conceptoDocumentosCoordinador'].enable();
+                formControls['asuntoCoordinador'].enable();
+                formControls['mensajeCoordinador'].enable();
+            }
+
+            if (
+                this.isCoordinadorFase1Created &&
+                !this.isCoordinadorFase2Created
+            ) {
+                formControls['conceptoComite'].enable();
+                formControls['asuntoComite'].enable();
+                formControls['mensajeComite'].enable();
+                formControls['numeroActa'].enable();
+                formControls['fechaActa'].enable();
                 formControls['linkSolicitudConsejoFacultad'].enable();
             }
 
-            if (this.isCoordinadorFase1Created) {
+            if (this.isCoordinadorFase2Created) {
                 formControls['numeroActaConsejoFacultad'].enable();
                 formControls['fechaActaConsejoFacultad'].enable();
             }
@@ -172,8 +240,7 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     subscribeToObservers() {
-        this.role = this.authService.getRole();
-        this.solicitudService.estudianteSeleccionado$.subscribe({
+        this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
             next: (response) => {
                 if (response) {
                     this.estudianteSeleccionado = response;
@@ -183,33 +250,34 @@ export class ResolucionExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
-        this.solicitudService.tituloSeleccionadoSubject$.subscribe({
+        this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
             next: (response) => {
                 if (response) {
                     this.tituloSeleccionado = response;
-                    this.resolucionForm
-                        .get('titulo')
-                        .setValue(this.tituloSeleccionado);
                 }
             },
             error: (e) => this.handlerResponseException(e),
         });
         this.trabajoSeleccionadoSubscription =
-            this.solicitudService.trabajoSeleccionadoSubject$.subscribe({
+            this.trabajoDeGradoService.trabajoSeleccionadoSubject$.subscribe({
                 next: (response) => {
                     if (response) {
                         this.trabajoDeGradoId = response.id;
                         this.estado = response.estado;
-                        this.resolucionForm
-                            .get('idTrabajoGrados')
-                            .setValue(response.id);
+                        if (
+                            this.estado ==
+                                EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2 &&
+                            this.role.includes('ROLE_COORDINADOR')
+                        ) {
+                            this.router.navigate(['examen-de-valoracion']);
+                        }
                     } else {
                         this.router.navigate(['examen-de-valoracion']);
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
             });
-        this.solicitudService.resolucionSeleccionadaSubject$.subscribe({
+        this.trabajoDeGradoService.resolucionSeleccionadaSubject$.subscribe({
             next: (response) => {
                 if (response) {
                     this.resolucionId = response.idGeneracionResolucion;
@@ -217,15 +285,16 @@ export class ResolucionExamenComponent implements OnInit {
             },
             error: (e) => this.handlerResponseException(e),
         });
-        this.solicitudService.sustentacionSeleccionadaSubject$.subscribe({
+        this.trabajoDeGradoService.sustentacionSeleccionadaSubject$.subscribe({
             next: (response) => {
                 if (response) {
-                    this.sustentacionId = response.idSustentacionTI;
+                    this.sustentacionId =
+                        response.idSustentacionTrabajoInvestigacion;
                 }
             },
             error: (e) => this.handlerResponseException(e),
         });
-        this.solicitudService.resolucionValid$.subscribe({
+        this.trabajoDeGradoService.resolucionValid$.subscribe({
             next: (response) => {
                 if (response) {
                     this.isResolucionValid = response;
@@ -262,67 +331,72 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     checkEstados() {
-        const addMessage = (
-            severity: string,
-            summary: string,
-            detail: string
-        ) => {
-            this.messageService.add({
-                severity,
-                summary,
-                detail,
-                life: 10000,
-            });
-        };
-
         switch (this.estado) {
-            // case EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_PARA_CORREGIR:
-            //     if (this.isDocenteCreated) {
-            //         addMessage('info', 'Correcciones pendientes', 'Docente debe realizar correcciones antes de continuar.');
-            //     } else if (this.isCoordinadorFase1Created) {
-            //         addMessage('info', 'Correcciones pendientes', 'Coordinador Fase 1 debe realizar correcciones antes de continuar.');
-            //     }
-            //     break;
-
             case EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2:
-                addMessage(
-                    'info',
-                    'Información',
-                    EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2
-                );
-
+                this.messageService.add({
+                    severity: 'info',
+                    summary: 'Informacion',
+                    detail: EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2,
+                    life: 2000,
+                });
                 this.isDocenteCreated = false;
                 this.isCoordinadorFase1Created = false;
                 this.isCoordinadorFase2Created = false;
-
-                if (this.role.includes('ROLE_COORDINADOR')) {
-                    this.router.navigate(['examen-de-valoracion']);
-                }
+                this.isCoordinadorFase3Created = false;
                 break;
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_GENERACION_RESOLUCION:
-                this.isDocenteCreated = false;
-                this.isCoordinadorFase1Created = false;
-                this.isCoordinadorFase2Created = false;
-                break;
-            case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE2_GENERACION_RESOLUCION:
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = false;
                 this.isCoordinadorFase2Created = false;
+                this.isCoordinadorFase3Created = false;
+                break;
+            case EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COORDINADOR:
+                this.messageService.add({
+                    severity: 'warn',
+                    summary: 'Advertencia',
+                    detail: EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COORDINADOR,
+                    life: 2000,
+                });
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = false;
+                this.isCoordinadorFase3Created = false;
+                break;
+            case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE2_GENERACION_RESOLUCION:
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = false;
+                this.isCoordinadorFase3Created = false;
+                break;
+            case EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COMITE:
+                this.messageService.add({
+                    severity: 'warn',
+                    summary: 'Advertencia',
+                    detail: EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COMITE,
+                    life: 2000,
+                });
+                this.isDocenteCreated = true;
+                this.isCoordinadorFase1Created = true;
+                this.isCoordinadorFase2Created = true;
+                this.isCoordinadorFase3Created = false;
                 break;
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE3_GENERACION_RESOLUCION:
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = false;
+                this.isCoordinadorFase2Created = true;
+                this.isCoordinadorFase3Created = false;
                 break;
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_DOCENTE_SUSTENTACION:
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = true;
                 this.isCoordinadorFase2Created = true;
+                this.isCoordinadorFase3Created = true;
                 break;
             default:
                 this.isDocenteCreated = true;
                 this.isCoordinadorFase1Created = true;
                 this.isCoordinadorFase2Created = true;
+                this.isCoordinadorFase3Created = true;
                 break;
         }
 
@@ -459,9 +533,19 @@ export class ResolucionExamenComponent implements OnInit {
         return new Promise<void>((resolve, reject) => {
             this.isLoading = true;
 
-            const docenteObs = this.resolucionService.getResolucionDocente(
-                this.trabajoDeGradoId
-            );
+            const docenteObs =
+                this.role.includes('ROLE_DOCENTE') ||
+                this.role.includes('ROLE_COORDINADOR')
+                    ? this.resolucionService.getResolucionDocente(
+                          this.trabajoDeGradoId
+                      )
+                    : of(null);
+
+            const coordinadorFase1Obs = this.role.includes('ROLE_COORDINADOR')
+                ? this.resolucionService.getResolucionCoordinadorFase1(
+                      this.trabajoDeGradoId
+                  )
+                : of(null);
 
             const coordinadorFase2Obs = this.role.includes('ROLE_COORDINADOR')
                 ? this.resolucionService.getResolucionCoordinadorFase2(
@@ -476,6 +560,7 @@ export class ResolucionExamenComponent implements OnInit {
 
             forkJoin({
                 docente: docenteObs,
+                coordinadorFase1: coordinadorFase1Obs,
                 coordinadorFase2: coordinadorFase2Obs,
                 coordinadorFase3: coordinadorFase3Obs,
             }).subscribe({
@@ -484,10 +569,7 @@ export class ResolucionExamenComponent implements OnInit {
                         const data = responses.docente;
                         this.setValuesForm(data);
 
-                        this.resolucionForm
-                            .get('idTrabajoGrados')
-                            .setValue(this.trabajoDeGradoId);
-                        this.solicitudService.setTituloSeleccionadoSubject(
+                        this.trabajoDeGradoService.setTituloSeleccionadoSubject(
                             data.titulo
                         );
 
@@ -512,21 +594,47 @@ export class ResolucionExamenComponent implements OnInit {
                             });
                     }
 
+                    if (responses.coordinadorFase1) {
+                        const data = responses.coordinadorFase1;
+                        data.conceptoDocumentosCoordinador
+                            ? this.resolucionForm
+                                  .get('conceptoDocumentosCoordinador')
+                                  .setValue('Aceptado')
+                            : this.resolucionForm
+                                  .get('conceptoDocumentosCoordinador')
+                                  .setValue('Rechazado');
+                    }
+
                     if (responses.coordinadorFase2) {
                         const data = responses.coordinadorFase2;
                         this.setValuesForm(data);
 
+                        const lastIdx: number =
+                            data.actaFechaRespuestaComite.length - 1;
+                        const lastActa = data.actaFechaRespuestaComite[lastIdx];
+
+                        const actaDate = lastActa?.fechaActa;
+                        const actaNumber = lastActa?.numeroActa;
+                        const actaConceptoComite = lastActa?.conceptoComite;
+
                         this.resolucionForm
-                            .get('fechaActaSolicitudComite')
+                            .get('fechaActa')
+                            .setValue(actaDate ? new Date(actaDate) : null);
+
+                        this.resolucionForm
+                            .get('numeroActa')
+                            .setValue(actaNumber ? actaNumber : null);
+
+                        this.resolucionForm
+                            .get('conceptoComite')
                             .setValue(
-                                data?.fechaActaSolicitudComite
-                                    ? new Date(data.fechaActaSolicitudComite)
-                                    : null
+                                actaConceptoComite ? 'Aceptado' : 'Rechazado'
                             );
                     }
 
                     if (responses.coordinadorFase3) {
                         const data = responses.coordinadorFase3;
+
                         this.setValuesForm(data);
 
                         this.resolucionForm
@@ -557,52 +665,78 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     async updateResolucion() {
-        const id = Number(this.route.snapshot.paramMap.get('id'));
-        this.resolucionId = id;
         this.isLoading = true;
-
         try {
-            if (
-                this.role.includes('ROLE_COORDINADOR') == true &&
-                this.isDocenteCreated == false &&
-                this.isCoordinadorFase1Created == false &&
-                this.isCoordinadorFase2Created == false
-            ) {
-                const solicitudData = this.isReviewed
-                    ? {
-                          idTrabajoGrados: this.trabajoDeGradoId,
-                          conceptoDocumentosCoordinador: true,
-                      }
-                    : {
-                          idTrabajoGrados: this.trabajoDeGradoId,
-                          conceptoDocumentosCoordinador: false,
-                      };
+            if (this.role.includes('ROLE_DOCENTE')) {
+                if (
+                    this.estado ==
+                        EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COORDINADOR ||
+                    this.estado ==
+                        EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COMITE
+                ) {
+                    await lastValueFrom(
+                        this.resolucionService.updateResolucionDocente(
+                            this.resolucionForm.value,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else {
+                    this.isLoading = false;
+                    return this.messageService.add(
+                        errorMessage('No puedes modificar los datos.')
+                    );
+                }
+            }
 
-                await lastValueFrom(
-                    this.resolucionService.createResolucionCoordinadorFase1(
-                        solicitudData
-                    )
-                );
-            } else if (
+            if (
                 this.role.includes('ROLE_COORDINADOR') == true &&
                 this.isDocenteCreated == true &&
                 this.isCoordinadorFase1Created == false &&
                 this.isCoordinadorFase2Created == false
             ) {
-                const envioEmailCorrecionesDto = {
-                    idTrabajoGrados: this.trabajoDeGradoId,
-                    asunto: 'Revision documentos al consejo',
-                    mensaje: 'Envio documento para revision',
-                };
+                const base64AnteproyectoFinal = await this.formatFileString(
+                    this.FileAnteproyectoFinal
+                );
+                const base64SolicitudComite = await this.formatFileString(
+                    this.FileSolicitudComite
+                );
 
-                const resolucionData = {
-                    ...this.resolucionForm.value,
-                    envioEmailCorrecionesDto,
-                };
+                const resolucionData =
+                    this.resolucionForm.get('conceptoDocumentosCoordinador')
+                        .value == 'Aceptado'
+                        ? {
+                              conceptoDocumentosCoordinador: true,
+                              envioEmailDto: {
+                                  asunto: this.resolucionForm.get(
+                                      'asuntoCoordinador'
+                                  ).value,
+                                  mensaje:
+                                      this.resolucionForm.get(
+                                          'mensajeCoordinador'
+                                      ).value,
+                              },
+                              obtenerDocumentosParaEnvioDto: {
+                                  base64AnteproyectoFinal,
+                                  base64SolicitudComite,
+                              },
+                          }
+                        : {
+                              conceptoDocumentosCoordinador: false,
+                              envioEmailDto: {
+                                  asunto: this.resolucionForm.get(
+                                      'asuntoCoordinador'
+                                  ).value,
+                                  mensaje:
+                                      this.resolucionForm.get(
+                                          'mensajeCoordinador'
+                                      ).value,
+                              },
+                          };
 
                 await lastValueFrom(
-                    this.resolucionService.createResolucionCoordinadorFase2(
-                        resolucionData
+                    this.resolucionService.createResolucionCoordinadorFase1(
+                        resolucionData,
+                        this.trabajoDeGradoId
                     )
                 );
             } else if (
@@ -611,10 +745,74 @@ export class ResolucionExamenComponent implements OnInit {
                 this.isCoordinadorFase1Created == true &&
                 this.isCoordinadorFase2Created == false
             ) {
+                const {
+                    numeroActa,
+                    fechaActa,
+                    linkSolicitudConsejoFacultad,
+                    ...restFormValues
+                } = this.resolucionForm.value;
+
+                const resolucionData =
+                    this.resolucionForm.get('conceptoComite').value ==
+                    'Aceptado'
+                        ? {
+                              actaFechaRespuestaComite: [
+                                  {
+                                      conceptoComite: true,
+                                      numeroActa,
+                                      fechaActa,
+                                  },
+                              ],
+                              envioEmail: {
+                                  asunto: this.resolucionForm.get(
+                                      'asuntoComite'
+                                  ).value,
+                                  mensaje:
+                                      this.resolucionForm.get('mensajeComite')
+                                          .value,
+                              },
+                              linkSolicitudConsejoFacultad,
+                          }
+                        : {
+                              actaFechaRespuestaComite: [
+                                  {
+                                      conceptoComite: false,
+                                      numeroActa,
+                                      fechaActa,
+                                  },
+                              ],
+                              envioEmail: {
+                                  asunto: this.resolucionForm.get(
+                                      'asuntoComite'
+                                  ).value,
+                                  mensaje:
+                                      this.resolucionForm.get('mensajeComite')
+                                          .value,
+                              },
+                          };
+
+                await lastValueFrom(
+                    this.resolucionService.createResolucionCoordinadorFase2(
+                        resolucionData,
+                        this.trabajoDeGradoId
+                    )
+                );
+            } else if (
+                this.role.includes('ROLE_COORDINADOR') == true &&
+                this.isDocenteCreated == true &&
+                this.isCoordinadorFase1Created == true &&
+                this.isCoordinadorFase2Created == true
+            ) {
                 await lastValueFrom(
                     this.resolucionService.createResolucionCoordinadorFase3(
-                        this.resolucionForm.value
+                        this.resolucionForm.value,
+                        this.trabajoDeGradoId
                     )
+                );
+            } else {
+                this.isLoading = false;
+                return this.messageService.add(
+                    errorMessage('No puedes modificar los datos.')
                 );
             }
             this.isLoading = false;
@@ -635,11 +833,14 @@ export class ResolucionExamenComponent implements OnInit {
             this.isDocenteCreated == false
         ) {
             this.resolucionService
-                .createResolucionDocente(this.resolucionForm.value)
+                .createResolucionDocente(
+                    this.resolucionForm.value,
+                    this.trabajoDeGradoId
+                )
                 .subscribe({
                     next: (response) => {
                         if (response) {
-                            this.solicitudService.setResolucionSeleccionada(
+                            this.trabajoDeGradoService.setResolucionSeleccionada(
                                 response
                             );
                             this.messageService.add(
@@ -653,16 +854,6 @@ export class ResolucionExamenComponent implements OnInit {
                     },
                     error: (e) => this.handlerResponseException(e),
                 });
-        }
-
-        if (this.role.includes('ROLE_COORDINADOR') == true) {
-            timer(2000).subscribe(() => {
-                this.isLoading = false;
-                this.messageService.add(
-                    warnMessage(Aviso.CAMPOS_DOCENTE_PENDIENTE)
-                );
-                this.router.navigate([`examen-de-valoracion`]);
-            });
         }
     }
 
@@ -719,8 +910,22 @@ export class ResolucionExamenComponent implements OnInit {
         }
     }
 
-    convertFileToBase64(file: File): Promise<string> {
+    async formatFileString(file: any): Promise<any> {
+        try {
+            const base64 = await this.convertFileToBase64(file);
+            return `${base64}`;
+        } catch (error) {
+            console.error('Error al convertir el archivo a base64:', error);
+            throw error;
+        }
+    }
+
+    convertFileToBase64(file: File | Blob): Promise<string> {
         return new Promise<string>((resolve, reject) => {
+            if (!(file instanceof File || file instanceof Blob)) {
+                reject(new Error('El parámetro no es de tipo File o Blob'));
+                return;
+            }
             const reader = new FileReader();
             reader.onload = () => {
                 const base64String = reader.result as string;
@@ -818,17 +1023,12 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     mapDirectorLabel(docente: any) {
-        const ultimaUniversidad =
-            docente?.titulos?.length > 0
-                ? docente.titulos[docente.titulos.length - 1].universidad
-                : null;
-
         return {
             id: docente.id,
             nombre: docente.nombre,
             apellido: docente.apellido,
             correo: docente.correoElectronico ?? docente.correo,
-            universidad: docente.universidad ?? ultimaUniversidad,
+            universidad: docente.universidad,
         };
     }
 
@@ -885,18 +1085,14 @@ export class ResolucionExamenComponent implements OnInit {
         ]);
     }
 
-    redirectToRespuesta(respuestaId: number) {
-        respuestaId
-            ? this.router.navigate([
-                  `examen-de-valoracion/respuesta/editar/${respuestaId}`,
-              ])
-            : this.router.navigate(['examen-de-valoracion/respuesta']);
+    redirectToRespuesta() {
+        this.router.navigate(['examen-de-valoracion/respuesta']);
     }
 
     redirectToSustentacion(sustentacionId: number) {
         sustentacionId
             ? this.router.navigate([
-                  `examen-de-valoracion/sustentacion/editar/${sustentacionId}`,
+                  `examen-de-valoracion/sustentacion/editar/${this.trabajoDeGradoId}`,
               ])
             : this.router.navigate(['examen-de-valoracion/sustentacion']);
     }
@@ -906,7 +1102,7 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        if (response.status != 501) return;
+        if (response.status != 500) return;
         const mapException = mapResponseException(response.error);
         mapException.forEach((value, _) => {
             this.messageService.add(errorMessage(value));

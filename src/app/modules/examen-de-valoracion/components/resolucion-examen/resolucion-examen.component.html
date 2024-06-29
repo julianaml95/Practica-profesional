@@ -94,23 +94,6 @@
                             ></button>
                         </div>
                     </div>
-                    <div
-                        style="
-                            margin-top: 1rem;
-                            display: flex;
-                            align-items: center;
-                            column-gap: 0.5rem;
-                        "
-                    >
-                        <input
-                            type="checkbox"
-                            id="reviewedCheckbox"
-                            [(ngModel)]="isReviewed"
-                        />
-                        <label for="reviewedCheckbox"
-                            >Revisé todos los documentos</label
-                        >
-                    </div>
                 </div>
             </ng-template>
             <div class="pdf-container">
@@ -150,7 +133,7 @@
                 class="w-15rem p-button-secondary"
                 label="Respuesta al examen de valoración"
                 [disabled]="role == 'ROLE_ESTUDIANTE' || role == 'ROLE_DOCENTE'"
-                (click)="redirectToRespuesta(respuestaId)"
+                (click)="redirectToRespuesta()"
             ></button>
             <button
                 pButton
@@ -191,15 +174,8 @@
                 *ngIf="editMode"
                 pButton
                 icon="pi pi-pencil"
-                [label]="
-                    isDocenteCreated &&
-                    isCoordinadorFase1Created &&
-                    isCoordinadorFase2Created
-                        ? 'Modificar Informacion'
-                        : 'Guardar'
-                "
+                label="Modificar Informacion"
                 (click)="createOrUpdateResolucion()"
-                [disabled]="!isReviewed"
             ></button>
         </div>
     </div>
@@ -473,6 +449,125 @@
                         role.includes('ROLE_COORDINADOR') && isDocenteCreated
                     "
                 >
+                    <div
+                        class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
+                    >
+                        <div
+                            *ngFor="let estado of estados"
+                            class="field-checkbox"
+                        >
+                            <p-radioButton
+                                [inputId]="estado + 'coordinador'"
+                                [value]="estado"
+                                formControlName="conceptoDocumentosCoordinador"
+                            ></p-radioButton>
+                            <label
+                                [for]="estado + 'coordinador'"
+                                class="ml-2"
+                                >{{ estado }}</label
+                            >
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
+                    "
+                >
+                    <div class="col-2 col-label text-right align-self-center">
+                        <label class="label-required">Asunto</label>
+                    </div>
+                    <div class="col-9 col-input">
+                        <div class="flex m-4 align-items-center">
+                            <input
+                                class="p-inputtext-md"
+                                style="flex: 0.5"
+                                pInputText
+                                [maxLength]="250"
+                                formControlName="asuntoCoordinador"
+                            />
+                            <span class="p-float-label ml-4" style="flex: 0.5">
+                                <textarea
+                                    id="float-input"
+                                    class="w-full"
+                                    rows="5"
+                                    cols="30"
+                                    pInputTextarea
+                                    [autoResize]="true"
+                                    formControlName="mensajeCoordinador"
+                                ></textarea>
+                                <label for="float-input">Observación</label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created
+                    "
+                >
+                    <div
+                        class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
+                    >
+                        <div
+                            *ngFor="let estado of estados"
+                            class="field-checkbox"
+                        >
+                            <p-radioButton
+                                [inputId]="estado + 'comite'"
+                                [value]="estado"
+                                formControlName="conceptoComite"
+                            ></p-radioButton>
+                            <label [for]="estado + 'comite'" class="ml-2">{{
+                                estado
+                            }}</label>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created
+                    "
+                >
+                    <div class="col-2 col-label text-right align-self-center">
+                        <label class="label-required">Asunto</label>
+                    </div>
+                    <div class="col-9 col-input">
+                        <div class="flex m-4 align-items-center">
+                            <input
+                                class="p-inputtext-md"
+                                style="flex: 0.5"
+                                pInputText
+                                [maxLength]="250"
+                                formControlName="asuntoComite"
+                            />
+                            <span class="p-float-label ml-4" style="flex: 0.5">
+                                <textarea
+                                    id="float-input"
+                                    class="w-full"
+                                    rows="5"
+                                    cols="30"
+                                    pInputTextarea
+                                    [autoResize]="true"
+                                    formControlName="mensajeComite"
+                                ></textarea>
+                                <label for="float-input">Observación</label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="field grid"
+                    *ngIf="
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created
+                    "
+                >
                     <div class="col-4 text-right flex align-items-center">
                         <p style="width: 80%; margin-left: 20%">
                             No de resolucion generada por el comite
@@ -480,13 +575,10 @@
                     </div>
                     <div class="col-8">
                         <div class="flex align-items-center column-gap-3">
-                            <input
-                                pInputText
-                                formControlName="numeroActaSolicitudComite"
-                            />
+                            <input pInputText formControlName="numeroActa" />
                             <label class="text-right">Fecha del Acta</label>
                             <p-calendar
-                                formControlName="fechaActaSolicitudComite"
+                                formControlName="fechaActa"
                                 [showIcon]="true"
                                 dateFormat="dd.mm.yy"
                             ></p-calendar>
@@ -496,7 +588,8 @@
                 <div
                     class="field grid"
                     *ngIf="
-                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase1Created
                     "
                 >
                     <div class="col-4 text-right align-self-center pb-5">
@@ -579,7 +672,7 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created == true
+                        isCoordinadorFase2Created
                     "
                 >
                     <div class="col-4 text-right">

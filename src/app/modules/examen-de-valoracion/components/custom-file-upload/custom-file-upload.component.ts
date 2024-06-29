@@ -7,11 +7,11 @@ import {
     forwardRef,
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
-import { mapResponseException } from 'src/app/core/utils/exception-util';
-import { errorMessage } from 'src/app/core/utils/message-util';
 import { MessageService } from 'primeng/api';
 import { FileUpload } from 'primeng/fileupload';
 import { Aviso } from 'src/app/core/enums/enums';
+import { errorMessage } from 'src/app/core/utils/message-util';
+import { mapResponseException } from 'src/app/core/utils/exception-util';
 
 @Component({
     selector: 'app-custom-file-upload',
@@ -77,8 +77,10 @@ export class CustomFileUploadComponent implements ControlValueAccessor {
         if (selectedFiles && selectedFiles.length > 0) {
             const selectedFile = selectedFiles[0];
             if (selectedFile.size > maxFileSize) {
-                this.messageService.add(errorMessage(Aviso.ARCHIVO_DEMASIADO_GRANDE))
-                return null
+                this.messageService.add(
+                    errorMessage(Aviso.ARCHIVO_DEMASIADO_GRANDE)
+                );
+                return null;
             }
             const fileType = selectedFile.type.split('/')[1];
             this.convertFileToBase64(selectedFile)

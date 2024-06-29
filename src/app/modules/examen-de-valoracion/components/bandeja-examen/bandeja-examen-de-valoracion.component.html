@@ -67,7 +67,10 @@
                     icon="pi pi-plus"
                     label="Crear Examen de Valoracion"
                     (click)="onProcesoExamen()"
-                    [disabled]="!role.includes('ROLE_DOCENTE')"
+                    [disabled]="
+                        !role.includes('ROLE_DOCENTE') ||
+                        !estadosFinalizado.includes(estadoInicial)
+                    "
                 ></button>
             </div>
             <p-table
@@ -84,12 +87,21 @@
                     <tr>
                         <th scope="col" style="min-width: 200px">Titulo</th>
                         <th scope="col" style="min-width: 200px">
-                            Fecha creacion de Examen de Valoracion
+                            Fecha creacion
                         </th>
                         <th scope="col" style="min-width: 200px">
                             Estado Actual
                         </th>
-                        <th scope="col" style="min-width: 200px">Opciones</th>
+                        <th
+                            scope="col"
+                            style="min-width: 200px"
+                            *ngIf="
+                                estadoInicial == estadoEstudiante ||
+                                !role.includes('ROLE_ESTUDIANTE')
+                            "
+                        >
+                            Opciones
+                        </th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-solicitud>
@@ -99,7 +111,13 @@
                             {{ solicitud.fechaCreacion }}
                         </td>
                         <td style="min-width: 200px">{{ solicitud.estado }}</td>
-                        <td style="min-width: 200px">
+                        <td
+                            *ngIf="
+                                estadoInicial == estadoEstudiante ||
+                                !role.includes('ROLE_ESTUDIANTE')
+                            "
+                            style="min-width: 200px"
+                        >
                             <button
                                 pButton
                                 pTooltip="Editar"
@@ -109,6 +127,11 @@
                                 (click)="onEditar(solicitud.id)"
                             ></button>
                             <button
+                                *ngIf="
+                                    role.includes('ROLE_ESTUDIANTE')
+                                        ? false
+                                        : true
+                                "
                                 pButton
                                 pTooltip="Eliminar"
                                 type="button"
