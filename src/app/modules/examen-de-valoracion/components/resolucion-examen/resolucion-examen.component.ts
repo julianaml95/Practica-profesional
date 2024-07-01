@@ -479,48 +479,44 @@ export class ResolucionExamenComponent implements OnInit {
     //#endregion
 
     setup(fieldName: string) {
-        if (Object.keys(this.estudianteSeleccionado).length > 0) {
-            this.solicitudService
-                .getFile(this.resolucionForm.get(fieldName).value)
-                .subscribe({
-                    next: (response: any) => {
-                        if (response) {
-                            const byteCharacters = atob(response);
-                            const byteNumbers = new Array(
-                                byteCharacters.length
-                            );
-                            for (let i = 0; i < byteCharacters.length; i++) {
-                                byteNumbers[i] = byteCharacters.charCodeAt(i);
-                            }
-                            const byteArray = new Uint8Array(byteNumbers);
-                            const file = new File([byteArray], fieldName, {
-                                type: response.type,
-                            });
-                            switch (fieldName) {
-                                case 'linkAnteproyectoFinal':
-                                    this.FileAnteproyectoFinal = file;
-                                    break;
-                                case 'linkSolicitudComite':
-                                    this.FileSolicitudComite = file;
-                                    break;
-                                case 'linkSolicitudConsejoFacultad':
-                                    this.FileSolicitudConsejo = file;
-                                    break;
-                                default:
-                                    break;
-                            }
+        this.solicitudService
+            .getFile(this.resolucionForm.get(fieldName).value)
+            .subscribe({
+                next: (response: any) => {
+                    if (response) {
+                        const byteCharacters = atob(response);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
                         }
-                    },
-                    error: (e) => {
-                        if (!this.errorMessageShown) {
-                            this.messageService.add(
-                                warnMessage('Pendiente subir archivos.')
-                            );
-                            this.errorMessageShown = true;
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const file = new File([byteArray], fieldName, {
+                            type: response.type,
+                        });
+                        switch (fieldName) {
+                            case 'linkAnteproyectoFinal':
+                                this.FileAnteproyectoFinal = file;
+                                break;
+                            case 'linkSolicitudComite':
+                                this.FileSolicitudComite = file;
+                                break;
+                            case 'linkSolicitudConsejoFacultad':
+                                this.FileSolicitudConsejo = file;
+                                break;
+                            default:
+                                break;
                         }
-                    },
-                });
-        }
+                    }
+                },
+                error: (e) => {
+                    if (!this.errorMessageShown) {
+                        this.messageService.add(
+                            warnMessage('Pendiente subir archivos.')
+                        );
+                        this.errorMessageShown = true;
+                    }
+                },
+            });
     }
 
     setValuesForm(resolucion: Resolucion) {

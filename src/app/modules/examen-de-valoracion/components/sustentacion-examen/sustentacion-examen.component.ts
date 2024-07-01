@@ -395,60 +395,56 @@ export class SustentacionExamenComponent implements OnInit {
     }
 
     setup(fieldName: string) {
-        if (Object.keys(this.estudianteSeleccionado).length > 0) {
-            this.solicitudService
-                .getFile(this.sustentacionForm.get(fieldName).value)
-                .subscribe({
-                    next: (response: any) => {
-                        if (response) {
-                            const byteCharacters = atob(response);
-                            const byteNumbers = new Array(
-                                byteCharacters.length
-                            );
-                            for (let i = 0; i < byteCharacters.length; i++) {
-                                byteNumbers[i] = byteCharacters.charCodeAt(i);
-                            }
-                            const byteArray = new Uint8Array(byteNumbers);
-                            const file = new File([byteArray], fieldName, {
-                                type: response.type,
-                            });
-                            switch (fieldName) {
-                                case 'linkFormatoF':
-                                    this.FileFormatoF = file;
-                                    break;
-                                case 'linkFormatoG':
-                                    this.FileFormatoG = file;
-                                    break;
-                                case 'linkEstudioHojaVidaAcademica':
-                                    this.FileEstudioHVA = file;
-                                    break;
-                                case 'linkFormatoH':
-                                    this.FileFormatoH = file;
-                                    break;
-                                case 'linkFormatoI':
-                                    this.FileFormatoI = file;
-                                    break;
-                                case 'linkActaSustentacionPublica':
-                                    this.FileActaSustentacionP = file;
-                                    break;
-                                case 'linkEstudioHojaVidaAcademicaGrado':
-                                    this.FileEstudioHVAGrado = file;
-                                    break;
-                                default:
-                                    break;
-                            }
+        this.solicitudService
+            .getFile(this.sustentacionForm.get(fieldName).value)
+            .subscribe({
+                next: (response: any) => {
+                    if (response) {
+                        const byteCharacters = atob(response);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
                         }
-                    },
-                    error: (e) => {
-                        if (!this.errorMessageShown) {
-                            this.messageService.add(
-                                warnMessage('Pendiente subir archivos.')
-                            );
-                            this.errorMessageShown = true;
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const file = new File([byteArray], fieldName, {
+                            type: response.type,
+                        });
+                        switch (fieldName) {
+                            case 'linkFormatoF':
+                                this.FileFormatoF = file;
+                                break;
+                            case 'linkFormatoG':
+                                this.FileFormatoG = file;
+                                break;
+                            case 'linkEstudioHojaVidaAcademica':
+                                this.FileEstudioHVA = file;
+                                break;
+                            case 'linkFormatoH':
+                                this.FileFormatoH = file;
+                                break;
+                            case 'linkFormatoI':
+                                this.FileFormatoI = file;
+                                break;
+                            case 'linkActaSustentacionPublica':
+                                this.FileActaSustentacionP = file;
+                                break;
+                            case 'linkEstudioHojaVidaAcademicaGrado':
+                                this.FileEstudioHVAGrado = file;
+                                break;
+                            default:
+                                break;
                         }
-                    },
-                });
-        }
+                    }
+                },
+                error: (e) => {
+                    if (!this.errorMessageShown) {
+                        this.messageService.add(
+                            warnMessage('Pendiente subir archivos.')
+                        );
+                        this.errorMessageShown = true;
+                    }
+                },
+            });
     }
 
     ngOnDestroy() {

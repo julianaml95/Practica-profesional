@@ -1,130 +1,92 @@
 <p-panel>
     <ng-template pTemplate="header">
-        <span
-            class="font-medium w-full text-center"
-            *ngIf="!estudianteSeleccionado"
+        <span class="font-medium w-full text-center"
             >Por favor, seleccione el estudiante que se encuentra bajo su
             dirección</span
         >
-        <span
-            class="font-bold w-full text-center"
-            *ngIf="estudianteSeleccionado"
-            >Informacion General</span
-        >
     </ng-template>
     <ng-template pTemplate="content">
-        <div
-            class="flex flex-column align-items-center justify-content-center gap-2"
-        >
+        <div class="flex justify-content-center mb-3 w-full">
             <button
                 pButton
                 icon="pi pi-plus"
-                label="Seleccionar Estudiante"
-                (click)="onSeleccionarEstudiante()"
-                *ngIf="!estudianteSeleccionado"
+                label="Crear Examen de Valoracion"
+                (click)="onProcesoExamen()"
+                [disabled]="!role.includes('ROLE_DOCENTE')"
             ></button>
-            <p-card
-                class="m-2 w-full max-w-30rem"
-                *ngIf="estudianteSeleccionado"
-            >
-                <div class="flex justify-content-between">
-                    <span style="font-size: 18px; font-weight: bold"
-                        >Datos del Estudiante</span
-                    >
-                    <button
-                        pButton
-                        class="p-button-secondary"
-                        icon="pi pi-times"
-                        (click)="limpiarEstudiante()"
-                    ></button>
-                </div>
-                <div class="mt-2 card-data flex justify-content-between">
-                    <span>Codigo</span>
-                    <span>{{ estudianteSeleccionado.codigo }}</span>
-                </div>
-                <div class="mt-2 card-data flex justify-content-between">
-                    <span>Numero de Identificacion</span>
-                    <span>{{ estudianteSeleccionado.identificacion }}</span>
-                </div>
-                <div class="mt-2 card-data flex justify-content-between">
-                    <span>Nombres y Apellidos</span>
-                    <span
-                        >{{ estudianteSeleccionado.nombre }}
-                        {{ estudianteSeleccionado.apellido }}</span
-                    >
-                </div>
-            </p-card>
         </div>
     </ng-template>
     <ng-template pTemplate="footer">
         <div
             class="col flex flex-column align-items-center justify-content-center w-full"
-            *ngIf="estudianteSeleccionado"
         >
-            <div class="flex justify-content-center mb-3 w-full">
-                <button
-                    pButton
-                    icon="pi pi-plus"
-                    label="Crear Examen de Valoracion"
-                    (click)="onProcesoExamen()"
-                    [disabled]="
-                        !role.includes('ROLE_DOCENTE') ||
-                        !estadosFinalizado.includes(estadoInicial)
-                    "
-                ></button>
+            <div class="mb-3">
+                <label class="mr-4" for="estadoSelect"
+                    >Filtrar por estado:</label
+                >
+                <p-multiSelect
+                    class="multiselect-custom-virtual-scroll"
+                    [(ngModel)]="selectedEstados"
+                    [options]="estados"
+                    optionLabel="text"
+                    itemSize="34"
+                    [filter]="true"
+                    [virtualScroll]="true"
+                    [showToggleAll]="false"
+                    selectedItemsLabel="{0} estados seleccionados"
+                    (onChange)="onEstadoChange($event)"
+                ></p-multiSelect>
             </div>
             <p-table
                 [value]="solicitudes"
                 [paginator]="true"
                 [loading]="loading"
                 [rows]="5"
-                [tableStyle]="{ width: '100%', 'max-width': '50rem' }"
+                [tableStyle]="{ width: '100%', 'max-width': '80rem' }"
                 [showCurrentPageReport]="true"
                 [scrollable]="true"
                 currentPageReportTemplate="{first} - {last} de {totalRecords}"
             >
                 <ng-template pTemplate="header">
                     <tr>
-                        <th scope="col" style="min-width: 200px">Titulo</th>
                         <th scope="col" style="min-width: 200px">
-                            Fecha creacion
+                            Identificacion
                         </th>
                         <th scope="col" style="min-width: 200px">
-                            Estado Actual
+                            Nombre Completo
                         </th>
-                        <th
-                            scope="col"
-                            style="min-width: 200px"
-                            *ngIf="
-                                estadoInicial == estadoEstudiante ||
-                                !role.includes('ROLE_ESTUDIANTE')
-                            "
-                        >
-                            Opciones
+                        <th scope="col" style="min-width: 200px">
+                            Correo Electronico
                         </th>
+                        <th scope="col" style="min-width: 200px">Estado</th>
+                        <th scope="col" style="min-width: 200px">Opciones</th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-solicitud>
                     <tr>
-                        <td style="min-width: 200px">{{ solicitud.titulo }}</td>
                         <td style="min-width: 200px">
-                            {{ solicitud.fechaCreacion }}
+                            {{ solicitud.identificacion }}
+                        </td>
+                        <td style="min-width: 200px">
+                            {{ solicitud.nombreCompleto }}
+                        </td>
+                        <td style="min-width: 200px">
+                            {{ solicitud.correoElectronico }}
                         </td>
                         <td style="min-width: 200px">{{ solicitud.estado }}</td>
-                        <td
-                            *ngIf="
-                                estadoInicial == estadoEstudiante ||
-                                !role.includes('ROLE_ESTUDIANTE')
-                            "
-                            style="min-width: 200px"
-                        >
+                        <td style="min-width: 200px">
                             <button
                                 pButton
                                 pTooltip="Editar"
                                 type="button"
                                 icon="pi pi-pencil"
                                 class="p-button-rounded p-button-text p-button-warning"
-                                (click)="onEditar(solicitud.id)"
+                                (click)="
+                                    onEditar(
+                                        solicitud.id,
+                                        solicitud.estudianteId
+                                    )
+                                "
                             ></button>
                             <button
                                 *ngIf="

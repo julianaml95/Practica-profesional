@@ -118,8 +118,6 @@ export class DocumentoFormatoAComponent implements OnInit {
                     this.estudiante.setValue(
                         this.nombreCompletoEstudiante(response)
                     );
-                } else {
-                    this.router.navigate(['examen-de-valoracion']);
                 }
             },
             error: (e) => this.handlerResponseException(e),

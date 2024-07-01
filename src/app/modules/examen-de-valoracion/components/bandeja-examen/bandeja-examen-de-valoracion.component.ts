@@ -2,19 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConfirmationService, MessageService, PrimeIcons } from 'primeng/api';
 import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
-import { DialogService } from 'primeng/dynamicdialog';
 import { Aviso, EstadoProceso } from 'src/app/core/enums/enums';
 import { errorMessage } from 'src/app/core/utils/message-util';
 import { Solicitud } from '../../models/solicitud';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { SolicitudService } from '../../services/solicitud.service';
-import { LocalStorageService } from '../../../../shared/services/localstorage.service';
+import { EstudianteService } from 'src/app/shared/services/estudiante.service';
+import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
+import { RespuestaService } from '../../services/respuesta.service';
 import { ResolucionService } from '../../services/resolucion.service';
 import { SustentacionService } from '../../services/sustentacion.service';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { RespuestaService } from '../../services/respuesta.service';
-import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
-import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -23,19 +21,19 @@ import { Subscription } from 'rxjs';
     styleUrls: ['./bandeja-examen-de-valoracion.component.scss'],
 })
 export class BandejaExamenDeValoracionComponent implements OnInit {
+    estudiante: Estudiante;
+
     loading: boolean;
-    estudianteSeleccionado: Estudiante;
-    estadoInicial: string =
-        EstadoProceso.SIN_REGISTRAR_SOLICITUD_EXAMEN_DE_VALORACION;
-    estadoEstudiante: string =
-        EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_ESTUDIANTE_SUSTENTACION;
+
+    estados: any[] = Object.keys(EstadoProceso).map((value, index) => ({
+        index,
+        text: value,
+    }));
+    selectedEstados: number[] = [];
     solicitudes: Solicitud[] | any[] = [];
     role: string[];
-    estadosFinalizado: string[] = [
-        EstadoProceso.SIN_REGISTRAR_SOLICITUD_EXAMEN_DE_VALORACION,
-        EstadoProceso.SUSTENTACION_APROBADA,
-        EstadoProceso.SUSTENTACION_NO_APROBADA,
-    ];
+
+    private estudianteSubscription: Subscription;
     private trabajoDeGradoSubscription: Subscription;
     private solicitudSubscription: Subscription;
     private respuestaSubscription: Subscription;
@@ -45,14 +43,13 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
     constructor(
         private breadcrumbService: BreadcrumbService,
         private router: Router,
+        private estudianteService: EstudianteService,
         private trabajoDeGradoService: TrabajoDeGradoService,
         private solicitudService: SolicitudService,
         private respuestaService: RespuestaService,
         private resolucionService: ResolucionService,
         private sustentacionService: SustentacionService,
         private messageService: MessageService,
-        private dialogService: DialogService,
-        private localStorageService: LocalStorageService,
         private confirmationService: ConfirmationService,
         private authService: AuthService
     ) {}
@@ -60,46 +57,26 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
     ngOnInit() {
         this.role = this.authService.getRole();
         this.setBreadcrumb();
-        this.loadData();
+        this.listTrabajosDeGrado([1]);
     }
 
-    async loadData() {
-        const estudiante = this.localStorageService.getLocalStorage('est');
-        if (estudiante) {
-            this.trabajoDeGradoService.setEstudianteSeleccionado(estudiante);
-            this.estudianteSeleccionado = estudiante;
-            await this.listTrabajosDeGrado(estudiante.id);
-        }
+    onEstadoChange(event: any): void {
+        const selectedIndices = event.value.map((estado: any) => estado.index);
+        this.listTrabajosDeGrado(selectedIndices);
     }
 
-    listTrabajosDeGrado(id: number) {
+    listTrabajosDeGrado(estados: number[]) {
         return new Promise<void>((resolve, reject) => {
             this.loading = true;
-
+            const estadosData = estados.length > 0 ? estados : [1];
             this.trabajoDeGradoSubscription = this.trabajoDeGradoService
-                .listTrabajosDeGrado(id)
+                .listTrabajosDeGradoPorEstado(estadosData)
                 .subscribe({
                     next: async (response) => {
-                        if (
-                            response &&
-                            response.trabajoGrado &&
-                            response.trabajoGrado.length > 0
-                        ) {
-                            const primerTrabajoConEstado =
-                                response.trabajoGrado.find((tg) => tg.estado);
-                            if (primerTrabajoConEstado) {
-                                this.estadoInicial =
-                                    primerTrabajoConEstado.estado;
-                            } else {
-                                this.estadoInicial =
-                                    EstadoProceso.SIN_REGISTRAR_SOLICITUD_EXAMEN_DE_VALORACION;
-                            }
-                        } else {
-                            this.estadoInicial =
-                                EstadoProceso.SIN_REGISTRAR_SOLICITUD_EXAMEN_DE_VALORACION;
+                        if (response) {
+                            this.solicitudes = response;
+                            resolve();
                         }
-                        this.solicitudes = response.trabajoGrado || [];
-                        resolve();
                     },
                     error: (e) => {
                         console.error(e);
@@ -109,6 +86,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                     },
                 });
 
+            this.trabajoDeGradoService.setEstudianteSeleccionado(null);
             this.trabajoDeGradoService.setSustentacionValid(null);
             this.trabajoDeGradoService.setResolucionValid(null);
             this.trabajoDeGradoService.setRespuestaValid(null);
@@ -125,8 +103,31 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         this.router.navigate(['examen-de-valoracion/solicitud']);
     }
 
-    onEditar(id: number) {
+    mapEstudianteLabel(estudiante: any) {
+        return {
+            id: estudiante.id,
+            nombre: estudiante.nombre,
+            codigo: estudiante.codigo,
+            apellido: estudiante.apellido,
+            identificacion: estudiante.identificacion,
+            tipoIdentificacion: estudiante.tipoIdentificacion,
+        };
+    }
+
+    onEditar(id: number, estudianteId: number) {
         this.unsubscribePreviousSubscriptions();
+        this.estudianteSubscription = this.estudianteService
+            .getEstudiante(estudianteId)
+            .subscribe({
+                next: (response) => {
+                    if (response) {
+                        this.estudiante = this.mapEstudianteLabel(response);
+                        this.trabajoDeGradoService.setEstudianteSeleccionado(
+                            this.estudiante
+                        );
+                    }
+                },
+            });
         this.trabajoDeGradoSubscription = this.trabajoDeGradoService
             .getTrabajoDeGrado(id)
             .subscribe({
@@ -197,6 +198,9 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
     }
 
     private unsubscribePreviousSubscriptions() {
+        if (this.estudianteSubscription) {
+            this.estudianteSubscription.unsubscribe();
+        }
         if (this.trabajoDeGradoSubscription) {
             this.trabajoDeGradoSubscription.unsubscribe();
         }
@@ -223,7 +227,7 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
             },
             error: (e) => console.error(e),
             complete: () => {
-                this.listTrabajosDeGrado(this.estudianteSeleccionado.id);
+                this.listTrabajosDeGrado([1]);
             },
         });
     }
@@ -236,49 +240,6 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
             acceptLabel: 'Si, eliminar',
             rejectLabel: 'No',
             accept: () => this.deleteTrabajoDeGrado(id),
-        });
-    }
-
-    showBuscadorEstudiantes() {
-        return this.dialogService.open(BuscadorEstudiantesComponent, {
-            header: 'Seleccionar estudiante',
-            width: '60%',
-        });
-    }
-
-    mapEstudianteLabel(estudiante: any) {
-        return {
-            id: estudiante.id,
-            nombre: estudiante.nombre,
-            codigo: estudiante.codigo,
-            apellido: estudiante.apellido,
-            identificacion: estudiante.identificacion,
-            tipoIdentificacion: estudiante.tipoIdentificacion,
-        };
-    }
-
-    limpiarEstudiante() {
-        this.estudianteSeleccionado = null;
-        this.localStorageService.clearLocalStorage('est');
-    }
-
-    onSeleccionarEstudiante() {
-        const ref = this.showBuscadorEstudiantes();
-        ref.onClose.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.estudianteSeleccionado =
-                        this.mapEstudianteLabel(response);
-                    this.trabajoDeGradoService.setEstudianteSeleccionado(
-                        this.estudianteSeleccionado
-                    );
-                    this.listTrabajosDeGrado(this.estudianteSeleccionado.id);
-                    this.localStorageService.saveLocalStorage(
-                        this.mapEstudianteLabel(response),
-                        'est'
-                    );
-                }
-            },
         });
     }
 

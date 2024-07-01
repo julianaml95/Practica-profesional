@@ -5,11 +5,30 @@
         >
     </ng-template>
     <div class="col flex align-items-center justify-content-center">
-        <p-card
-            class="m-2 w-full max-w-30rem"
-            header="Datos del Estudiante"
-            *ngIf="estudianteSeleccionado"
+        <div
+            *ngIf="!editMode && !estudianteSeleccionado"
+            class="flex flex-column align-items-center justify-content-center gap-2"
         >
+            <button
+                pButton
+                icon="pi pi-plus"
+                label="Seleccionar Estudiante"
+                (click)="onSeleccionarEstudiante()"
+            ></button>
+        </div>
+        <p-card class="m-2 w-full max-w-30rem" *ngIf="estudianteSeleccionado">
+            <div class="flex justify-content-between">
+                <span style="font-size: 18px; font-weight: bold"
+                    >Datos del Estudiante</span
+                >
+                <button
+                    *ngIf="!editMode"
+                    pButton
+                    class="p-button-secondary"
+                    icon="pi pi-times"
+                    (click)="limpiarEstudiante()"
+                ></button>
+            </div>
             <div class="mt-2 card-data flex justify-content-between">
                 <span>Codigo</span>
                 <span>{{ estudianteSeleccionado.codigo }}</span>
