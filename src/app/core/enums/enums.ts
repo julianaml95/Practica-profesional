@@ -65,3 +65,18 @@ export enum EstadoProceso {
     SUSTENTACION_NO_APROBADA = 'Sustentación no aprobada. Examen de valoración finalizado.',
     SUSTENTACION_APLAZADA = 'Sustentación aplazada. Examen de valoración en espera',
 }
+
+export enum EstadoEmpresa {
+    LABORA_ACTUALMENTE = 'Labora actualmente en la empresa',
+    CONTRATO_FINALIZADO = 'Contrato finalizado',
+}
+
+export enum Rol {
+    TUTOR = 'Tutor',
+    ASESOR = 'Asesor',
+}
+
+export enum TipoRol {
+    INTERNO = 'Interno',
+    EXTERNO = 'Externo',
+}

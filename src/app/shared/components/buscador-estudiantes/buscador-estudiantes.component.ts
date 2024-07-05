@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { EstudianteService } from '../../services/estudiante.service';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { mapResponseException } from 'src/app/core/utils/exception-util';

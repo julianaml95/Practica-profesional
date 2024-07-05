@@ -5,7 +5,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class BytesToKbPipe implements PipeTransform {
     transform(bytes: number): string {
-        const kilobytes = bytes / 1024; // 1 kilobyte = 1024 bytes
-        return kilobytes.toFixed(0); // Mostrar el resultado sin decimales
+        const kilobytes = bytes / 1024;
+        return kilobytes.toFixed(0);
     }
 }

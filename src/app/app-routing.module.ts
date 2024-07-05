@@ -17,9 +17,9 @@ import { HomeComponent } from './core/components/home/home.component';
                         {
                             path: 'login',
                             loadChildren: () =>
-                                import('./modules/login/login.module').then(
-                                    (m) => m.LoginModule
-                                ),
+                                import(
+                                    './modules/gestion-acceso/gestion-acceso.module'
+                                ).then((m) => m.LoginModule),
                         },
                         {
                             path: 'estudiantes',
@@ -39,14 +39,14 @@ import { HomeComponent } from './core/components/home/home.component';
                             path: 'examen-de-valoracion',
                             loadChildren: () =>
                                 import(
-                                    './modules/examen-de-valoracion/examen-de-valoracion.module'
+                                    './modules/gestion-examen-de-valoracion/gestion-examen-de-valoracion.module'
                                 ).then((m) => m.ExamenDeValoracionModule),
                         },
                         {
                             path: 'seguimiento-a-egresados',
                             loadChildren: () =>
                                 import(
-                                    './modules/seguimiento-a-egresados/seguimiento-a-egresados.module'
+                                    './modules/gestion-egresados/gestion-egresados.module'
                                 ).then((m) => m.SeguimientoAEgresadosModule),
                         },
                     ],

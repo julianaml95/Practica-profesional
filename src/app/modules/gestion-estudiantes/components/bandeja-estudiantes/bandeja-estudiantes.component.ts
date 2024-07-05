@@ -7,7 +7,6 @@ import { EstadoMastria } from 'src/app/core/enums/domain-enum';
 import { ConfirmationService, MessageService, PrimeIcons } from 'primeng/api';
 import { infoMessage } from 'src/app/core/utils/message-util';
 import { Mensaje } from 'src/app/core/enums/enums';
-import { SolicitudService } from 'src/app/modules/examen-de-valoracion/services/solicitud.service';
 
 @Component({
     selector: 'app-bandeja-estudiantes',
@@ -22,7 +21,6 @@ export class BandejaEstudiantesComponent implements OnInit {
     constructor(
         private breadcrumbService: BreadcrumbService,
         private estudianteService: EstudianteService,
-        private solicitudService: SolicitudService,
         private messageService: MessageService,
         private router: Router,
         private confirmationService: ConfirmationService,

@@ -32,7 +32,7 @@ export class AppTopBarComponent implements OnInit {
 
         this.authService.role$.subscribe((roles) => {
             if (roles.length > 0) {
-                this.role = roles[0]; // Assuming the user has a single role, adjust if necessary
+                this.role = roles[0];
             } else {
                 this.role = '';
             }

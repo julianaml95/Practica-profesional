@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-// import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { ExpertoService } from '../../services/experto.service';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { Router } from '@angular/router';
-import { Experto } from 'src/app/modules/examen-de-valoracion/models/experto';
+import { Experto } from 'src/app/modules/gestion-examen-de-valoracion/models/experto';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import { errorMessage } from 'src/app/core/utils/message-util';
 import { MessageService } from 'primeng/api';

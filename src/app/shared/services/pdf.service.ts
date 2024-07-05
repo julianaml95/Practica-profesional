@@ -51,14 +51,21 @@ export class PdfService {
         };
     }
 
-    async generatePDF(htmlContent: any): Promise<Blob> {
+    async generatePDF(htmlContent: any, htmlNextContent: any): Promise<Blob> {
         const content = await this.extractContentFromElement(htmlContent);
+        const nextContent = await this.extractContentFromElement(
+            htmlNextContent
+        );
         const footerContent = await this.extractFooterFromElement(htmlContent);
         const docDefinition = {
             pageSize: 'A4',
             styles: this.getStyles(),
             pageMargins: [30, 40, 30, 40],
-            content: content,
+            content: [
+                ...content,
+                { text: '', pageBreak: 'after' },
+                ...nextContent,
+            ],
             footer: () => {
                 return {
                     columns: footerContent,
@@ -93,7 +100,7 @@ export class PdfService {
     async extractFooterContent(node, content) {
         if (node.nodeType === Node.ELEMENT_NODE) {
             if (
-                node.classList.contains('body-footer') ||
+                node.classList.contains('footer-content') ||
                 node.classList.contains('footer-text')
             ) {
                 const bodyFooterContent = [];
@@ -106,6 +113,7 @@ export class PdfService {
                             image: imgData,
                             width: 120,
                             style: 'titleLeft',
+                            opacity: 0.6,
                         });
                     } else if (
                         child.nodeType === Node.ELEMENT_NODE &&
@@ -119,32 +127,33 @@ export class PdfService {
                             ) {
                                 divContent.push({
                                     text: ' ' + divChild.textContent.trim(),
-                                    style: 'imageRight',
-                                    margin: [5, 0, 0, 0],
+                                    alignment: 'center',
+                                    color: '#3e5270',
+                                    margin: [0, 0, 0, 5],
+                                    decoration: 'underline',
+                                    decorationStyle: 'solid',
+                                    decorationColor: '#ff0000',
+                                    lineHeight: 1.6,
+                                    opacity: 0.6,
+                                    italics: true,
                                 });
                             } else if (
                                 divChild.nodeType === Node.ELEMENT_NODE &&
-                                divChild.tagName === 'HR'
+                                divChild.tagName === 'STRONG'
                             ) {
                                 divContent.push({
-                                    canvas: [
-                                        {
-                                            type: 'line',
-                                            x1: 0,
-                                            y1: 0,
-                                            x2: 350,
-                                            y2: 0,
-                                            lineWidth: 1,
-                                            color: '#ff0000',
-                                        },
-                                    ],
+                                    text: ' ' + divChild.textContent.trim(),
                                     alignment: 'center',
-                                    margin: [0, 5, 0, 5],
+                                    color: '#3e5270',
+                                    margin: [0, 0, 0, 5],
+                                    opacity: 0.6,
                                 });
                             }
                         }
                         bodyFooterContent.push({
                             stack: divContent,
+                            alignment: 'center',
+                            width: '80%',
                         });
                     }
                 }
@@ -175,7 +184,7 @@ export class PdfService {
                 });
             }
 
-            if (node.classList.contains('header-titulo')) {
+            if (node.classList.contains('title-head')) {
                 const tituloContent = [];
 
                 for (let child of node.childNodes) {
@@ -193,7 +202,7 @@ export class PdfService {
                 content.push(...tituloContent);
             }
 
-            if (node.classList.contains('body-field')) {
+            if (node.classList.contains('field-content')) {
                 const bodyFieldContent = [];
                 for (let child of node.childNodes) {
                     if (
@@ -214,6 +223,15 @@ export class PdfService {
                             style: 'contentStyle',
                             width: '50%',
                         });
+                    } else if (
+                        child.nodeType === Node.ELEMENT_NODE &&
+                        child.tagName === 'UL'
+                    ) {
+                        bodyFieldContent.push({
+                            text: child.innerText.trim(),
+                            style: 'contentStyle',
+                            width: '20%',
+                        });
                     }
                 }
                 content.push({
@@ -222,7 +240,7 @@ export class PdfService {
                 });
             }
 
-            if (node.classList.contains('body-image')) {
+            if (node.classList.contains('field-firma')) {
                 const bodyImageContent = [];
 
                 for (let child of node.childNodes) {
@@ -233,6 +251,7 @@ export class PdfService {
                         bodyImageContent.push({
                             text: ' ' + child.textContent.trim(),
                             style: 'leftAlignment',
+                            width: '25%',
                         });
                     } else if (
                         child.nodeType === Node.ELEMENT_NODE &&
@@ -252,7 +271,7 @@ export class PdfService {
                             ],
                             alignment: 'left',
                             display: 'inline',
-                            margin: [0, 15, 0, 5],
+                            margin: [-10, 20, 0, 5],
                         });
                     }
                 }
@@ -265,7 +284,7 @@ export class PdfService {
                 }
             }
 
-            if (node.classList.contains('estudiante-image')) {
+            if (node.classList.contains('field-estudiante')) {
                 const estudianteImageContent = [];
 
                 for (let child of node.childNodes) {
@@ -308,6 +327,7 @@ export class PdfService {
                                     text: divChild.textContent.trim(),
                                     width: '100%',
                                     margin: [0, 2, 0, 2],
+                                    opacity: 0.6,
                                 });
                             }
                         }
@@ -329,6 +349,7 @@ export class PdfService {
                             image: imgData,
                             width: 80,
                             style: 'imageRight',
+                            opacity: 0.6,
                         });
                     }
                 }

@@ -5,21 +5,6 @@ export enum EstadoMastria {
     EN_SUSPENSION = 'En suspención',
 }
 
-export enum EstadoEmpresa {
-    LABORA_ACTUALMENTE = 'Labora actualmente en la empresa',
-    CONTRATO_FINALIZADO = 'Contrato finalizado',
-}
-
-export enum Rol {
-    TUTOR = 'Tutor',
-    ASESOR = 'Asesor',
-}
-
-export enum TipoRol {
-    INTERNO = 'Interno',
-    EXTERNO = 'Externo',
-}
-
 export enum TipoIdentificacion {
     CEDULA_CIUDADANIA = 'Cédula de ciudadanía',
     PASAPORTE = 'Pasaporte',

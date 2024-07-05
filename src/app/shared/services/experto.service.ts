@@ -1,12 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import {
-    backendGestionExpertos,
-    backendGestionTrabajoDeGrado,
-} from 'src/app/core/constants/api-url';
+import { backendGestionTrabajoDeGrado } from 'src/app/core/constants/api-url';
 import { getHeaders } from 'src/app/core/constants/header';
-import { Experto } from 'src/app/modules/examen-de-valoracion/models/experto';
+import { Experto } from 'src/app/modules/gestion-examen-de-valoracion/models/experto';
 
 @Injectable({
     providedIn: 'root',

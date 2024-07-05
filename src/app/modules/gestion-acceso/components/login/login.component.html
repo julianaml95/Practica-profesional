@@ -1,0 +1,56 @@
+<p-panel>
+    <p-header>Bienvenido</p-header>
+    <div
+        class="login-container"
+        style="
+            max-width: 400px;
+            margin: auto;
+            padding: 2rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        "
+    >
+        <div
+            style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-bottom: 1rem;
+            "
+        >
+            <h2>Iniciar Sesión</h2>
+        </div>
+        <form [formGroup]="loginForm">
+            <div class="p-field p-grid mt-2">
+                <label for="username" class="p-col-fixed"
+                    >Nombre de Usuario</label
+                >
+                <div class="p-col mt-2">
+                    <input
+                        pInputText
+                        class="w-full"
+                        id="username"
+                        formControlName="username"
+                    />
+                </div>
+            </div>
+            <div class="p-field p-grid mt-2">
+                <label for="password" class="p-col-fixed">Contraseña</label>
+                <div class="p-col mt-2">
+                    <input
+                        pInputText
+                        class="w-full"
+                        id="password"
+                        type="password"
+                        formControlName="password"
+                    />
+                </div>
+            </div>
+            <div class="p-field p-grid mt-2">
+                <button pButton type="button" (click)="onLogin()">
+                    Enviar
+                </button>
+            </div>
+        </form>
+    </div>
+</p-panel>

@@ -1,0 +1,16 @@
+.empresaForm {
+    overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+    .col-label,
+    .col-input {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .col-label {
+        text-align: left !important;
+        margin-bottom: 1rem;
+    }
+}

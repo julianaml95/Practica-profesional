@@ -24,8 +24,6 @@ import { AppBreadcrumbComponent } from './core/components/breadcrumb/app.breadcr
 import { BreadcrumbService } from './core/components/breadcrumb/app.breadcrumb.service';
 import { AuthInterceptor } from './shared/config/interceptor';
 import { PdfViewerModule } from 'ng2-pdf-viewer';
-import { LoginModule } from './modules/login/login.module';
-import { AuthService } from './shared/services/auth.service';
 
 @NgModule({
     imports: [
