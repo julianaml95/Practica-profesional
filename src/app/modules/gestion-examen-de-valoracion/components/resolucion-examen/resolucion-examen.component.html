@@ -223,11 +223,18 @@
                                     class="flex justify-content-between align-items-center"
                                 >
                                     <span
+                                        *ngIf="
+                                            directorSeleccionado.nombre;
+                                            else director
+                                        "
                                         >{{ directorSeleccionado.nombre }}
                                         {{
                                             directorSeleccionado.apellido
                                         }}</span
                                     >
+                                    <ng-template #director>
+                                        {{ directorSeleccionado }}
+                                    </ng-template>
                                     <button
                                         pButton
                                         class="p-button-secondary"
@@ -262,11 +269,18 @@
                             <p-card class="w-full max-w-30rem m-0">
                                 <div class="flex justify-content-between">
                                     <span
+                                        *ngIf="
+                                            codirectorSeleccionado.nombre;
+                                            else coodirector
+                                        "
                                         >{{ codirectorSeleccionado.nombre }}
                                         {{
                                             codirectorSeleccionado.apellido
                                         }}</span
                                     >
+                                    <ng-template #coodirector>
+                                        {{ codirectorSeleccionado }}
+                                    </ng-template>
                                     <button
                                         pButton
                                         class="p-button-secondary"
@@ -445,9 +459,7 @@
                 </div>
                 <div
                     class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
-                    "
+                    *ngIf="role.includes('ROLE_COORDINADOR') && isDocente"
                 >
                     <div
                         class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
@@ -471,9 +483,7 @@
                 </div>
                 <div
                     class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
-                    "
+                    *ngIf="role.includes('ROLE_COORDINADOR') && isDocente"
                 >
                     <div class="col-2 col-label text-right align-self-center">
                         <label class="label-required">Asunto</label>
@@ -505,8 +515,7 @@
                 <div
                     class="field grid"
                     *ngIf="
-                        role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created
+                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
                     "
                 >
                     <div
@@ -530,8 +539,7 @@
                 <div
                     class="field grid"
                     *ngIf="
-                        role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created
+                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
                     "
                 >
                     <div class="col-2 col-label text-right align-self-center">
@@ -564,8 +572,7 @@
                 <div
                     class="field grid"
                     *ngIf="
-                        role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created
+                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
                     "
                 >
                     <div class="col-4 text-right flex align-items-center">
@@ -589,7 +596,8 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created
+                        isCoordinadorFase1 &&
+                        resolucionForm.get('conceptoComite').value == 'APROBADO'
                     "
                 >
                     <div class="col-4 text-right align-self-center pb-5">
@@ -671,8 +679,7 @@
                 <div
                     class="field grid"
                     *ngIf="
-                        role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase2Created
+                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase2
                     "
                 >
                     <div class="col-4 text-right">

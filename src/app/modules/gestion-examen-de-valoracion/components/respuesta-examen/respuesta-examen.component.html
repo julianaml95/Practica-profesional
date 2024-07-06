@@ -102,10 +102,10 @@
                         <strong style="font-size: 16px"
                             >Evaluador Externo</strong
                         >
-                        <span>Nombre: {{ expertoSeleccionado.nombres }}</span>
+                        <span>Nombre: {{ expertoSeleccionado?.nombres }}</span>
                         <span
                             >Universidad:
-                            {{ expertoSeleccionado.universidad }}</span
+                            {{ expertoSeleccionado?.universidad }}</span
                         >
                     </div>
                 </div>
@@ -549,13 +549,6 @@
                                                                     i
                                                                 )
                                                             "
-                                                            [disabled]="
-                                                                isExamenCreado(
-                                                                    'expertoEvaluaciones',
-                                                                    i
-                                                                ) &&
-                                                                !isChangedExperto
-                                                            "
                                                         >
                                                             <ng-template
                                                                 pTemplate="content"
@@ -565,7 +558,9 @@
                                                                         selectedFiles[
                                                                             'expertoEvaluaciones.anexos' +
                                                                                 i
-                                                                        ] &&
+                                                                        ]
+                                                                            ?.length >
+                                                                            0 &&
                                                                         isExamenCreado(
                                                                             'expertoEvaluaciones',
                                                                             i
@@ -765,10 +760,10 @@
                         <strong style="font-size: 16px"
                             >Evaluador Interno</strong
                         >
-                        <span>Nombre: {{ docenteSeleccionado.nombres }}</span>
+                        <span>Nombre: {{ docenteSeleccionado?.nombres }}</span>
                         <span
                             >Universidad:
-                            {{ docenteSeleccionado.universidad }}</span
+                            {{ docenteSeleccionado?.universidad }}</span
                         >
                     </div>
                 </div>
@@ -1211,13 +1206,6 @@
                                                                     i
                                                                 )
                                                             "
-                                                            [disabled]="
-                                                                isExamenCreado(
-                                                                    'docenteEvaluaciones',
-                                                                    i
-                                                                ) &&
-                                                                !isChangedDocente
-                                                            "
                                                         >
                                                             <ng-template
                                                                 pTemplate="content"
@@ -1227,7 +1215,9 @@
                                                                         selectedFiles[
                                                                             'docenteEvaluaciones.anexos' +
                                                                                 i
-                                                                        ] &&
+                                                                        ]
+                                                                            ?.length >
+                                                                            0 &&
                                                                         isExamenCreado(
                                                                             'docenteEvaluaciones',
                                                                             i

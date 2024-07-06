@@ -259,7 +259,7 @@
                 *ngIf="
                     editMode &&
                     role.includes('ROLE_COORDINADOR') &&
-                    isCoordinadorFase1Created
+                    isCoordinadorFase1
                 "
                 pButton
                 pTooltip="Formatos B y C"
@@ -392,6 +392,13 @@
                                 icon="pi pi-plus"
                                 class="align-self-center"
                                 label="Crear Documento"
+                                [pTooltip]="
+                                    !this.evaluadorInternoSeleccionado ||
+                                    !this.evaluadorExternoSeleccionado
+                                        ? 'Debes seleccionar los evaluadores'
+                                        : ''
+                                "
+                                tooltipPosition="top"
                                 (click)="showFormatoA()"
                                 [loading]="loading"
                                 [disabled]="
@@ -797,9 +804,7 @@
                 </div>
                 <div
                     class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
-                    "
+                    *ngIf="role.includes('ROLE_COORDINADOR') && isDocente"
                 >
                     <div
                         class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
@@ -823,9 +828,7 @@
                 </div>
                 <div
                     class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') && isDocenteCreated
-                    "
+                    *ngIf="role.includes('ROLE_COORDINADOR') && isDocente"
                 >
                     <div class="col-2 col-label text-right align-self-center">
                         <label class="label-required">Asunto</label>
@@ -857,8 +860,7 @@
                 <div
                     class="field grid"
                     *ngIf="
-                        role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created
+                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
                     "
                 >
                     <div
@@ -882,8 +884,7 @@
                 <div
                     class="field grid"
                     *ngIf="
-                        role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created
+                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
                     "
                 >
                     <div class="col-2 col-label text-right align-self-center">
@@ -916,8 +917,7 @@
                 <div
                     class="field grid"
                     *ngIf="
-                        role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created
+                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
                     "
                 >
                     <div class="col-5 col-label text-right align-self-center">
@@ -932,8 +932,7 @@
                 <div
                     class="field grid"
                     *ngIf="
-                        role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created
+                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
                     "
                 >
                     <div class="col-5 col-label text-right align-self-center">
@@ -951,7 +950,7 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created &&
+                        isCoordinadorFase1 &&
                         solicitudForm.get('conceptoComite').value == 'Aceptado'
                     "
                 >
@@ -1047,7 +1046,7 @@
                     class="field grid"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1Created &&
+                        isCoordinadorFase1 &&
                         solicitudForm.get('conceptoComite').value == 'Aceptado'
                     "
                 >

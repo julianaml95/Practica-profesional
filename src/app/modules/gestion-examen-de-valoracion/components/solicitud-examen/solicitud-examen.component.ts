@@ -46,7 +46,6 @@ import { ResolucionService } from '../../services/resolucion.service';
 import { SolicitudService } from '../../services/solicitud.service';
 import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
 import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
-import { LocalStorageService } from 'src/app/shared/services/localstorage.service';
 
 @Component({
     selector: 'app-solicitud-examen',
@@ -86,6 +85,9 @@ export class SolicitudExamenComponent implements OnInit {
     editMode: boolean = false;
     isLoading: boolean;
     isChanged: boolean = false;
+    isDocente: boolean = false;
+    isCoordinadorFase1: boolean = false;
+    isCoordinadorFase2: boolean = false;
     isDocenteCreated: boolean = false;
     isCoordinadorFase1Created: boolean = false;
     isCoordinadorFase2Created: boolean = false;
@@ -328,8 +330,27 @@ export class SolicitudExamenComponent implements OnInit {
                                                     response?.evaluador_externo &&
                                                     response?.evaluador_interno
                                                 ) {
-                                                    this.isRespuestaValid =
-                                                        true;
+                                                    const evaluadorExternoAprobado =
+                                                        response.evaluador_externo.find(
+                                                            (evaluador: any) =>
+                                                                evaluador.respuestaExamenValoracion ===
+                                                                'APROBADO'
+                                                        );
+
+                                                    const evaluadorInternoAprobado =
+                                                        response.evaluador_interno.find(
+                                                            (evaluador: any) =>
+                                                                evaluador.respuestaExamenValoracion ===
+                                                                'APROBADO'
+                                                        );
+
+                                                    if (
+                                                        evaluadorExternoAprobado &&
+                                                        evaluadorInternoAprobado
+                                                    ) {
+                                                        this.isRespuestaValid =
+                                                            true;
+                                                    }
                                                 }
                                             },
                                         });
@@ -447,46 +468,14 @@ export class SolicitudExamenComponent implements OnInit {
         }
 
         if (role.includes('ROLE_COORDINADOR')) {
-            if (this.isDocenteCreated && !this.isCoordinadorFase1Created) {
+            if (this.isDocente && !this.isCoordinadorFase1) {
                 this.solicitudForm
                     .get('conceptoCoordinadorDocumentos')
                     .enable();
                 this.solicitudForm.get('asuntoCoordinador').enable();
                 this.solicitudForm.get('mensajeCoordinador').enable();
             }
-            if (
-                this.isCoordinadorFase1Created &&
-                !this.isCoordinadorFase2Created
-            ) {
-                this.solicitudForm
-                    .get('conceptoComite')
-                    .valueChanges.subscribe((value) => {
-                        if (value == 'Aceptado') {
-                            this.solicitudForm
-                                .get('linkOficioDirigidoEvaluadores')
-                                .enable();
-                            this.solicitudForm
-                                .get('fechaMaximaEvaluacion')
-                                .enable();
-                        } else if (value == 'Rechazado') {
-                            this.solicitudForm
-                                .get('linkOficioDirigidoEvaluadores')
-                                .disable();
-                            this.solicitudForm
-                                .get('fechaMaximaEvaluacion')
-                                .disable();
-                        }
-                    });
-                this.solicitudForm.get('conceptoComite').enable();
-                this.solicitudForm.get('asuntoComite').enable();
-                this.solicitudForm.get('mensajeComite').enable();
-                this.solicitudForm.get('numeroActa').enable();
-                this.solicitudForm.get('fechaActa').enable();
-            }
-            if (
-                this.isCoordinadorFase1Created &&
-                this.isCoordinadorFase2Created
-            ) {
+            if (this.isCoordinadorFase1) {
                 this.solicitudForm
                     .get('conceptoComite')
                     .valueChanges.subscribe((value) => {
@@ -545,14 +534,14 @@ export class SolicitudExamenComponent implements OnInit {
     checkEstados() {
         switch (this.estado) {
             case EstadoProceso.SIN_REGISTRAR_SOLICITUD_EXAMEN_DE_VALORACION:
-                this.isDocenteCreated = false;
-                this.isCoordinadorFase1Created = false;
-                this.isCoordinadorFase2Created = false;
+                this.isDocente = false;
+                this.isCoordinadorFase1 = false;
+                this.isCoordinadorFase2 = false;
                 break;
             case EstadoProceso.PENDIENTE_REVISION_COORDINADOR:
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = false;
-                this.isCoordinadorFase2Created = false;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = false;
+                this.isCoordinadorFase2 = false;
                 break;
             case EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COORDINADOR:
                 this.messageService.add({
@@ -561,14 +550,14 @@ export class SolicitudExamenComponent implements OnInit {
                     detail: EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COORDINADOR,
                     life: 2000,
                 });
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = false;
-                this.isCoordinadorFase2Created = false;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = false;
+                this.isCoordinadorFase2 = false;
                 break;
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR:
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = false;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = true;
+                this.isCoordinadorFase2 = false;
                 break;
             case EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COMITE:
                 this.messageService.add({
@@ -577,19 +566,19 @@ export class SolicitudExamenComponent implements OnInit {
                     detail: EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COMITE,
                     life: 2000,
                 });
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = true;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = true;
+                this.isCoordinadorFase2 = false;
                 break;
             case EstadoProceso.PENDIENTE_RESULTADO_EXAMEN_DE_VALORACION:
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = true;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = true;
+                this.isCoordinadorFase2 = true;
                 break;
             default:
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = true;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = true;
+                this.isCoordinadorFase2 = true;
                 break;
         }
 
@@ -781,10 +770,11 @@ export class SolicitudExamenComponent implements OnInit {
         try {
             if (this.role.includes('ROLE_DOCENTE')) {
                 if (
-                    this.estado ==
+                    this.isDocenteCreated == true &&
+                    (this.estado ==
                         EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COORDINADOR ||
-                    this.estado ==
-                        EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COMITE
+                        this.estado ==
+                            EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COMITE)
                 ) {
                     const formatoA = await this.formatFileString(
                         this.FileFormatoA,
@@ -846,84 +836,7 @@ export class SolicitudExamenComponent implements OnInit {
                         errorMessage('No puedes modificar los datos.')
                     );
                 } else if (
-                    this.isDocenteCreated &&
-                    this.isCoordinadorFase1Created &&
-                    !this.isCoordinadorFase2Created &&
-                    this.estado == EstadoProceso.PENDIENTE_REVISION_COORDINADOR
-                ) {
-                    const formatoA = await this.formatFileString(
-                        this.FileFormatoA,
-                        'linkFormatoA'
-                    );
-
-                    const formatoD = await this.formatFileString(
-                        this.FileFormatoD,
-                        'linkFormatoD'
-                    );
-                    const formatoE = await this.formatFileString(
-                        this.FileFormatoE,
-                        'linkFormatoE'
-                    );
-                    const anexos = await this.formatFileString(
-                        this.anexosFiles,
-                        'anexos'
-                    );
-
-                    const mailData =
-                        this.solicitudForm.get('conceptoCoordinadorDocumentos')
-                            .value == 'Aceptado'
-                            ? {
-                                  conceptoCoordinadorDocumentos: 'ACEPTADO',
-                                  envioEmail: {
-                                      asunto: this.solicitudForm.get(
-                                          'asuntoCoordinador'
-                                      ).value,
-                                      mensaje:
-                                          this.solicitudForm.get(
-                                              'mensajeCoordinador'
-                                          ).value,
-                                  },
-                                  documentosEnvioComite: {
-                                      b64FormatoA: formatoA,
-                                      b64FormatoD: formatoD,
-                                      b64FormatoE: formatoE,
-                                      b64Anexos: anexos,
-                                  },
-                              }
-                            : {
-                                  conceptoCoordinadorDocumentos: 'RECHAZADO',
-                                  envioEmail: {
-                                      asunto: this.solicitudForm.get(
-                                          'asuntoCoordinador'
-                                      ).value,
-                                      mensaje:
-                                          this.solicitudForm.get(
-                                              'mensajeCoordinador'
-                                          ).value,
-                                  },
-                              };
-
-                    const {
-                        asuntoCoordinador,
-                        mensajeCoordinador,
-                        ...restData
-                    } = this.solicitudForm.value;
-
-                    const solicitudData = {
-                        ...restData,
-                        ...mailData,
-                    };
-
-                    await lastValueFrom(
-                        this.solicitudService.updateSolicitudCoordinadorFase1(
-                            solicitudData,
-                            this.trabajoDeGradoId
-                        )
-                    );
-                } else if (
-                    this.isDocenteCreated &&
-                    !this.isCoordinadorFase1Created &&
-                    !this.isCoordinadorFase2Created &&
+                    this.isCoordinadorFase1Created == false &&
                     this.estado == EstadoProceso.PENDIENTE_REVISION_COORDINADOR
                 ) {
                     const formatoA = await this.formatFileString(
@@ -996,9 +909,7 @@ export class SolicitudExamenComponent implements OnInit {
                         )
                     );
                 } else if (
-                    this.isDocenteCreated &&
-                    this.isCoordinadorFase1Created &&
-                    !this.isCoordinadorFase2Created &&
+                    this.isCoordinadorFase2Created == false &&
                     this.estado ==
                         EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR
                 ) {
@@ -1103,9 +1014,82 @@ export class SolicitudExamenComponent implements OnInit {
                         )
                     );
                 } else if (
-                    this.isDocenteCreated &&
-                    this.isCoordinadorFase1Created &&
-                    this.isCoordinadorFase2Created
+                    this.isCoordinadorFase1Created == true &&
+                    this.estado == EstadoProceso.PENDIENTE_REVISION_COORDINADOR
+                ) {
+                    const formatoA = await this.formatFileString(
+                        this.FileFormatoA,
+                        'linkFormatoA'
+                    );
+
+                    const formatoD = await this.formatFileString(
+                        this.FileFormatoD,
+                        'linkFormatoD'
+                    );
+                    const formatoE = await this.formatFileString(
+                        this.FileFormatoE,
+                        'linkFormatoE'
+                    );
+                    const anexos = await this.formatFileString(
+                        this.anexosFiles,
+                        'anexos'
+                    );
+
+                    const mailData =
+                        this.solicitudForm.get('conceptoCoordinadorDocumentos')
+                            .value == 'Aceptado'
+                            ? {
+                                  conceptoCoordinadorDocumentos: 'ACEPTADO',
+                                  envioEmail: {
+                                      asunto: this.solicitudForm.get(
+                                          'asuntoCoordinador'
+                                      ).value,
+                                      mensaje:
+                                          this.solicitudForm.get(
+                                              'mensajeCoordinador'
+                                          ).value,
+                                  },
+                                  documentosEnvioComite: {
+                                      b64FormatoA: formatoA,
+                                      b64FormatoD: formatoD,
+                                      b64FormatoE: formatoE,
+                                      b64Anexos: anexos,
+                                  },
+                              }
+                            : {
+                                  conceptoCoordinadorDocumentos: 'RECHAZADO',
+                                  envioEmail: {
+                                      asunto: this.solicitudForm.get(
+                                          'asuntoCoordinador'
+                                      ).value,
+                                      mensaje:
+                                          this.solicitudForm.get(
+                                              'mensajeCoordinador'
+                                          ).value,
+                                  },
+                              };
+
+                    const {
+                        asuntoCoordinador,
+                        mensajeCoordinador,
+                        ...restData
+                    } = this.solicitudForm.value;
+
+                    const solicitudData = {
+                        ...restData,
+                        ...mailData,
+                    };
+
+                    await lastValueFrom(
+                        this.solicitudService.updateSolicitudCoordinadorFase1(
+                            solicitudData,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else if (
+                    this.isCoordinadorFase2Created == true &&
+                    this.estado ==
+                        EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR
                 ) {
                     const b64FormatoD = await this.formatFileString(
                         this.FileFormatoD,
@@ -1377,6 +1361,7 @@ export class SolicitudExamenComponent implements OnInit {
                           .getSolicitudDocente(this.trabajoDeGradoId)
                           .pipe(
                               catchError((error) => {
+                                  this.isDocenteCreated = false;
                                   console.error(
                                       'Error al obtener solicitud de docente:',
                                       error
@@ -1391,6 +1376,7 @@ export class SolicitudExamenComponent implements OnInit {
                       .getSolicitudCoordinadorFase1(this.trabajoDeGradoId)
                       .pipe(
                           catchError((error) => {
+                              this.isCoordinadorFase1Created = false;
                               console.error(
                                   'Error al obtener solicitud de coordinador fase 1:',
                                   error
@@ -1405,6 +1391,7 @@ export class SolicitudExamenComponent implements OnInit {
                       .getSolicitudCoordinadorFase2(this.trabajoDeGradoId)
                       .pipe(
                           catchError((error) => {
+                              this.isCoordinadorFase2Created = false;
                               console.error(
                                   'Error al obtener solicitud de coordinador fase 2:',
                                   error
@@ -1421,6 +1408,7 @@ export class SolicitudExamenComponent implements OnInit {
             }).subscribe({
                 next: (responses) => {
                     if (responses.docente) {
+                        this.isDocenteCreated = true;
                         const data = responses.docente;
                         this.trabajoDeGradoService.setTituloSeleccionadoSubject(
                             data.titulo
@@ -1451,6 +1439,7 @@ export class SolicitudExamenComponent implements OnInit {
                     }
 
                     if (responses.coordinadorFase1) {
+                        this.isCoordinadorFase1Created = true;
                         const data = responses.coordinadorFase1;
                         this.solicitudForm
                             .get('conceptoCoordinadorDocumentos')
@@ -1462,6 +1451,7 @@ export class SolicitudExamenComponent implements OnInit {
                     }
 
                     if (responses.coordinadorFase2) {
+                        this.isCoordinadorFase2Created = true;
                         const data = responses.coordinadorFase2;
                         this.setValuesForm(data);
 
@@ -1506,7 +1496,6 @@ export class SolicitudExamenComponent implements OnInit {
                         this.setup('linkFormatoE');
                         this.setup('anexos');
                     }
-
                     if (this.role.includes('ROLE_COORDINADOR')) {
                         this.setup('linkFormatoA');
                         this.setup('linkFormatoD');

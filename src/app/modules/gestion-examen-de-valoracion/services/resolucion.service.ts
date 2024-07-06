@@ -73,11 +73,56 @@ export class ResolucionService {
 
     updateResolucionDocente(
         resolucion: Resolucion,
-        resolucionId: number
+        trabajoDeGradoId: number
     ): Observable<any> {
         return this.http.put<any>(
             backendGestionTrabajoDeGrado(
-                `generacion_resolucion/actualizarInformacionDocente/${resolucionId}`
+                `generacion_resolucion/actualizarInformacionDocente/${trabajoDeGradoId}`
+            ),
+            resolucion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    updateResolucionCoordinadorFase1(
+        resolucion: any,
+        trabajoDeGradoId: number
+    ): Observable<any> {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `generacion_resolucion/actualizarInformacionCoordinadorFase1/${trabajoDeGradoId}`
+            ),
+            resolucion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    updateResolucionCoordinadorFase2(
+        resolucion: any,
+        trabajoDeGradoId: number
+    ): Observable<any> {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `generacion_resolucion/actualizarInformacionCoordinadorFase2/${trabajoDeGradoId}`
+            ),
+            resolucion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    updateResolucionCoordinadorFase3(
+        resolucion: any,
+        trabajoDeGradoId: number
+    ): Observable<any> {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `generacion_resolucion/actualizarInformacionCoordinadorFase3/${trabajoDeGradoId}`
             ),
             resolucion,
             {

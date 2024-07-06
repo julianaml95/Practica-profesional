@@ -17,8 +17,14 @@ import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadc
 import { Experto } from '../../models/experto';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
-import { Subscription, forkJoin, lastValueFrom, of, timer } from 'rxjs';
-import { SolicitudService } from '../../services/solicitud.service';
+import {
+    Subscription,
+    catchError,
+    forkJoin,
+    lastValueFrom,
+    of,
+    timer,
+} from 'rxjs';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {
     errorMessage,
@@ -33,8 +39,6 @@ import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-ex
 import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { ExpertoService } from 'src/app/shared/services/experto.service';
-import { DocenteService } from 'src/app/shared/services/docente.service';
 import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
 
 @Component({
@@ -62,6 +66,10 @@ export class ResolucionExamenComponent implements OnInit {
     editMode: boolean = false;
     isPdfLoaded: boolean = false;
     isLoading: boolean;
+    isDocente: boolean = false;
+    isCoordinadorFase1: boolean = false;
+    isCoordinadorFase2: boolean = false;
+    isCoordinadorFase3: boolean = false;
     isDocenteCreated: boolean = false;
     isCoordinadorFase1Created: boolean = false;
     isCoordinadorFase2Created: boolean = false;
@@ -70,7 +78,7 @@ export class ResolucionExamenComponent implements OnInit {
 
     role: string[];
     pdfUrls: { name: string; url: string }[] = [];
-    estados: string[] = ['Aceptado', 'Rechazado'];
+    estados: string[] = ['APROBADO', 'NO_APROBADO'];
 
     trabajoDeGradoId: number;
     respuestaId: number;
@@ -89,21 +97,18 @@ export class ResolucionExamenComponent implements OnInit {
         private router: Router,
         private trabajoDeGradoService: TrabajoDeGradoService,
         private resolucionService: ResolucionService,
-        private solicitudService: SolicitudService,
         private breadcrumbService: BreadcrumbService,
         private messageService: MessageService,
         private dialogService: DialogService,
-        private authService: AuthService,
-        private expertoService: ExpertoService,
-        private docenteService: DocenteService
+        private authService: AuthService
     ) {}
 
     get director(): FormControl {
-        return this.resolucionForm.get('director') as FormControl;
+        return this.resolucionForm.get('idDirector') as FormControl;
     }
 
     get codirector(): FormControl {
-        return this.resolucionForm.get('codirector') as FormControl;
+        return this.resolucionForm.get('idCodirector') as FormControl;
     }
 
     ngOnInit() {
@@ -124,8 +129,8 @@ export class ResolucionExamenComponent implements OnInit {
 
     initForm(): void {
         this.resolucionForm = this.fb.group({
-            director: [null, Validators.required],
-            codirector: [null, Validators.required],
+            idDirector: [null, Validators.required],
+            idCodirector: [null, Validators.required],
             linkAnteproyectoFinal: [null, Validators.required],
             linkSolicitudComite: [null, Validators.required],
             asuntoCoordinador: [null],
@@ -146,7 +151,7 @@ export class ResolucionExamenComponent implements OnInit {
         this.resolucionForm
             .get('conceptoDocumentosCoordinador')
             .valueChanges.subscribe((value) => {
-                if (value == 'Aceptado') {
+                if (value == 'APROBADO') {
                     this.resolucionForm
                         .get('asuntoCoordinador')
                         .setValue(
@@ -159,7 +164,7 @@ export class ResolucionExamenComponent implements OnInit {
                             'Solicito comedidamente revisar el resolucion de valoracion del estudiante para aprobacion.'
                         );
                 }
-                if (value == 'Rechazado') {
+                if (value == 'NO_APROBADO') {
                     this.resolucionForm
                         .get('asuntoCoordinador')
                         .setValue(
@@ -176,7 +181,7 @@ export class ResolucionExamenComponent implements OnInit {
         this.resolucionForm
             .get('conceptoComite')
             .valueChanges.subscribe((value) => {
-                if (value == 'Aceptado') {
+                if (value == 'APROBADO') {
                     this.resolucionForm
                         .get('asuntoComite')
                         .setValue('Envio evaluadores');
@@ -186,7 +191,7 @@ export class ResolucionExamenComponent implements OnInit {
                             'Envio documentos para que por favor los revisen y den respuesta oportuna.'
                         );
                 }
-                if (value == 'Rechazado') {
+                if (value == 'NO_APROBADO') {
                     this.resolucionForm
                         .get('asuntoComite')
                         .setValue('Envio correcion por parte del comite');
@@ -207,23 +212,33 @@ export class ResolucionExamenComponent implements OnInit {
         }
 
         if (role.includes('ROLE_DOCENTE')) {
-            formControls['director'].enable();
-            formControls['codirector'].enable();
+            formControls['idDirector'].enable();
+            formControls['idCodirector'].enable();
             formControls['linkAnteproyectoFinal'].enable();
             formControls['linkSolicitudComite'].enable();
         }
 
         if (role.includes('ROLE_COORDINADOR')) {
-            if (this.isDocenteCreated && !this.isCoordinadorFase1Created) {
+            if (this.isDocente && !this.isCoordinadorFase1) {
                 formControls['conceptoDocumentosCoordinador'].enable();
                 formControls['asuntoCoordinador'].enable();
                 formControls['mensajeCoordinador'].enable();
             }
 
-            if (
-                this.isCoordinadorFase1Created &&
-                !this.isCoordinadorFase2Created
-            ) {
+            if (this.isCoordinadorFase1 && !this.isCoordinadorFase2) {
+                this.resolucionForm
+                    .get('conceptoComite')
+                    .valueChanges.subscribe((value) => {
+                        if (value == 'APROBADO') {
+                            this.resolucionForm
+                                .get('linkSolicitudConsejoFacultad')
+                                .enable();
+                        } else if (value == 'NO_APROBADO') {
+                            this.resolucionForm
+                                .get('linkSolicitudConsejoFacultad')
+                                .disable();
+                        }
+                    });
                 formControls['conceptoComite'].enable();
                 formControls['asuntoComite'].enable();
                 formControls['mensajeComite'].enable();
@@ -232,7 +247,7 @@ export class ResolucionExamenComponent implements OnInit {
                 formControls['linkSolicitudConsejoFacultad'].enable();
             }
 
-            if (this.isCoordinadorFase2Created) {
+            if (this.isCoordinadorFase2) {
                 formControls['numeroActaConsejoFacultad'].enable();
                 formControls['fechaActaConsejoFacultad'].enable();
             }
@@ -339,16 +354,16 @@ export class ResolucionExamenComponent implements OnInit {
                     detail: EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2,
                     life: 2000,
                 });
-                this.isDocenteCreated = false;
-                this.isCoordinadorFase1Created = false;
-                this.isCoordinadorFase2Created = false;
-                this.isCoordinadorFase3Created = false;
+                this.isDocente = false;
+                this.isCoordinadorFase1 = false;
+                this.isCoordinadorFase2 = false;
+                this.isCoordinadorFase3 = false;
                 break;
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_GENERACION_RESOLUCION:
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = false;
-                this.isCoordinadorFase2Created = false;
-                this.isCoordinadorFase3Created = false;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = false;
+                this.isCoordinadorFase2 = false;
+                this.isCoordinadorFase3 = false;
                 break;
             case EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COORDINADOR:
                 this.messageService.add({
@@ -357,16 +372,16 @@ export class ResolucionExamenComponent implements OnInit {
                     detail: EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COORDINADOR,
                     life: 2000,
                 });
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = false;
-                this.isCoordinadorFase3Created = false;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = false;
+                this.isCoordinadorFase2 = false;
+                this.isCoordinadorFase3 = false;
                 break;
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE2_GENERACION_RESOLUCION:
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = false;
-                this.isCoordinadorFase3Created = false;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = true;
+                this.isCoordinadorFase2 = false;
+                this.isCoordinadorFase3 = false;
                 break;
             case EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COMITE:
                 this.messageService.add({
@@ -375,28 +390,28 @@ export class ResolucionExamenComponent implements OnInit {
                     detail: EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COMITE,
                     life: 2000,
                 });
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = true;
-                this.isCoordinadorFase3Created = false;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = true;
+                this.isCoordinadorFase2 = false;
+                this.isCoordinadorFase3 = false;
                 break;
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE3_GENERACION_RESOLUCION:
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = true;
-                this.isCoordinadorFase3Created = false;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = true;
+                this.isCoordinadorFase2 = true;
+                this.isCoordinadorFase3 = false;
                 break;
             case EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_DOCENTE_SUSTENTACION:
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = true;
-                this.isCoordinadorFase3Created = true;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = true;
+                this.isCoordinadorFase2 = true;
+                this.isCoordinadorFase3 = true;
                 break;
             default:
-                this.isDocenteCreated = true;
-                this.isCoordinadorFase1Created = true;
-                this.isCoordinadorFase2Created = true;
-                this.isCoordinadorFase3Created = true;
+                this.isDocente = true;
+                this.isCoordinadorFase1 = true;
+                this.isCoordinadorFase2 = true;
+                this.isCoordinadorFase3 = true;
                 break;
         }
 
@@ -532,26 +547,63 @@ export class ResolucionExamenComponent implements OnInit {
             const docenteObs =
                 this.role.includes('ROLE_DOCENTE') ||
                 this.role.includes('ROLE_COORDINADOR')
-                    ? this.resolucionService.getResolucionDocente(
-                          this.trabajoDeGradoId
-                      )
+                    ? this.resolucionService
+                          .getResolucionDocente(this.trabajoDeGradoId)
+                          .pipe(
+                              catchError((error) => {
+                                  this.isDocenteCreated = false;
+                                  console.error(
+                                      'Error al obtener resolución de docente:',
+                                      error
+                                  );
+                                  return of(null);
+                              })
+                          )
                     : of(null);
 
             const coordinadorFase1Obs = this.role.includes('ROLE_COORDINADOR')
-                ? this.resolucionService.getResolucionCoordinadorFase1(
-                      this.trabajoDeGradoId
-                  )
+                ? this.resolucionService
+                      .getResolucionCoordinadorFase1(this.trabajoDeGradoId)
+                      .pipe(
+                          catchError((error) => {
+                              this.isCoordinadorFase1Created = false;
+                              console.error(
+                                  'Error al obtener resolución de coordinador fase 1:',
+                                  error
+                              );
+                              return of(null);
+                          })
+                      )
                 : of(null);
 
             const coordinadorFase2Obs = this.role.includes('ROLE_COORDINADOR')
-                ? this.resolucionService.getResolucionCoordinadorFase2(
-                      this.trabajoDeGradoId
-                  )
+                ? this.resolucionService
+                      .getResolucionCoordinadorFase2(this.trabajoDeGradoId)
+                      .pipe(
+                          catchError((error) => {
+                              this.isCoordinadorFase2Created = false;
+                              console.error(
+                                  'Error al obtener resolución de coordinador fase 2:',
+                                  error
+                              );
+                              return of(null);
+                          })
+                      )
                 : of(null);
+
             const coordinadorFase3Obs = this.role.includes('ROLE_COORDINADOR')
-                ? this.resolucionService.getResolucionCoordinadorFase3(
-                      this.trabajoDeGradoId
-                  )
+                ? this.resolucionService
+                      .getResolucionCoordinadorFase3(this.trabajoDeGradoId)
+                      .pipe(
+                          catchError((error) => {
+                              this.isCoordinadorFase3Created = false;
+                              console.error(
+                                  'Error al obtener resolución de coordinador fase 3:',
+                                  error
+                              );
+                              return of(null);
+                          })
+                      )
                 : of(null);
 
             forkJoin({
@@ -562,53 +614,35 @@ export class ResolucionExamenComponent implements OnInit {
             }).subscribe({
                 next: (responses) => {
                     if (responses.docente) {
+                        this.isDocenteCreated = true;
                         const data = responses.docente;
                         this.setValuesForm(data);
-
                         this.trabajoDeGradoService.setTituloSeleccionadoSubject(
                             data.titulo
                         );
-
-                        this.expertoService
-                            .obtenerExperto(Number(data.codirector))
-                            .subscribe({
-                                next: (response) => {
-                                    this.codirectorSeleccionado =
-                                        this.mapCodirectorLabel(response);
-                                    this.codirector.setValue(response.id);
-                                },
-                            });
-
-                        this.docenteService
-                            .obtenerDocente(Number(data.director))
-                            .subscribe({
-                                next: (response) => {
-                                    this.directorSeleccionado =
-                                        this.mapDirectorLabel(response);
-                                    this.director.setValue(response.id);
-                                },
-                            });
+                        this.codirectorSeleccionado = data.codirector;
+                        this.directorSeleccionado = data.director;
                     }
 
                     if (responses.coordinadorFase1) {
+                        this.isCoordinadorFase1Created = true;
                         const data = responses.coordinadorFase1;
-                        data.conceptoDocumentosCoordinador
+                        data.conceptoDocumentosCoordinador == 'APROBADO'
                             ? this.resolucionForm
                                   .get('conceptoDocumentosCoordinador')
-                                  .setValue('Aceptado')
+                                  .setValue('APROBADO')
                             : this.resolucionForm
                                   .get('conceptoDocumentosCoordinador')
-                                  .setValue('Rechazado');
+                                  .setValue('NO_APROBADO');
                     }
 
                     if (responses.coordinadorFase2) {
+                        this.isCoordinadorFase2Created = true;
                         const data = responses.coordinadorFase2;
                         this.setValuesForm(data);
-
                         const lastIdx: number =
                             data.actaFechaRespuestaComite.length - 1;
                         const lastActa = data.actaFechaRespuestaComite[lastIdx];
-
                         const actaDate = lastActa?.fechaActa;
                         const actaNumber = lastActa?.numeroActa;
                         const actaConceptoComite = lastActa?.conceptoComite;
@@ -624,15 +658,16 @@ export class ResolucionExamenComponent implements OnInit {
                         this.resolucionForm
                             .get('conceptoComite')
                             .setValue(
-                                actaConceptoComite ? 'Aceptado' : 'Rechazado'
+                                actaConceptoComite == 'APROBADO'
+                                    ? 'APROBADO'
+                                    : 'NO_APROBADO'
                             );
                     }
 
                     if (responses.coordinadorFase3) {
+                        this.isCoordinadorFase3Created = true;
                         const data = responses.coordinadorFase3;
-
                         this.setValuesForm(data);
-
                         this.resolucionForm
                             .get('fechaActaConsejoFacultad')
                             .setValue(
@@ -665,10 +700,11 @@ export class ResolucionExamenComponent implements OnInit {
         try {
             if (this.role.includes('ROLE_DOCENTE')) {
                 if (
-                    this.estado ==
+                    this.isDocenteCreated == true &&
+                    (this.estado ==
                         EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COORDINADOR ||
-                    this.estado ==
-                        EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COMITE
+                        this.estado ==
+                            EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COMITE)
                 ) {
                     await lastValueFrom(
                         this.resolucionService.updateResolucionDocente(
@@ -684,132 +720,263 @@ export class ResolucionExamenComponent implements OnInit {
                 }
             }
 
-            if (
-                this.role.includes('ROLE_COORDINADOR') == true &&
-                this.isDocenteCreated == true &&
-                this.isCoordinadorFase1Created == false &&
-                this.isCoordinadorFase2Created == false
-            ) {
-                const base64AnteproyectoFinal = await this.formatFileString(
-                    this.FileAnteproyectoFinal
-                );
-                const base64SolicitudComite = await this.formatFileString(
-                    this.FileSolicitudComite
-                );
+            if (this.role.includes('ROLE_COORDINADOR')) {
+                if (
+                    this.estado ==
+                        EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COORDINADOR ||
+                    this.estado ==
+                        EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COMITE
+                ) {
+                    this.isLoading = false;
+                    return this.messageService.add(
+                        errorMessage('No puedes modificar los datos.')
+                    );
+                } else if (
+                    this.isCoordinadorFase1Created == false &&
+                    this.estado ==
+                        EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_GENERACION_RESOLUCION
+                ) {
+                    const base64AnteproyectoFinal = await this.formatFileString(
+                        this.FileAnteproyectoFinal
+                    );
+                    const base64SolicitudComite = await this.formatFileString(
+                        this.FileSolicitudComite
+                    );
 
-                const resolucionData =
-                    this.resolucionForm.get('conceptoDocumentosCoordinador')
-                        .value == 'Aceptado'
-                        ? {
-                              conceptoDocumentosCoordinador: true,
-                              envioEmailDto: {
-                                  asunto: this.resolucionForm.get(
-                                      'asuntoCoordinador'
-                                  ).value,
-                                  mensaje:
-                                      this.resolucionForm.get(
-                                          'mensajeCoordinador'
+                    const resolucionData =
+                        this.resolucionForm.get('conceptoDocumentosCoordinador')
+                            .value == 'APROBADO'
+                            ? {
+                                  conceptoDocumentosCoordinador: 'APROBADO',
+                                  envioEmail: {
+                                      asunto: this.resolucionForm.get(
+                                          'asuntoCoordinador'
                                       ).value,
-                              },
-                              obtenerDocumentosParaEnvioDto: {
-                                  base64AnteproyectoFinal,
-                                  base64SolicitudComite,
-                              },
-                          }
-                        : {
-                              conceptoDocumentosCoordinador: false,
-                              envioEmailDto: {
-                                  asunto: this.resolucionForm.get(
-                                      'asuntoCoordinador'
-                                  ).value,
-                                  mensaje:
-                                      this.resolucionForm.get(
-                                          'mensajeCoordinador'
+                                      mensaje:
+                                          this.resolucionForm.get(
+                                              'mensajeCoordinador'
+                                          ).value,
+                                  },
+                                  obtenerDocumentosParaEnvio: {
+                                      base64AnteproyectoFinal,
+                                      base64SolicitudComite,
+                                  },
+                              }
+                            : {
+                                  conceptoDocumentosCoordinador: 'NO_APROBADO',
+                                  envioEmail: {
+                                      asunto: this.resolucionForm.get(
+                                          'asuntoCoordinador'
                                       ).value,
-                              },
-                          };
-
-                await lastValueFrom(
-                    this.resolucionService.createResolucionCoordinadorFase1(
-                        resolucionData,
-                        this.trabajoDeGradoId
-                    )
-                );
-            } else if (
-                this.role.includes('ROLE_COORDINADOR') == true &&
-                this.isDocenteCreated == true &&
-                this.isCoordinadorFase1Created == true &&
-                this.isCoordinadorFase2Created == false
-            ) {
-                const {
-                    numeroActa,
-                    fechaActa,
-                    linkSolicitudConsejoFacultad,
-                    ...restFormValues
-                } = this.resolucionForm.value;
-
-                const resolucionData =
-                    this.resolucionForm.get('conceptoComite').value ==
-                    'Aceptado'
-                        ? {
-                              actaFechaRespuestaComite: [
-                                  {
-                                      conceptoComite: true,
-                                      numeroActa,
-                                      fechaActa,
+                                      mensaje:
+                                          this.resolucionForm.get(
+                                              'mensajeCoordinador'
+                                          ).value,
                                   },
-                              ],
-                              envioEmail: {
-                                  asunto: this.resolucionForm.get(
-                                      'asuntoComite'
-                                  ).value,
-                                  mensaje:
-                                      this.resolucionForm.get('mensajeComite')
-                                          .value,
-                              },
-                              linkSolicitudConsejoFacultad,
-                          }
-                        : {
-                              actaFechaRespuestaComite: [
-                                  {
-                                      conceptoComite: false,
-                                      numeroActa,
-                                      fechaActa,
-                                  },
-                              ],
-                              envioEmail: {
-                                  asunto: this.resolucionForm.get(
-                                      'asuntoComite'
-                                  ).value,
-                                  mensaje:
-                                      this.resolucionForm.get('mensajeComite')
-                                          .value,
-                              },
-                          };
+                              };
 
-                await lastValueFrom(
-                    this.resolucionService.createResolucionCoordinadorFase2(
-                        resolucionData,
-                        this.trabajoDeGradoId
-                    )
-                );
-            } else if (
-                this.role.includes('ROLE_COORDINADOR') == true &&
-                this.isDocenteCreated == true &&
-                this.isCoordinadorFase1Created == true &&
-                this.isCoordinadorFase2Created == true
-            ) {
-                await lastValueFrom(
-                    this.resolucionService.createResolucionCoordinadorFase3(
-                        this.resolucionForm.value,
-                        this.trabajoDeGradoId
-                    )
-                );
-            } else {
-                this.isLoading = false;
-                return this.messageService.add(
-                    errorMessage('No puedes modificar los datos.')
-                );
+                    await lastValueFrom(
+                        this.resolucionService.createResolucionCoordinadorFase1(
+                            resolucionData,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else if (
+                    this.isCoordinadorFase2Created == false &&
+                    this.estado ==
+                        EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE2_GENERACION_RESOLUCION
+                ) {
+                    const {
+                        numeroActa,
+                        fechaActa,
+                        linkSolicitudConsejoFacultad,
+                        ...restFormValues
+                    } = this.resolucionForm.value;
+
+                    const resolucionData =
+                        this.resolucionForm.get('conceptoComite').value ==
+                        'APROBADO'
+                            ? {
+                                  actaFechaRespuestaComite: [
+                                      {
+                                          conceptoComite: 'APROBADO',
+                                          numeroActa,
+                                          fechaActa,
+                                      },
+                                  ],
+                                  envioEmail: {
+                                      asunto: this.resolucionForm.get(
+                                          'asuntoComite'
+                                      ).value,
+                                      mensaje:
+                                          this.resolucionForm.get(
+                                              'mensajeComite'
+                                          ).value,
+                                  },
+                                  linkSolicitudConsejoFacultad,
+                              }
+                            : {
+                                  actaFechaRespuestaComite: [
+                                      {
+                                          conceptoComite: 'NO_APROBADO',
+                                          numeroActa,
+                                          fechaActa,
+                                      },
+                                  ],
+                                  envioEmail: {
+                                      asunto: this.resolucionForm.get(
+                                          'asuntoComite'
+                                      ).value,
+                                      mensaje:
+                                          this.resolucionForm.get(
+                                              'mensajeComite'
+                                          ).value,
+                                  },
+                              };
+
+                    await lastValueFrom(
+                        this.resolucionService.createResolucionCoordinadorFase2(
+                            resolucionData,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else if (
+                    this.isCoordinadorFase3Created == false &&
+                    this.estado ==
+                        EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE3_GENERACION_RESOLUCION
+                ) {
+                    await lastValueFrom(
+                        this.resolucionService.createResolucionCoordinadorFase3(
+                            this.resolucionForm.value,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else if (
+                    this.isCoordinadorFase1Created == true &&
+                    this.estado ==
+                        EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_GENERACION_RESOLUCION
+                ) {
+                    const base64AnteproyectoFinal = await this.formatFileString(
+                        this.FileAnteproyectoFinal
+                    );
+                    const base64SolicitudComite = await this.formatFileString(
+                        this.FileSolicitudComite
+                    );
+
+                    const resolucionData =
+                        this.resolucionForm.get('conceptoDocumentosCoordinador')
+                            .value == 'APROBADO'
+                            ? {
+                                  conceptoDocumentosCoordinador: 'APROBADO',
+                                  envioEmail: {
+                                      asunto: this.resolucionForm.get(
+                                          'asuntoCoordinador'
+                                      ).value,
+                                      mensaje:
+                                          this.resolucionForm.get(
+                                              'mensajeCoordinador'
+                                          ).value,
+                                  },
+                                  obtenerDocumentosParaEnvio: {
+                                      base64AnteproyectoFinal,
+                                      base64SolicitudComite,
+                                  },
+                              }
+                            : {
+                                  conceptoDocumentosCoordinador: 'NO_APROBADO',
+                                  envioEmail: {
+                                      asunto: this.resolucionForm.get(
+                                          'asuntoCoordinador'
+                                      ).value,
+                                      mensaje:
+                                          this.resolucionForm.get(
+                                              'mensajeCoordinador'
+                                          ).value,
+                                  },
+                              };
+
+                    await lastValueFrom(
+                        this.resolucionService.updateResolucionCoordinadorFase1(
+                            resolucionData,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else if (
+                    this.isCoordinadorFase2Created == true &&
+                    this.estado ==
+                        EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE2_GENERACION_RESOLUCION
+                ) {
+                    const {
+                        numeroActa,
+                        fechaActa,
+                        linkSolicitudConsejoFacultad,
+                        ...restFormValues
+                    } = this.resolucionForm.value;
+
+                    const resolucionData =
+                        this.resolucionForm.get('conceptoComite').value ==
+                        'APROBADO'
+                            ? {
+                                  actaFechaRespuestaComite: [
+                                      {
+                                          conceptoComite: 'APROBADO',
+                                          numeroActa,
+                                          fechaActa,
+                                      },
+                                  ],
+                                  envioEmail: {
+                                      asunto: this.resolucionForm.get(
+                                          'asuntoComite'
+                                      ).value,
+                                      mensaje:
+                                          this.resolucionForm.get(
+                                              'mensajeComite'
+                                          ).value,
+                                  },
+                                  linkSolicitudConsejoFacultad,
+                              }
+                            : {
+                                  actaFechaRespuestaComite: [
+                                      {
+                                          conceptoComite: 'NO_APROBADO',
+                                          numeroActa,
+                                          fechaActa,
+                                      },
+                                  ],
+                                  envioEmail: {
+                                      asunto: this.resolucionForm.get(
+                                          'asuntoComite'
+                                      ).value,
+                                      mensaje:
+                                          this.resolucionForm.get(
+                                              'mensajeComite'
+                                          ).value,
+                                  },
+                              };
+
+                    await lastValueFrom(
+                        this.resolucionService.updateResolucionCoordinadorFase2(
+                            resolucionData,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else if (
+                    this.isCoordinadorFase3Created == true &&
+                    this.estado ==
+                        EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE3_GENERACION_RESOLUCION
+                ) {
+                    await lastValueFrom(
+                        this.resolucionService.updateResolucionCoordinadorFase3(
+                            this.resolucionForm.value,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else {
+                    this.isLoading = false;
+                    return this.messageService.add(
+                        errorMessage('No puedes modificar los datos.')
+                    );
+                }
             }
             this.isLoading = false;
             this.messageService.add(infoMessage(Mensaje.ACTUALIZACION_EXITOSA));
@@ -854,6 +1021,8 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     createOrUpdateResolucion() {
+        console.log(this.resolucionForm.value);
+
         if (this.resolucionForm.invalid) {
             this.messageService.clear();
             this.messageService.add(
