@@ -94,6 +94,25 @@
                             ></button>
                         </div>
                     </div>
+                    <div
+                        style="
+                            margin-top: 1rem;
+                            display: flex;
+                            align-items: center;
+                            column-gap: 0.5rem;
+                        "
+                    >
+                        <div class="field-checkbox">
+                            <p-checkbox
+                                [(ngModel)]="isReviewed"
+                                [binary]="true"
+                                inputId="isReviewed"
+                            ></p-checkbox>
+                            <label for="isReviewed"
+                                >Revisé todos los documentos</label
+                            >
+                        </div>
+                    </div>
                 </div>
             </ng-template>
             <div class="pdf-container">
@@ -152,30 +171,6 @@
                 label="Sustentación del proyecto de investigación"
                 [disabled]="!isResolucionValid"
                 (click)="redirectToSustentacion(sustentacionId)"
-            ></button>
-        </div>
-        <div class="flex align-items-center column-gap-2">
-            <button
-                *ngIf="!editMode"
-                pButton
-                icon="pi pi-save"
-                label="Guardar"
-                (click)="createOrUpdateResolucion()"
-            ></button>
-            <button
-                *ngIf="editMode && role.includes('ROLE_COORDINADOR')"
-                pButton
-                pTooltip="Revisar documentos"
-                tooltipPosition="top"
-                icon="pi pi-eye"
-                (click)="openModal()"
-            ></button>
-            <button
-                *ngIf="editMode"
-                pButton
-                icon="pi pi-pencil"
-                label="Modificar Informacion"
-                (click)="createOrUpdateResolucion()"
             ></button>
         </div>
     </div>
@@ -702,6 +697,32 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div
+                class="w-full flex align-items-center justify-content-end column-gap-2"
+            >
+                <button
+                    *ngIf="!editMode"
+                    pButton
+                    icon="pi pi-save"
+                    label="Guardar"
+                    (click)="createOrUpdateResolucion()"
+                ></button>
+                <button
+                    *ngIf="editMode && role.includes('ROLE_COORDINADOR')"
+                    pButton
+                    icon="pi pi-eye"
+                    label="Revisar documentos"
+                    (click)="openModal()"
+                ></button>
+                <button
+                    *ngIf="editMode"
+                    pButton
+                    icon="pi pi-pencil"
+                    [label]="getButtonLabel()"
+                    (click)="createOrUpdateResolucion()"
+                    [disabled]="!isReviewed"
+                ></button>
             </div>
         </form>
     </ng-template>

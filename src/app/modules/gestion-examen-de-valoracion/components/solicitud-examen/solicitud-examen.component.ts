@@ -24,7 +24,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 import { FileUpload } from 'primeng/fileupload';
-import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { Aviso, EstadoProceso, Mensaje } from 'src/app/core/enums/enums';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {
@@ -95,6 +94,7 @@ export class SolicitudExamenComponent implements OnInit {
     isRespuestaValid: boolean = false;
     isResolucionValid: boolean = false;
     isSustentacionValid: boolean = false;
+    isReviewed: boolean = false;
 
     estudianteSeleccionado: Estudiante;
     evaluadorInternoSeleccionado: Docente;
@@ -120,7 +120,6 @@ export class SolicitudExamenComponent implements OnInit {
     constructor(
         private fb: FormBuilder,
         private router: Router,
-        private breadcrumbService: BreadcrumbService,
         private messageService: MessageService,
         private dialogService: DialogService,
         private trabajoDeGradoService: TrabajoDeGradoService,
@@ -141,7 +140,6 @@ export class SolicitudExamenComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.setBreadcrumb();
         this.initializeComponent();
     }
 
@@ -588,23 +586,35 @@ export class SolicitudExamenComponent implements OnInit {
     //#region PDF VIEWER
     async loadPdfFiles() {
         const filesToConvert = [
-            this.FileFormatoA,
-            this.FileFormatoD,
-            this.FileFormatoE,
-            this.FileOficioDirigidoEvaluadores,
-            this.formatoB,
-            this.formatoC,
-            ...this.anexosFiles,
+            {
+                file: this.FileFormatoA,
+                fieldName: 'Solicitud Examen de Valoración',
+            },
+            {
+                file: this.FileFormatoD,
+                fieldName: 'Anteproyecto presentado a Examen',
+            },
+            { file: this.FileFormatoE, fieldName: 'Examen de valoración' },
+            {
+                file: this.FileOficioDirigidoEvaluadores,
+                fieldName: 'Oficio Dirigido a Evaluadores',
+            },
+            { file: this.formatoB, fieldName: 'Formato B' },
+            { file: this.formatoC, fieldName: 'Formato C' },
+            ...this.anexosFiles.map((file) => ({ file, fieldName: 'Anexo' })),
         ];
 
         const errorFiles = new Set<File>();
 
         try {
-            for (const file of filesToConvert) {
+            for (const { file, fieldName } of filesToConvert) {
                 if (file) {
                     try {
                         const url = URL.createObjectURL(file);
-                        this.pdfUrls.push({ name: file.name, url });
+                        this.pdfUrls.push({
+                            name: `${fieldName}`,
+                            url,
+                        });
                     } catch (error) {
                         errorFiles.add(file);
                     }
@@ -1827,14 +1837,17 @@ export class SolicitudExamenComponent implements OnInit {
         return false;
     }
 
-    setBreadcrumb() {
-        this.breadcrumbService.setItems([
-            { label: 'Trabajos de Grado' },
-            {
-                label: 'Examen de Valoracion',
-                routerLink: 'examen-de-valoracion',
-            },
-            { label: 'Solicitud' },
-        ]);
+    getButtonLabel(): string {
+        if (this.role.includes('ROLE_DOCENTE') && this.isDocenteCreated) {
+            return 'Modificar Informacion';
+        } else if (
+            this.role.includes('ROLE_COORDINADOR') &&
+            this.isCoordinadorFase1Created &&
+            this.isCoordinadorFase2Created
+        ) {
+            return 'Modificar Informacion';
+        } else {
+            return 'Guardar';
+        }
     }
 }

@@ -3,7 +3,6 @@ import { MessageService } from 'primeng/api';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { Router } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { Aviso, EstadoProceso, Mensaje } from 'src/app/core/enums/enums';
 import {
     errorMessage,
@@ -68,7 +67,6 @@ export class RespuestaExamenComponent implements OnInit {
     constructor(
         private router: Router,
         private fb: FormBuilder,
-        private breadcrumbService: BreadcrumbService,
         private trabajoDeGradoService: TrabajoDeGradoService,
         private messageService: MessageService,
         private respuestaService: RespuestaService,
@@ -85,12 +83,11 @@ export class RespuestaExamenComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.role = this.authService.getRole();
-        this.setBreadcrumb();
         this.initializeComponent();
     }
 
     async initializeComponent() {
+        this.role = this.authService.getRole();
         this.initForm();
         await this.subscribeToObservers();
         this.checkEstados();
@@ -109,7 +106,6 @@ export class RespuestaExamenComponent implements OnInit {
         }
     }
 
-    // TODO
     subscribeToObservers(): Promise<void[]> {
         return Promise.all([
             new Promise<void>((resolve, reject) => {
@@ -510,9 +506,6 @@ export class RespuestaExamenComponent implements OnInit {
                         this.isLoading = false;
                         reject(e);
                     },
-                    complete: () => {
-                        console.log(this.selectedFiles);
-                    },
                 });
         }).catch((e) => {
             throw e;
@@ -576,24 +569,27 @@ export class RespuestaExamenComponent implements OnInit {
                         respuesta.linkObservaciones,
                         Validators.required,
                     ],
-                    ['anexos' + indexExperto]: [respuesta.anexos],
+                    ['anexos' + indexExperto]: [
+                        respuesta.anexos,
+                        Validators.required,
+                    ],
                     ['idEvaluador' + indexExperto]: [respuesta.idEvaluador],
                     ['tipoEvaluador' + indexExperto]: [respuesta.tipoEvaluador],
                     ['respuestaExamenValoracionExperto' + indexExperto]: [
                         respuesta.respuestaExamenValoracion,
                         Validators.required,
                     ],
-                    // ['fechaMaximaEntrega' + indexExperto]: [
-                    //     respuesta.fechaMaximaEntrega,
-                    // ],
+                    ['fechaMaximaEntrega' + indexExperto]: [
+                        respuesta.fechaMaximaEntrega,
+                    ],
                 });
                 this.expertoEvaluaciones.push(evaluacionFormGroup);
-                // this.expertoEvaluaciones.at(indexExperto).patchValue({
-                //     ['fechaMaximaEntrega' + indexExperto]:
-                //         respuesta?.fechaMaximaEntrega
-                //             ? new Date(respuesta.fechaMaximaEntrega)
-                //             : null,
-                // });
+                this.expertoEvaluaciones.at(indexExperto).patchValue({
+                    ['fechaMaximaEntrega' + indexExperto]:
+                        respuesta?.fechaMaximaEntrega
+                            ? new Date(respuesta.fechaMaximaEntrega)
+                            : null,
+                });
                 this.setup('linkFormatoB', 'expertoEvaluaciones');
                 this.setup('linkFormatoC', 'expertoEvaluaciones');
                 this.setup('linkObservaciones', 'expertoEvaluaciones');
@@ -630,24 +626,27 @@ export class RespuestaExamenComponent implements OnInit {
                         respuesta.linkObservaciones,
                         Validators.required,
                     ],
-                    ['anexos' + indexDocente]: [respuesta.anexos],
+                    ['anexos' + indexDocente]: [
+                        respuesta.anexos,
+                        Validators.required,
+                    ],
                     ['idEvaluador' + indexDocente]: [respuesta.idEvaluador],
                     ['tipoEvaluador' + indexDocente]: [respuesta.tipoEvaluador],
                     ['respuestaExamenValoracionDocente' + indexDocente]: [
                         respuesta.respuestaExamenValoracion,
                         Validators.required,
                     ],
-                    // ['fechaMaximaEntrega' + indexDocente]: [
-                    //     respuesta.fechaMaximaEntrega,
-                    // ],
+                    ['fechaMaximaEntrega' + indexDocente]: [
+                        respuesta.fechaMaximaEntrega,
+                    ],
                 });
                 this.docenteEvaluaciones.push(evaluacionFormGroup);
-                // this.docenteEvaluaciones.at(indexDocente).patchValue({
-                //     ['fechaMaximaEntrega' + indexDocente]:
-                //         respuesta?.fechaMaximaEntrega
-                //             ? new Date(respuesta.fechaMaximaEntrega)
-                //             : null,
-                // });
+                this.docenteEvaluaciones.at(indexDocente).patchValue({
+                    ['fechaMaximaEntrega' + indexDocente]:
+                        respuesta?.fechaMaximaEntrega
+                            ? new Date(respuesta.fechaMaximaEntrega)
+                            : null,
+                });
                 this.setup('linkFormatoB', 'docenteEvaluaciones');
                 this.setup('linkFormatoC', 'docenteEvaluaciones');
                 this.setup('linkObservaciones', 'docenteEvaluaciones');
@@ -742,14 +741,14 @@ export class RespuestaExamenComponent implements OnInit {
             const docenteValue = this.docenteEvaluaciones
                 .at(index)
                 .get('respuestaExamenValoracionDocente' + index)?.value;
-            return ['Aplazado', 'No aprobado'].includes(docenteValue);
+            return ['APLAZADO', 'NO_APROBADO'].includes(docenteValue);
         }
         if (this.expertoEvaluaciones.length > 0) {
             const index = this.expertoEvaluaciones.length - 1;
             const expertoValue = this.expertoEvaluaciones
                 .at(index)
                 .get('respuestaExamenValoracionExperto' + index)?.value;
-            return ['Aplazado', 'No aprobado'].includes(expertoValue);
+            return ['APLAZADO', 'NO_APROBADO'].includes(expertoValue);
         }
         return false;
     }
@@ -769,7 +768,7 @@ export class RespuestaExamenComponent implements OnInit {
                 formArrayName === 'expertoEvaluaciones'
                     ? evaluacion['respuestaExamenValoracionExperto' + i]
                     : evaluacion['respuestaExamenValoracionDocente' + i],
-            // fechaMaximaEntrega: evaluacion['fechaMaximaEntrega' + i],
+            fechaMaximaEntrega: evaluacion['fechaMaximaEntrega' + i],
         };
     }
 
@@ -787,8 +786,8 @@ export class RespuestaExamenComponent implements OnInit {
                 : this.evaluacionDocenteIds[index];
         const evaluacionData = this.mapEvaluacion(formArrayName, index);
 
-        // if (evaluacionData.respuestaExamenValoracion == 'Aprobado')
-        //     evaluacionData.fechaMaximaEntrega = '';
+        if (evaluacionData.respuestaExamenValoracion == 'APROBADO')
+            evaluacionData.fechaMaximaEntrega = '';
 
         const respuestaMail = {
             envioEmail: {
@@ -930,7 +929,10 @@ export class RespuestaExamenComponent implements OnInit {
                     null,
                     Validators.required,
                 ],
-                ['anexos' + this[formArrayName].length]: [null],
+                ['anexos' + this[formArrayName].length]: [
+                    null,
+                    Validators.required,
+                ],
                 ['tipoEvaluador' + this[formArrayName].length]: [
                     formArrayName === 'expertoEvaluaciones'
                         ? 'EXTERNO'
@@ -1084,16 +1086,5 @@ export class RespuestaExamenComponent implements OnInit {
             return true;
         }
         return false;
-    }
-
-    setBreadcrumb() {
-        this.breadcrumbService.setItems([
-            { label: 'Trabajos de Grado' },
-            {
-                label: 'Examen de Valoracion',
-                routerLink: 'examen-de-valoracion',
-            },
-            { label: 'Respuesta' },
-        ]);
     }
 }

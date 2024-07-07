@@ -12,11 +12,6 @@ import {
     Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
-import { Experto } from '../../models/experto';
-import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
-import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import {
     Subscription,
     catchError,
@@ -25,21 +20,25 @@ import {
     of,
     timer,
 } from 'rxjs';
+import { MessageService } from 'primeng/api';
+import { FileUpload } from 'primeng/fileupload';
+import { DialogService } from 'primeng/dynamicdialog';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {
     errorMessage,
     infoMessage,
     warnMessage,
 } from 'src/app/core/utils/message-util';
-import { ResolucionService } from '../../services/resolucion.service';
-import { Resolucion } from '../../models/resolucion';
-import { FileUpload } from 'primeng/fileupload';
 import { Aviso, EstadoProceso, Mensaje } from 'src/app/core/enums/enums';
+import { ResolucionService } from '../../services/resolucion.service';
+import { AuthService } from 'src/app/shared/services/auth.service';
+import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
+import { Experto } from '../../models/experto';
+import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
+import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
+import { Resolucion } from '../../models/resolucion';
 import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-expertos/buscador-expertos.component';
 import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
-import { DialogService } from 'primeng/dynamicdialog';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
 
 @Component({
     selector: 'app-resolucion-examen',
@@ -51,7 +50,15 @@ export class ResolucionExamenComponent implements OnInit {
 
     resolucionForm: FormGroup;
 
+    private estudianteSubscription: Subscription;
     private trabajoSeleccionadoSubscription: Subscription;
+    private tituloSubscription: Subscription;
+    private resolucionSubscription: Subscription;
+    private respuestaSubscription: Subscription;
+    private sustentacionSubscription: Subscription;
+    private solicitudSubscription: Subscription;
+    private respuestaValidSubscription: Subscription;
+    private resolucionValidSubscription: Subscription;
 
     @ViewChild('AnteproyectoFinal') AnteproyectoFinal!: FileUpload;
     @ViewChild('SolicitudComite') SolicitudComite!: FileUpload;
@@ -75,6 +82,7 @@ export class ResolucionExamenComponent implements OnInit {
     isCoordinadorFase2Created: boolean = false;
     isCoordinadorFase3Created: boolean = false;
     isResolucionValid: boolean = false;
+    isReviewed: boolean = false;
 
     role: string[];
     pdfUrls: { name: string; url: string }[] = [];
@@ -97,7 +105,6 @@ export class ResolucionExamenComponent implements OnInit {
         private router: Router,
         private trabajoDeGradoService: TrabajoDeGradoService,
         private resolucionService: ResolucionService,
-        private breadcrumbService: BreadcrumbService,
         private messageService: MessageService,
         private dialogService: DialogService,
         private authService: AuthService
@@ -112,8 +119,11 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.initializeComponent();
+    }
+
+    initializeComponent() {
         this.role = this.authService.getRole();
-        this.setBreadcrumb();
         this.initForm();
         this.subscribeToObservers();
         if (this.router.url.includes('editar')) {
@@ -255,24 +265,26 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     subscribeToObservers() {
-        this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.estudianteSeleccionado = response;
-                } else {
-                    this.router.navigate(['examen-de-valoracion']);
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.tituloSeleccionado = response;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
+        this.estudianteSubscription =
+            this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
+                next: (response) => {
+                    if (response) {
+                        this.estudianteSeleccionado = response;
+                    } else {
+                        this.router.navigate(['examen-de-valoracion']);
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
+            });
+        this.tituloSubscription =
+            this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
+                next: (response) => {
+                    if (response) {
+                        this.tituloSeleccionado = response;
+                    }
+                },
+                error: (e) => this.handlerResponseException(e),
+            });
         this.trabajoSeleccionadoSubscription =
             this.trabajoDeGradoService.trabajoSeleccionadoSubject$.subscribe({
                 next: (response) => {
@@ -292,56 +304,87 @@ export class ResolucionExamenComponent implements OnInit {
                 },
                 error: (e) => this.handlerResponseException(e),
             });
-        this.trabajoDeGradoService.resolucionSeleccionadaSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.resolucionId = response.idGeneracionResolucion;
+        this.resolucionSubscription =
+            this.trabajoDeGradoService.resolucionSeleccionadaSubject$.subscribe(
+                {
+                    next: (response) => {
+                        if (response) {
+                            this.resolucionId = response.idGeneracionResolucion;
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
                 }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.trabajoDeGradoService.sustentacionSeleccionadaSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.sustentacionId =
-                        response.idSustentacionTrabajoInvestigacion;
+            );
+        this.sustentacionSubscription =
+            this.trabajoDeGradoService.sustentacionSeleccionadaSubject$.subscribe(
+                {
+                    next: (response) => {
+                        if (response) {
+                            this.sustentacionId =
+                                response.idSustentacionTrabajoInvestigacion;
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
                 }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-        this.trabajoDeGradoService.resolucionValid$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.isResolucionValid = response;
-                } else {
-                    if (this.trabajoDeGradoId) {
-                        this.resolucionService
-                            .getResolucionCoordinadorFase3(
-                                this.trabajoDeGradoId
-                            )
-                            .subscribe({
-                                next: (response) => {
-                                    if (
-                                        response?.numeroActaConsejoFacultad &&
-                                        response?.fechaActaConsejoFacultad
-                                    ) {
-                                        this.isResolucionValid = true;
-                                    }
-                                },
-                                error: (e) => {
-                                    this.handlerResponseException(e);
-                                },
-                            });
+            );
+        this.resolucionSubscription =
+            this.trabajoDeGradoService.resolucionValid$.subscribe({
+                next: (response) => {
+                    if (response) {
+                        this.isResolucionValid = response;
+                    } else {
+                        if (this.trabajoDeGradoId) {
+                            this.resolucionService
+                                .getResolucionCoordinadorFase3(
+                                    this.trabajoDeGradoId
+                                )
+                                .subscribe({
+                                    next: (response) => {
+                                        if (
+                                            response?.numeroActaConsejoFacultad &&
+                                            response?.fechaActaConsejoFacultad
+                                        ) {
+                                            this.isResolucionValid = true;
+                                        }
+                                    },
+                                    error: (e) => {
+                                        this.handlerResponseException(e);
+                                    },
+                                });
+                        }
                     }
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
+                },
+                error: (e) => this.handlerResponseException(e),
+            });
     }
 
     ngOnDestroy() {
+        if (this.estudianteSubscription) {
+            this.estudianteSubscription.unsubscribe();
+        }
+        if (this.tituloSubscription) {
+            this.tituloSubscription.unsubscribe();
+        }
         if (this.trabajoSeleccionadoSubscription) {
             this.trabajoSeleccionadoSubscription.unsubscribe();
+        }
+        if (this.solicitudSubscription) {
+            this.solicitudSubscription.unsubscribe();
+        }
+        if (this.respuestaSubscription) {
+            this.respuestaSubscription.unsubscribe();
+        }
+        if (this.respuestaValidSubscription) {
+            this.respuestaValidSubscription.unsubscribe();
+        }
+        if (this.resolucionSubscription) {
+            this.resolucionSubscription.unsubscribe();
+        }
+        if (this.resolucionValidSubscription) {
+            this.resolucionValidSubscription.unsubscribe();
+        }
+        if (this.sustentacionSubscription) {
+            this.sustentacionSubscription.unsubscribe();
         }
     }
 
@@ -421,19 +464,29 @@ export class ResolucionExamenComponent implements OnInit {
     //#region PDF VIEWER
     async loadPdfFiles() {
         const filesToConvert = [
-            this.FileAnteproyectoFinal,
-            this.FileSolicitudComite,
-            this.FileSolicitudConsejo,
+            {
+                file: this.FileAnteproyectoFinal,
+                fieldName: 'Anteproyecto Final',
+            },
+            {
+                file: this.FileSolicitudComite,
+                fieldName: 'Solicitud al Comité',
+            },
+            {
+                file: this.FileSolicitudConsejo,
+                fieldName: 'Solicitud al Consejo de Facultad',
+            },
         ];
 
         const errorFiles = new Set<File>();
 
         try {
-            for (const file of filesToConvert) {
+            for (const item of filesToConvert) {
+                const { file, fieldName } = item;
                 if (file) {
                     try {
                         const url = URL.createObjectURL(file);
-                        this.pdfUrls.push({ name: file.name, url });
+                        this.pdfUrls.push({ name: `${fieldName}`, url });
                     } catch (error) {
                         errorFiles.add(file);
                     }
@@ -468,14 +521,14 @@ export class ResolucionExamenComponent implements OnInit {
 
     nextPdf() {
         if (this.currentPdfIndex < this.pdfUrls.length - 1) {
-            this.isPdfLoaded = false; // Reset the flag when changing PDF
+            this.isPdfLoaded = false;
             this.currentPdfIndex++;
         }
     }
 
     previousPdf() {
         if (this.currentPdfIndex > 0) {
-            this.isPdfLoaded = false; // Reset the flag when changing PDF
+            this.isPdfLoaded = false;
             this.currentPdfIndex--;
         }
     }
@@ -1021,8 +1074,6 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     createOrUpdateResolucion() {
-        console.log(this.resolucionForm.value);
-
         if (this.resolucionForm.invalid) {
             this.messageService.clear();
             this.messageService.add(
@@ -1281,14 +1332,18 @@ export class ResolucionExamenComponent implements OnInit {
         return false;
     }
 
-    setBreadcrumb() {
-        this.breadcrumbService.setItems([
-            { label: 'Trabajos de Grado' },
-            {
-                label: 'Examen de Valoracion',
-                routerLink: 'examen-de-valoracion',
-            },
-            { label: 'Resolucion' },
-        ]);
+    getButtonLabel(): string {
+        if (this.role.includes('ROLE_DOCENTE') && this.isDocenteCreated) {
+            return 'Modificar Informacion';
+        } else if (
+            this.role.includes('ROLE_COORDINADOR') &&
+            this.isCoordinadorFase1Created &&
+            this.isCoordinadorFase2Created &&
+            this.isCoordinadorFase3Created
+        ) {
+            return 'Modificar Informacion';
+        } else {
+            return 'Guardar';
+        }
     }
 }

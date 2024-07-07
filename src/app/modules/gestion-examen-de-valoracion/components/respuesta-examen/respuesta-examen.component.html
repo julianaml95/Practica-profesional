@@ -132,6 +132,8 @@
                                         pButton
                                         class="p-button-danger"
                                         type="button"
+                                        pTooltip="Cancelar"
+                                        tooltipPosition="top"
                                         icon="pi pi-times"
                                         (click)="
                                             eliminarRespuestaExamen(
@@ -150,6 +152,8 @@
                                         pButton
                                         class="p-button-secondary"
                                         type="button"
+                                        pTooltip="Guardar Respuesta"
+                                        tooltipPosition="top"
                                         icon="pi pi-save"
                                         (click)="
                                             createRespuestaExamen(
@@ -698,7 +702,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- <div class="grid column-gap-4 mb-6">
+                                    <div class="grid column-gap-4 mb-6">
                                         <div
                                             class="label-required col-2 text-right"
                                         >
@@ -715,13 +719,13 @@
                                                     .get(
                                                         'respuestaExamenValoracionExperto' +
                                                             i
-                                                    )?.value == 'Aplazado' ||
+                                                    )?.value == 'APLAZADO' ||
                                                 expertoEvaluaciones
                                                     .at(i)
                                                     .get(
                                                         'respuestaExamenValoracionExperto' +
                                                             i
-                                                    )?.value == 'No Aprobado'
+                                                    )?.value == 'NO_APROBADO'
                                             "
                                         >
                                             <p-calendar
@@ -732,7 +736,7 @@
                                                 dateFormat="dd.mm.yy"
                                             ></p-calendar>
                                         </div>
-                                    </div> -->
+                                    </div>
                                 </p-fieldset>
                             </div>
                         </div>
@@ -789,6 +793,8 @@
                                         pButton
                                         class="p-button-danger"
                                         type="button"
+                                        pTooltip="Cancelar"
+                                        tooltipPosition="top"
                                         icon="pi pi-times"
                                         (click)="
                                             eliminarRespuestaExamen(
@@ -807,6 +813,8 @@
                                         pButton
                                         class="p-button-secondary"
                                         type="button"
+                                        pTooltip="Guardar Respuesta"
+                                        tooltipPosition="top"
                                         icon="pi pi-save"
                                         (click)="
                                             createRespuestaExamen(
@@ -1355,7 +1363,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- <div class="grid column-gap-4 mb-6">
+                                    <div class="grid column-gap-4 mb-6">
                                         <div
                                             class="label-required col-2 text-right"
                                         >
@@ -1372,13 +1380,13 @@
                                                     .get(
                                                         'respuestaExamenValoracionDocente' +
                                                             i
-                                                    )?.value == 'Aplazado' ||
+                                                    )?.value == 'APLAZADO' ||
                                                 docenteEvaluaciones
                                                     .at(i)
                                                     .get(
                                                         'respuestaExamenValoracionDocente' +
                                                             i
-                                                    )?.value == 'No Aprobado'
+                                                    )?.value == 'NO_APROBADO'
                                             "
                                         >
                                             <p-calendar
@@ -1389,7 +1397,7 @@
                                                 dateFormat="dd.mm.yy"
                                             ></p-calendar>
                                         </div>
-                                    </div> -->
+                                    </div>
                                 </p-fieldset>
                             </div>
                         </div>

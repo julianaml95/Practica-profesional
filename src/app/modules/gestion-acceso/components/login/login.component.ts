@@ -10,6 +10,7 @@ import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadc
 @Component({
     selector: 'app-login',
     templateUrl: './login.component.html',
+    styleUrls: ['login.component.scss'],
 })
 export class LoginComponent implements OnInit {
     @Output() formReady = new EventEmitter<FormGroup>();

@@ -1,7 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConfirmationService, MessageService, PrimeIcons } from 'primeng/api';
-import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { Aviso, EstadoProceso } from 'src/app/core/enums/enums';
 import { errorMessage } from 'src/app/core/utils/message-util';
 import { Solicitud } from '../../models/solicitud';
@@ -27,7 +26,10 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
 
     estados: any[] = Object.keys(EstadoProceso).map((value, index) => ({
         index,
-        text: value,
+        text: value
+            .split('_')
+            .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+            .join(' '),
     }));
     selectedEstados: number[] = this.estados.map((estado) => estado.index);
     solicitudes: Solicitud[] | any[] = [];
@@ -42,7 +44,6 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
 
     constructor(
         private cdr: ChangeDetectorRef,
-        private breadcrumbService: BreadcrumbService,
         private router: Router,
         private estudianteService: EstudianteService,
         private trabajoDeGradoService: TrabajoDeGradoService,
@@ -57,7 +58,6 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
 
     ngOnInit() {
         this.role = this.authService.getRole();
-        this.setBreadcrumb();
         this.listTrabajosDeGrado(this.selectedEstados);
         this.selectedEstados = [...this.estados];
         this.cdr.detectChanges();
@@ -229,7 +229,9 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
             },
             error: (e) => console.error(e),
             complete: () => {
-                this.listTrabajosDeGrado([1]);
+                this.listTrabajosDeGrado(
+                    this.estados.map((estado) => estado.index)
+                );
             },
         });
     }
@@ -243,12 +245,5 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
             rejectLabel: 'No',
             accept: () => this.deleteTrabajoDeGrado(id),
         });
-    }
-
-    setBreadcrumb() {
-        this.breadcrumbService.setItems([
-            { label: 'Trabajos de Grado' },
-            { label: 'Examen de Valoracion' },
-        ]);
     }
 }
