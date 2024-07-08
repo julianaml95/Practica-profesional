@@ -18,6 +18,14 @@ const routes: Routes = [
             {
                 path: '',
                 component: BandejaExamenDeValoracionComponent,
+                canActivate: [RoleGuard],
+                data: {
+                    roles: [
+                        'ROLE_COORDINADOR',
+                        'ROLE_DOCENTE',
+                        'ROLE_ESTUDIANTE',
+                    ],
+                },
             },
             {
                 path: 'solicitud',
@@ -36,10 +44,6 @@ const routes: Routes = [
                         'ROLE_ESTUDIANTE',
                     ],
                 },
-            },
-            {
-                path: 'solicitud/documentoFormatoA',
-                component: DocumentoFormatoAComponent,
             },
             {
                 path: 'respuesta',

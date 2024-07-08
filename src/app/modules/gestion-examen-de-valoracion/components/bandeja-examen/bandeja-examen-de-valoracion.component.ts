@@ -1,8 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ConfirmationService, MessageService, PrimeIcons } from 'primeng/api';
-import { Aviso, EstadoProceso } from 'src/app/core/enums/enums';
-import { errorMessage } from 'src/app/core/utils/message-util';
+import { EstadoProceso } from 'src/app/core/enums/enums';
 import { Solicitud } from '../../models/solicitud';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { SolicitudService } from '../../services/solicitud.service';
@@ -13,6 +11,9 @@ import { ResolucionService } from '../../services/resolucion.service';
 import { SustentacionService } from '../../services/sustentacion.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { Subscription } from 'rxjs';
+import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
+import { DialogService } from 'primeng/dynamicdialog';
+import { LocalStorageService } from 'src/app/shared/services/localstorage.service';
 
 @Component({
     selector: 'app-bandeja-examen-de-valoracion',
@@ -21,6 +22,7 @@ import { Subscription } from 'rxjs';
 })
 export class BandejaExamenDeValoracionComponent implements OnInit {
     estudiante: Estudiante;
+    estudianteSeleccionado: Estudiante;
 
     loading: boolean;
 
@@ -32,7 +34,8 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
             .join(' '),
     }));
     selectedEstados: number[] = this.estados.map((estado) => estado.index);
-    solicitudes: Solicitud[] | any[] = [];
+    solicitudesPorEstado: Solicitud[] | any[] = [];
+    solicitudesPorEstudiante: Solicitud[] | any[] = [];
     role: string[];
 
     private estudianteSubscription: Subscription;
@@ -51,32 +54,91 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         private respuestaService: RespuestaService,
         private resolucionService: ResolucionService,
         private sustentacionService: SustentacionService,
-        private messageService: MessageService,
-        private confirmationService: ConfirmationService,
+        private localStorageService: LocalStorageService,
+        private dialogService: DialogService,
         private authService: AuthService
     ) {}
 
     ngOnInit() {
+        this.initializeComponent();
+    }
+
+    async initializeComponent() {
         this.role = this.authService.getRole();
-        this.listTrabajosDeGrado(this.selectedEstados);
-        this.selectedEstados = [...this.estados];
-        this.cdr.detectChanges();
+        const isCoordinatorOrCommittee =
+            this.role.includes('ROLE_COORDINADOR') ||
+            this.role.includes('ROLE_COMITE');
+        const isDocenteOrEstudiante =
+            this.role.includes('ROLE_DOCENTE') ||
+            this.role.includes('ROLE_ESTUDIANTE');
+
+        if (isCoordinatorOrCommittee) {
+            await this.listTrabajosDeGradoPorEstados(this.selectedEstados);
+            this.selectedEstados = [...this.estados];
+            this.cdr.detectChanges();
+        }
+
+        if (isDocenteOrEstudiante) {
+            const estudiante = this.localStorageService.getLocalStorage('est');
+            if (estudiante) {
+                this.trabajoDeGradoService.setEstudianteSeleccionado(
+                    estudiante
+                );
+                this.estudianteSeleccionado = estudiante;
+                await this.listTrabajosDeGradoPorEstudiante(
+                    this.estudianteSeleccionado.id
+                );
+            }
+        }
     }
 
     onStateChange(event: any): void {
         const selectedIndices = event.value.map((estado: any) => estado.index);
-        this.listTrabajosDeGrado(selectedIndices);
+        this.listTrabajosDeGradoPorEstados(selectedIndices);
     }
 
-    listTrabajosDeGrado(estados: number[]) {
+    listTrabajosDeGradoPorEstudiante(estudianteId: number) {
+        return new Promise<void>((resolve, reject) => {
+            this.loading = true;
+            this.trabajoDeGradoSubscription = this.trabajoDeGradoService
+                .listTrabajosDeGradoPorEstudiante(estudianteId)
+                .subscribe({
+                    next: (response) => {
+                        if (response) {
+                            this.solicitudesPorEstudiante =
+                                response.trabajoGrado;
+                            resolve();
+                        }
+                    },
+                    error: (e) => {
+                        console.error(e);
+                    },
+                    complete: () => {
+                        this.loading = false;
+                    },
+                });
+
+            this.trabajoDeGradoService.setSustentacionValid(null);
+            this.trabajoDeGradoService.setResolucionValid(null);
+            this.trabajoDeGradoService.setRespuestaValid(null);
+            this.trabajoDeGradoService.setSustentacionSeleccionada(null);
+            this.trabajoDeGradoService.setResolucionSeleccionada(null);
+            this.trabajoDeGradoService.setRespuestaSeleccionada(null);
+            this.trabajoDeGradoService.setSolicitudSeleccionada(null);
+            this.trabajoDeGradoService.setTituloSeleccionadoSubject(null);
+            this.trabajoDeGradoService.setTrabajoSeleccionado(null);
+        });
+    }
+
+    listTrabajosDeGradoPorEstados(estados: number[]) {
         return new Promise<void>((resolve, reject) => {
             this.loading = true;
             this.trabajoDeGradoSubscription = this.trabajoDeGradoService
                 .listTrabajosDeGradoPorEstado(estados.length ? estados : [0])
                 .subscribe({
-                    next: async (response) => {
+                    next: (response) => {
                         if (response) {
-                            this.solicitudes = response;
+                            this.solicitudesPorEstado = response;
                             resolve();
                         }
                     },
@@ -105,31 +167,25 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         this.router.navigate(['examen-de-valoracion/solicitud']);
     }
 
-    mapEstudianteLabel(estudiante: any) {
-        return {
-            id: estudiante.id,
-            nombre: estudiante.nombre,
-            codigo: estudiante.codigo,
-            apellido: estudiante.apellido,
-            identificacion: estudiante.identificacion,
-            tipoIdentificacion: estudiante.tipoIdentificacion,
-        };
-    }
-
     onEditar(id: number, estudianteId: number) {
         this.unsubscribePreviousSubscriptions();
-        this.estudianteSubscription = this.estudianteService
-            .getEstudiante(estudianteId)
-            .subscribe({
-                next: (response) => {
-                    if (response) {
-                        this.estudiante = this.mapEstudianteLabel(response);
-                        this.trabajoDeGradoService.setEstudianteSeleccionado(
-                            this.estudiante
-                        );
-                    }
-                },
-            });
+        if (estudianteId) {
+            if (this.estudianteSubscription) {
+                this.estudianteSubscription.unsubscribe();
+            }
+            this.estudianteSubscription = this.estudianteService
+                .getEstudiante(estudianteId)
+                .subscribe({
+                    next: (response) => {
+                        if (response) {
+                            this.estudiante = this.mapEstudianteLabel(response);
+                            this.trabajoDeGradoService.setEstudianteSeleccionado(
+                                this.estudiante
+                            );
+                        }
+                    },
+                });
+        }
         this.trabajoDeGradoSubscription = this.trabajoDeGradoService
             .getTrabajoDeGrado(id)
             .subscribe({
@@ -191,18 +247,12 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                     }
                 },
             });
-        if (
-            this.role.includes('ROLE_DOCENTE') ||
-            this.role.includes('ROLE_COORDINADOR')
-        ) {
+        if (!this.role.includes('ROLE_ESTUDIANTE')) {
             this.router.navigate(['examen-de-valoracion/solicitud/editar', id]);
         }
     }
 
     private unsubscribePreviousSubscriptions() {
-        if (this.estudianteSubscription) {
-            this.estudianteSubscription.unsubscribe();
-        }
         if (this.trabajoDeGradoSubscription) {
             this.trabajoDeGradoSubscription.unsubscribe();
         }
@@ -220,30 +270,49 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         }
     }
 
-    deleteTrabajoDeGrado(id: number) {
-        this.trabajoDeGradoService.deleteTrabajoDeGrado(id).subscribe({
-            next: () => {
-                this.messageService.add(
-                    errorMessage(Aviso.SOLICITUD_ELIMINADA_CORRECTAMENTE)
-                );
-            },
-            error: (e) => console.error(e),
-            complete: () => {
-                this.listTrabajosDeGrado(
-                    this.estados.map((estado) => estado.index)
-                );
-            },
+    mapEstudianteLabel(estudiante: any) {
+        return {
+            id: estudiante.id,
+            nombre: estudiante.nombre,
+            codigo: estudiante.codigo,
+            apellido: estudiante.apellido,
+            identificacion: estudiante.identificacion,
+            tipoIdentificacion: estudiante.tipoIdentificacion,
+        };
+    }
+
+    showBuscadorEstudiantes() {
+        return this.dialogService.open(BuscadorEstudiantesComponent, {
+            header: 'Seleccionar estudiante',
+            width: '60%',
         });
     }
 
-    onDelete(event: any, id: number) {
-        this.confirmationService.confirm({
-            target: event.target,
-            message: Aviso.CONFIRMAR_ELIMINAR_REGISTRO,
-            icon: PrimeIcons.EXCLAMATION_TRIANGLE,
-            acceptLabel: 'Si, eliminar',
-            rejectLabel: 'No',
-            accept: () => this.deleteTrabajoDeGrado(id),
+    limpiarEstudiante() {
+        this.estudianteSeleccionado = null;
+        this.localStorageService.clearLocalStorage('est');
+        this.solicitudesPorEstudiante = [];
+    }
+
+    onSeleccionarEstudiante() {
+        const ref = this.showBuscadorEstudiantes();
+        ref.onClose.subscribe({
+            next: (response) => {
+                if (response) {
+                    this.estudianteSeleccionado =
+                        this.mapEstudianteLabel(response);
+                    this.trabajoDeGradoService.setEstudianteSeleccionado(
+                        this.estudianteSeleccionado
+                    );
+                    this.listTrabajosDeGradoPorEstudiante(
+                        this.estudianteSeleccionado.id
+                    );
+                    this.localStorageService.saveLocalStorage(
+                        this.mapEstudianteLabel(response),
+                        'est'
+                    );
+                }
+            },
         });
     }
 }

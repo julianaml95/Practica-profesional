@@ -44,7 +44,6 @@ import { RespuestaService } from '../../services/respuesta.service';
 import { ResolucionService } from '../../services/resolucion.service';
 import { SolicitudService } from '../../services/solicitud.service';
 import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
-import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
 
 @Component({
     selector: 'app-solicitud-examen',
@@ -67,6 +66,7 @@ export class SolicitudExamenComponent implements OnInit {
     private respuestaSubscription: Subscription;
     private sustentacionSubscription: Subscription;
     private solicitudSubscription: Subscription;
+    private solicitudValidSubscription: Subscription;
     private respuestaValidSubscription: Subscription;
     private resolucionValidSubscription: Subscription;
 
@@ -91,6 +91,7 @@ export class SolicitudExamenComponent implements OnInit {
     isCoordinadorFase1Created: boolean = false;
     isCoordinadorFase2Created: boolean = false;
     isPdfLoaded: boolean = false;
+    isSolicitudValid: boolean = false;
     isRespuestaValid: boolean = false;
     isResolucionValid: boolean = false;
     isSustentacionValid: boolean = false;
@@ -145,6 +146,7 @@ export class SolicitudExamenComponent implements OnInit {
 
     async initializeComponent() {
         this.role = this.authService.getRole();
+        this.subscribeToEstudiante();
         this.initForm();
         if (this.router.url.includes('editar')) {
             this.isLoading = true;
@@ -284,9 +286,23 @@ export class SolicitudExamenComponent implements OnInit {
         }
     }
 
+    subscribeToEstudiante() {
+        this.estudianteSubscription =
+            this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
+                next: (response) => {
+                    if (response) {
+                        this.estudianteSeleccionado = response;
+                    }
+                },
+                error: (e) => {
+                    this.handlerResponseException(e);
+                },
+            });
+    }
+
     subscribeToObservers(): Promise<void> {
         return new Promise<void>((resolve) => {
-            let pendingObservables = 6;
+            let pendingObservables = 5;
 
             const checkCompletion = () => {
                 pendingObservables--;
@@ -295,20 +311,6 @@ export class SolicitudExamenComponent implements OnInit {
                 }
             };
 
-            this.estudianteSubscription =
-                this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
-                    next: (response) => {
-                        if (response) {
-                            this.estudianteSeleccionado = response;
-                            checkCompletion();
-                        }
-                    },
-                    error: (e) => {
-                        this.handlerResponseException(e);
-                        checkCompletion();
-                    },
-                });
-
             this.trabajoSeleccionadoSubscription =
                 this.trabajoDeGradoService.trabajoSeleccionadoSubject$.subscribe(
                     {
@@ -316,6 +318,31 @@ export class SolicitudExamenComponent implements OnInit {
                             if (response) {
                                 this.trabajoDeGradoId = response.id;
                                 this.estado = response.estado;
+
+                                this.solicitudValidSubscription =
+                                    this.solicitudService
+                                        .getSolicitudCoordinadorFase2(
+                                            this.trabajoDeGradoId
+                                        )
+                                        .subscribe({
+                                            next: (response) => {
+                                                if (
+                                                    response?.actaFechaRespuestaComite
+                                                ) {
+                                                    const respuestaComite =
+                                                        response.actaFechaRespuestaComite.find(
+                                                            (respuesta: any) =>
+                                                                respuesta.conceptoComite ===
+                                                                'APROBADO'
+                                                        );
+
+                                                    if (respuestaComite) {
+                                                        this.isSolicitudValid =
+                                                            true;
+                                                    }
+                                                }
+                                            },
+                                        });
 
                                 this.respuestaValidSubscription =
                                     this.respuestaService
@@ -511,6 +538,9 @@ export class SolicitudExamenComponent implements OnInit {
         }
         if (this.solicitudSubscription) {
             this.solicitudSubscription.unsubscribe();
+        }
+        if (this.solicitudValidSubscription) {
+            this.solicitudValidSubscription.unsubscribe();
         }
         if (this.respuestaSubscription) {
             this.respuestaSubscription.unsubscribe();
@@ -1741,43 +1771,6 @@ export class SolicitudExamenComponent implements OnInit {
     limpiarEvaluadorInterno() {
         this.evaluadorInterno.setValue(null);
         this.evaluadorInternoSeleccionado = null;
-    }
-
-    showBuscadorEstudiantes() {
-        return this.dialogService.open(BuscadorEstudiantesComponent, {
-            header: 'Seleccionar estudiante',
-            width: '60%',
-        });
-    }
-
-    mapEstudianteLabel(estudiante: any) {
-        return {
-            id: estudiante.id,
-            nombre: estudiante.nombre,
-            codigo: estudiante.codigo,
-            apellido: estudiante.apellido,
-            identificacion: estudiante.identificacion,
-            tipoIdentificacion: estudiante.tipoIdentificacion,
-        };
-    }
-
-    limpiarEstudiante() {
-        this.estudianteSeleccionado = null;
-    }
-
-    onSeleccionarEstudiante() {
-        const ref = this.showBuscadorEstudiantes();
-        ref.onClose.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.estudianteSeleccionado =
-                        this.mapEstudianteLabel(response);
-                    this.trabajoDeGradoService.setEstudianteSeleccionado(
-                        this.estudianteSeleccionado
-                    );
-                }
-            },
-        });
     }
 
     redirectToRespuesta() {

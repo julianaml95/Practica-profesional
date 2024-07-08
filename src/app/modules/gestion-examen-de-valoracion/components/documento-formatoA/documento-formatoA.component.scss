@@ -38,14 +38,15 @@
         margin: 0;
         height: 2px;
         background-color: #ff0000;
-        width: 50%;
+        width: 70%;
     }
 
-    & span:last-child {
-        margin-top: 14px;
+    & strong:last-child {
+        font-weight: 400;
+        margin-top: 7px;
         width: 80%;
         text-align: center;
-        font-size: 18px;
+        font-size: 16px;
         color: #3e5270;
     }
 }
