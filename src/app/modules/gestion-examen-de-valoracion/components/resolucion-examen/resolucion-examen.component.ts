@@ -33,11 +33,9 @@ import { Aviso, EstadoProceso, Mensaje } from 'src/app/core/enums/enums';
 import { ResolucionService } from '../../services/resolucion.service';
 import { AuthService } from 'src/app/shared/services/auth.service';
 import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
-import { Experto } from '../../models/experto';
 import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { Resolucion } from '../../models/resolucion';
-import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-expertos/buscador-expertos.component';
 import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
 
 @Component({
@@ -97,7 +95,7 @@ export class ResolucionExamenComponent implements OnInit {
     estado: string;
     tituloSeleccionado: string;
     estudianteSeleccionado: Estudiante = {};
-    codirectorSeleccionado: Experto;
+    codirectorSeleccionado: Docente;
     directorSeleccionado: Docente;
 
     constructor(
@@ -1224,15 +1222,15 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     //#region Director and Coodirector
-    showBuscadorDocentes() {
+    showBuscadorDirector() {
         return this.dialogService.open(BuscadorDocentesComponent, {
             header: 'Seleccionar docente',
             width: '60%',
         });
     }
 
-    showBuscadorExpertos() {
-        return this.dialogService.open(BuscadorExpertosComponent, {
+    showBuscadorCodirector() {
+        return this.dialogService.open(BuscadorDocentesComponent, {
             header: 'Seleccionar experto',
             width: '60%',
         });
@@ -1248,18 +1246,18 @@ export class ResolucionExamenComponent implements OnInit {
         };
     }
 
-    mapCodirectorLabel(experto: any) {
+    mapCodirectorLabel(docente: any) {
         return {
-            id: experto.id,
-            nombre: experto.nombre,
-            apellido: experto.apellido,
-            correo: experto.correoElectronico ?? experto.correo,
-            universidad: experto.universidad,
+            id: docente.id,
+            nombre: docente.nombre,
+            apellido: docente.apellido,
+            correo: docente.correoElectronico ?? docente.correo,
+            universidad: docente.universidad,
         };
     }
 
     onSeleccionarDirector() {
-        const ref = this.showBuscadorDocentes();
+        const ref = this.showBuscadorDirector();
         ref.onClose.subscribe({
             next: (response) => {
                 if (response) {
@@ -1272,7 +1270,7 @@ export class ResolucionExamenComponent implements OnInit {
     }
 
     onSeleccionarCodirector() {
-        const ref = this.showBuscadorExpertos();
+        const ref = this.showBuscadorCodirector();
         ref.onClose.subscribe({
             next: (response) => {
                 if (response) {
