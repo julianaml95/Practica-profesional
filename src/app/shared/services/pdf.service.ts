@@ -63,8 +63,8 @@ export class PdfService {
             pageMargins: [30, 40, 30, 40],
             content: [
                 ...content,
-                { text: '', pageBreak: 'after' },
-                ...nextContent,
+                nextContent ? { text: '', pageBreak: 'after' } : null,
+                nextContent ? [...nextContent] : null,
             ],
             footer: () => {
                 return {
@@ -85,19 +85,22 @@ export class PdfService {
         });
     }
 
-    async extractFooterFromElement(element) {
+    async extractFooterFromElement(element: any) {
         const content = [];
         await this.extractFooterContent(element, content);
         return content;
     }
 
-    async extractContentFromElement(element) {
-        const content = [];
-        await this.extractNodeContent(element, content);
-        return content;
+    async extractContentFromElement(element: any) {
+        if (element != null) {
+            const content = [];
+            await this.extractNodeContent(element, content);
+            return content;
+        }
+        return null;
     }
 
-    async extractFooterContent(node, content) {
+    async extractFooterContent(node: any, content: any) {
         if (node.nodeType === Node.ELEMENT_NODE) {
             if (
                 node.classList.contains('footer-content') ||
@@ -168,7 +171,7 @@ export class PdfService {
         }
     }
 
-    async extractNodeContent(node, content) {
+    async extractNodeContent(node: any, content: any) {
         if (
             node.nodeType === Node.ELEMENT_NODE &&
             node.classList.contains('p-hide')

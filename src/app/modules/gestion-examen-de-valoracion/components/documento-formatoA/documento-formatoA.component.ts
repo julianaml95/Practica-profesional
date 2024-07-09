@@ -15,7 +15,6 @@ import {
 import { Router } from '@angular/router';
 import { MessageService, SelectItem } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
-import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
 import { Mensaje, Rol, TipoRol } from 'src/app/core/enums/enums';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {
@@ -30,6 +29,7 @@ import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiant
 import { Orientador } from '../../models/orientador';
 import { PdfService } from 'src/app/shared/services/pdf.service';
 import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'documento-formatoA',
@@ -43,6 +43,11 @@ export class DocumentoFormatoAComponent implements OnInit {
     formatoAForm: FormGroup;
 
     @ViewChild('formatoA') formatoA!: ElementRef;
+
+    private estudianteSubscription: Subscription;
+    private tituloSubscription: Subscription;
+    private evaluadorInternoSubscription: Subscription;
+    private evaluadorExternoSubscription: Subscription;
 
     loading = false;
 
@@ -62,7 +67,6 @@ export class DocumentoFormatoAComponent implements OnInit {
         private router: Router,
         private dialogService: DialogService,
         private messageService: MessageService,
-        private breadcrumbService: BreadcrumbService,
         private trabajoDeGradoService: TrabajoDeGradoService,
         private pdfService: PdfService
     ) {}
@@ -96,51 +100,54 @@ export class DocumentoFormatoAComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.setBreadcrumb();
         this.initForm();
         this.fechaActual = new Date();
 
-        this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.titulo.setValue(response);
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-
-        this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.estudianteSeleccionado = response;
-                    this.estudiante.setValue(
-                        this.nombreCompletoEstudiante(response)
-                    );
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-
-        this.trabajoDeGradoService.evaluadorExternoSeleccionadoSubject$.subscribe(
-            {
+        this.tituloSubscription =
+            this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
                 next: (response) => {
                     if (response) {
-                        this.experto.setValue(response);
+                        this.titulo.setValue(response);
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
-            }
-        );
-        this.trabajoDeGradoService.evaluadorInternoSeleccionadoSubject$.subscribe(
-            {
+            });
+
+        this.estudianteSubscription =
+            this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
                 next: (response) => {
                     if (response) {
-                        this.docente.setValue(response);
+                        this.estudianteSeleccionado = response;
+                        this.estudiante.setValue(
+                            this.nombreCompletoEstudiante(response)
+                        );
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
-            }
-        );
+            });
+
+        this.evaluadorExternoSubscription =
+            this.trabajoDeGradoService.evaluadorExternoSeleccionadoSubject$.subscribe(
+                {
+                    next: (response) => {
+                        if (response) {
+                            this.experto.setValue(response);
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                }
+            );
+        this.evaluadorInternoSubscription =
+            this.trabajoDeGradoService.evaluadorInternoSeleccionadoSubject$.subscribe(
+                {
+                    next: (response) => {
+                        if (response) {
+                            this.docente.setValue(response);
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                }
+            );
 
         this.tipo.valueChanges.subscribe(
             (response) => (this.tipoSeleccionado = response)
@@ -167,6 +174,21 @@ export class DocumentoFormatoAComponent implements OnInit {
         this.formatoAForm.get('evaluadorInterno').disable();
         this.formatoAForm.get('evaluadorExterno').disable();
         this.formReady.emit(this.formatoAForm);
+    }
+
+    ngOnDestroy() {
+        if (this.tituloSubscription) {
+            this.tituloSubscription.unsubscribe();
+        }
+        if (this.estudianteSubscription) {
+            this.estudianteSubscription.unsubscribe();
+        }
+        if (this.evaluadorExternoSubscription) {
+            this.evaluadorExternoSubscription.unsubscribe();
+        }
+        if (this.evaluadorInternoSubscription) {
+            this.evaluadorInternoSubscription.unsubscribe();
+        }
     }
 
     onCancel() {
@@ -199,7 +221,7 @@ export class DocumentoFormatoAComponent implements OnInit {
             return;
         } else {
             const content = document.getElementById('formatoA');
-            this.pdfService.generatePDF(content, '').then((pdfBlob: Blob) => {
+            this.pdfService.generatePDF(content, null).then((pdfBlob: Blob) => {
                 const file = new File(
                     [pdfBlob],
                     `${this.estudianteSeleccionado.codigo} - formatoA.pdf`,
@@ -294,20 +316,6 @@ export class DocumentoFormatoAComponent implements OnInit {
         mapException.forEach((value) => {
             this.messageService.add(errorMessage(value));
         });
-    }
-
-    setBreadcrumb() {
-        this.breadcrumbService.setItems([
-            { label: 'Trabajos de Grado' },
-            {
-                label: 'Examen de Valoracion',
-                routerLink: 'examen-de-valoracion',
-            },
-            {
-                label: 'Solicitud',
-                routerLink: 'examen-de-valoracion/solicitud',
-            },
-        ]);
     }
 
     private handleSuccessMessage(message: string) {

@@ -304,12 +304,12 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                     this.trabajoDeGradoService.setEstudianteSeleccionado(
                         this.estudianteSeleccionado
                     );
-                    this.listTrabajosDeGradoPorEstudiante(
-                        this.estudianteSeleccionado.id
-                    );
                     this.localStorageService.saveLocalStorage(
                         this.mapEstudianteLabel(response),
                         'est'
+                    );
+                    this.listTrabajosDeGradoPorEstudiante(
+                        this.estudianteSeleccionado.id
                     );
                 }
             },

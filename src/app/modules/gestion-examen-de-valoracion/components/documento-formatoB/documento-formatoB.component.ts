@@ -23,6 +23,7 @@ import {
     infoMessage,
     warnMessage,
 } from 'src/app/core/utils/message-util';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'documento-formatoB',
@@ -34,6 +35,11 @@ export class DocumentoFormatoBComponent implements OnInit {
     @Output() formatoBPdfGenerated = new EventEmitter<File>();
 
     @ViewChild('formatoB') formatoB!: ElementRef;
+
+    private estudianteSubscription: Subscription;
+    private tituloSubscription: Subscription;
+    private evaluadorInternoSubscription: Subscription;
+    private evaluadorExternoSubscription: Subscription;
 
     formatoBForm: FormGroup;
     fechaActual: Date;
@@ -70,47 +76,51 @@ export class DocumentoFormatoBComponent implements OnInit {
         this.initForm();
         this.fechaActual = new Date();
 
-        this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.titulo.setValue(response);
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-
-        this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.estudianteSeleccionado = response;
-                    this.estudiante.setValue(
-                        this.nombreCompletoEstudiante(response)
-                    );
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-
-        this.trabajoDeGradoService.evaluadorExternoSeleccionadoSubject$.subscribe(
-            {
+        this.tituloSubscription =
+            this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
                 next: (response) => {
                     if (response) {
-                        this.experto.setValue(response);
+                        this.titulo.setValue(response);
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
-            }
-        );
-        this.trabajoDeGradoService.evaluadorInternoSeleccionadoSubject$.subscribe(
-            {
+            });
+
+        this.estudianteSubscription =
+            this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
                 next: (response) => {
                     if (response) {
-                        this.docente.setValue(response);
+                        this.estudianteSeleccionado = response;
+                        this.estudiante.setValue(
+                            this.nombreCompletoEstudiante(response)
+                        );
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
-            }
-        );
+            });
+
+        this.evaluadorExternoSubscription =
+            this.trabajoDeGradoService.evaluadorExternoSeleccionadoSubject$.subscribe(
+                {
+                    next: (response) => {
+                        if (response) {
+                            this.experto.setValue(response);
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                }
+            );
+        this.evaluadorInternoSubscription =
+            this.trabajoDeGradoService.evaluadorInternoSeleccionadoSubject$.subscribe(
+                {
+                    next: (response) => {
+                        if (response) {
+                            this.docente.setValue(response);
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                }
+            );
 
         this.formatoBForm.get('fecha').setValue(this.fechaActual);
     }
@@ -132,6 +142,21 @@ export class DocumentoFormatoBComponent implements OnInit {
         this.formatoBForm.get('fecha').disable();
         this.formatoBForm.get('conceptoJurado').disable();
         this.formReady.emit(this.formatoBForm);
+    }
+
+    ngOnDestroy() {
+        if (this.tituloSubscription) {
+            this.tituloSubscription.unsubscribe();
+        }
+        if (this.estudianteSubscription) {
+            this.estudianteSubscription.unsubscribe();
+        }
+        if (this.evaluadorExternoSubscription) {
+            this.evaluadorExternoSubscription.unsubscribe();
+        }
+        if (this.evaluadorInternoSubscription) {
+            this.evaluadorInternoSubscription.unsubscribe();
+        }
     }
 
     getFormattedDate(): string {

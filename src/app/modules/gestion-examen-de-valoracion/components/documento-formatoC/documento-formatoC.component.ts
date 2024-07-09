@@ -25,6 +25,7 @@ import {
     infoMessage,
     warnMessage,
 } from 'src/app/core/utils/message-util';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'documento-formatoC',
@@ -36,6 +37,11 @@ export class DocumentoFormatoCComponent implements OnInit {
     @Output() formatoCPdfGenerated = new EventEmitter<File>();
 
     @ViewChild('formatoC') formatoC!: ElementRef;
+
+    private estudianteSubscription: Subscription;
+    private tituloSubscription: Subscription;
+    private evaluadorInternoSubscription: Subscription;
+    private evaluadorExternoSubscription: Subscription;
 
     formatoCForm: FormGroup;
 
@@ -75,44 +81,48 @@ export class DocumentoFormatoCComponent implements OnInit {
         this.initForm();
         this.fechaActual = new Date();
 
-        this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.titulo.setValue(response);
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-
-        this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.estudianteSeleccionado = response;
-                }
-            },
-            error: (e) => this.handlerResponseException(e),
-        });
-
-        this.trabajoDeGradoService.evaluadorExternoSeleccionadoSubject$.subscribe(
-            {
+        this.tituloSubscription =
+            this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
                 next: (response) => {
                     if (response) {
-                        this.experto.setValue(response);
+                        this.titulo.setValue(response);
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
-            }
-        );
-        this.trabajoDeGradoService.evaluadorInternoSeleccionadoSubject$.subscribe(
-            {
+            });
+
+        this.estudianteSubscription =
+            this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
                 next: (response) => {
                     if (response) {
-                        this.docente.setValue(response);
+                        this.estudianteSeleccionado = response;
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
-            }
-        );
+            });
+
+        this.evaluadorExternoSubscription =
+            this.trabajoDeGradoService.evaluadorExternoSeleccionadoSubject$.subscribe(
+                {
+                    next: (response) => {
+                        if (response) {
+                            this.experto.setValue(response);
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                }
+            );
+        this.evaluadorInternoSubscription =
+            this.trabajoDeGradoService.evaluadorInternoSeleccionadoSubject$.subscribe(
+                {
+                    next: (response) => {
+                        if (response) {
+                            this.docente.setValue(response);
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                }
+            );
     }
 
     initForm(): void {
@@ -129,6 +139,21 @@ export class DocumentoFormatoCComponent implements OnInit {
         this.formatoCForm.get('juradoInterno').disable();
         this.formatoCForm.get('juradoExterno').disable();
         this.formReady.emit(this.formatoCForm);
+    }
+
+    ngOnDestroy() {
+        if (this.tituloSubscription) {
+            this.tituloSubscription.unsubscribe();
+        }
+        if (this.estudianteSubscription) {
+            this.estudianteSubscription.unsubscribe();
+        }
+        if (this.evaluadorExternoSubscription) {
+            this.evaluadorExternoSubscription.unsubscribe();
+        }
+        if (this.evaluadorInternoSubscription) {
+            this.evaluadorInternoSubscription.unsubscribe();
+        }
     }
 
     onDownload() {

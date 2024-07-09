@@ -247,771 +247,846 @@
                     </p>
                 </div>
                 <div
-                    class="field grid"
+                    class="card"
                     *ngIf="
                         role.includes('ROLE_COORDINADOR') ||
                         role.includes('ROLE_DOCENTE')
                     "
                 >
-                    <div class="col-5 col-label text-right align-self-center">
-                        <label class="label-required"
-                            >Título del Trabajo de Investigacion</label
-                        >
+                    <div class="mb-4">
+                        <p class="text-xl font-bold mb-0">
+                            <i class="pi pi-check-square mr-2"></i>Paso 1 -
+                            Cargue de documentos
+                        </p>
+                        <p>
+                            Complete los datos requeridos para realizar la
+                            solicitud
+                        </p>
                     </div>
-                    <div class="col-7 col-input">
-                        <input
-                            pInputText
-                            [maxLength]="250"
-                            class="p-inputtext-md w-full max-w-30rem"
-                            formControlName="titulo"
-                        />
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_DOCENTE')
-                    "
-                >
-                    <div class="col-5 col-label text-right align-self-center">
-                        <label class="label-required"
-                            >Solicitud Examen de Valoracion (Formato A .pdf)
-                        </label>
-                    </div>
-                    <div class="col-7 col-input">
-                        <div
-                            class="flex flex-wrap gap-2 max-w-30rem align-items-start"
-                        >
-                            <div
-                                class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
-                            >
-                                <div
-                                    class="flex flex-row w-full justify-content-between"
+                    <p-fieldset legend="Docente" styleClass="bg-bluegray-50">
+                        <div class="field grid justify-content-center">
+                            <div class="col-5">
+                                <label class="label-required"
+                                    >Título del Trabajo de Investigacion</label
                                 >
-                                    <p-fileUpload
-                                        #FormatoA
-                                        name="linkFormatoA"
-                                        mode="basic"
-                                        [auto]="true"
-                                        accept=".pdf"
-                                        chooseIcon="pi pi-file"
-                                        class="w-full max-w-30rem"
-                                        maxFileSize="2000000"
-                                        (onSelect)="
-                                            onFileSelectFormatoA($event)
-                                        "
-                                        chooseLabel="Buscar documento"
-                                        [disabled]="
-                                            solicitudForm.get('linkFormatoA')
-                                                .value
-                                        "
-                                    >
-                                    </p-fileUpload>
-                                    <button
-                                        *ngIf="FileFormatoA"
-                                        pButton
-                                        class="p-button-secondary"
-                                        icon="pi pi-times"
-                                        type="button"
-                                        (click)="onFileClear('linkFormatoA')"
-                                    ></button>
-                                </div>
-                                <div
-                                    class="mt-2"
-                                    *ngIf="FileFormatoA"
-                                    style="word-break: break-word"
-                                >
-                                    {{ FileFormatoA.name }} -
-                                    {{ FileFormatoA.size | bytesToKb }}
-                                    KB
-                                </div>
+                                <input
+                                    pInputText
+                                    [maxLength]="250"
+                                    style="max-width: 50rem"
+                                    class="p-inputtext-md mt-2 w-full"
+                                    formControlName="titulo"
+                                />
                             </div>
-                            <button
-                                *ngIf="editMode && FileFormatoA"
-                                pButton
-                                class="p-button-secondary"
-                                type="button"
-                                icon="pi pi-download"
-                                pTooltip="Descargar documento"
-                                (click)="getFileAndSetValue('linkFormatoA')"
-                            ></button>
-                            <button
-                                *ngIf="!FileFormatoA"
-                                pButton
-                                icon="pi pi-plus"
-                                class="align-self-center"
-                                label="Crear Documento"
-                                [pTooltip]="
-                                    !this.evaluadorInternoSeleccionado ||
-                                    !this.evaluadorExternoSeleccionado
-                                        ? 'Debes seleccionar los evaluadores'
-                                        : ''
-                                "
-                                tooltipPosition="top"
-                                (click)="showFormatoA()"
-                                [loading]="loading"
-                                [disabled]="
-                                    !this.evaluadorInternoSeleccionado ||
-                                    !this.evaluadorExternoSeleccionado
-                                "
-                            ></button>
                         </div>
-                        <div class="mt-2" *ngIf="!FileFormatoA">
-                            <p>No has seleccionado ningún documento.</p>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_DOCENTE')
-                    "
-                >
-                    <div class="col-5 col-label text-right align-self-center">
-                        <label class="label-required"
-                            >Anteproyecto presentado a Examen (Formato D .pdf,
-                            .rar, .zip)
-                        </label>
-                    </div>
-                    <div class="col-7 col-input">
-                        <div
-                            class="flex flex-wrap gap-2 max-w-30rem align-items-start"
-                        >
-                            <div
-                                class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
-                            >
+                        <div class="field grid justify-content-center">
+                            <div class="col-5 mt-4">
+                                <label class="label-required"
+                                    >Solicitud Examen de Valoracion (Formato A
+                                    .pdf)
+                                </label>
                                 <div
-                                    class="flex flex-row w-full justify-content-between"
+                                    style="max-width: 50rem"
+                                    class="flex flex-wrap mt-2 gap-2 align-items-start"
                                 >
-                                    <p-fileUpload
-                                        #FormatoD
-                                        name="linkFormatoD"
-                                        mode="basic"
-                                        [auto]="true"
-                                        accept=".pdf,.zip,.rar"
-                                        chooseIcon="pi pi-file"
-                                        class="w-full max-w-30rem"
-                                        maxFileSize="5000000"
-                                        (onSelect)="
-                                            onFileSelectFormatoD($event)
-                                        "
-                                        chooseLabel="Buscar documento"
-                                        [disabled]="
-                                            solicitudForm.get('linkFormatoD')
-                                                .value
-                                        "
+                                    <div
+                                        class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
                                     >
-                                    </p-fileUpload>
-                                    <button
-                                        *ngIf="FileFormatoD"
-                                        pButton
-                                        class="p-button-secondary"
-                                        icon="pi pi-times"
-                                        type="button"
-                                        (click)="onFileClear('linkFormatoD')"
-                                    ></button>
-                                </div>
-                                <div
-                                    class="mt-2"
-                                    *ngIf="FileFormatoD"
-                                    style="word-break: break-word"
-                                >
-                                    {{ FileFormatoD.name }} -
-                                    {{ FileFormatoD.size | bytesToKb }}
-                                    KB
-                                </div>
-                            </div>
-                            <button
-                                *ngIf="editMode && FileFormatoD"
-                                pButton
-                                class="p-button-secondary"
-                                type="button"
-                                icon="pi pi-download"
-                                pTooltip="Descargar documento"
-                                (click)="getFileAndSetValue('linkFormatoD')"
-                            ></button>
-                        </div>
-                        <div class="mt-2" *ngIf="!FileFormatoD">
-                            <p>No has seleccionado ningún documento.</p>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_DOCENTE')
-                    "
-                >
-                    <div class="col-5 col-label text-right align-self-center">
-                        <label class="label-required"
-                            >Examen de valoración (Formato E, .pdf, .rar, .zip)
-                        </label>
-                    </div>
-                    <div class="col-7 col-input">
-                        <div
-                            class="flex flex-wrap gap-2 max-w-30rem align-items-start"
-                        >
-                            <div
-                                class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
-                            >
-                                <div
-                                    class="flex flex-row w-full justify-content-between"
-                                >
-                                    <p-fileUpload
-                                        #FormatoE
-                                        mode="basic"
-                                        [auto]="true"
-                                        name="linkFormatoE"
-                                        chooseIcon="pi pi-file"
-                                        accept=".pdf,.zip,.rar"
-                                        class="w-full max-w-30rem"
-                                        maxFileSize="5000000"
-                                        (onSelect)="
-                                            onFileSelectFormatoE($event)
-                                        "
-                                        chooseLabel="Buscar documento"
-                                        [disabled]="
-                                            solicitudForm.get('linkFormatoE')
-                                                .value
-                                        "
-                                    ></p-fileUpload>
-                                    <button
-                                        *ngIf="FileFormatoE"
-                                        pButton
-                                        class="p-button-secondary"
-                                        icon="pi pi-times"
-                                        type="button"
-                                        (click)="onFileClear('linkFormatoE')"
-                                    ></button>
-                                </div>
-                                <div
-                                    class="mt-2"
-                                    *ngIf="FileFormatoE"
-                                    style="word-break: break-word"
-                                >
-                                    {{ FileFormatoE.name }} -
-                                    {{ FileFormatoE.size | bytesToKb }}
-                                    KB
-                                </div>
-                            </div>
-                            <button
-                                *ngIf="editMode && FileFormatoE"
-                                pButton
-                                class="p-button-secondary"
-                                type="button"
-                                icon="pi pi-download"
-                                pTooltip="Descargar documento"
-                                (click)="getFileAndSetValue('linkFormatoE')"
-                            ></button>
-                        </div>
-                        <div class="mt-2" *ngIf="!FileFormatoE">
-                            <p>No has seleccionado ningún documento.</p>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_DOCENTE')
-                    "
-                >
-                    <div class="col-5 col-label text-right align-self-center">
-                        <label class="label-required"
-                            >Anexos (.pdf, .rar, .zip)
-                        </label>
-                    </div>
-                    <div class="col-7 col-input">
-                        <div
-                            class="flex flex-wrap gap-2 max-w-30rem align-items-start"
-                        >
-                            <div
-                                class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
-                            >
-                                <div
-                                    class="flex flex-row w-full justify-content-between"
-                                >
-                                    <p-fileUpload
-                                        name="anexos"
-                                        class="w-full max-w-30rem"
-                                        chooseIcon="pi pi-file"
-                                        multiple="multiple"
-                                        accept=".pdf"
-                                        maxFileSize="5000000"
-                                        chooseLabel="Buscar documento"
-                                        (onSelect)="onUpload($event)"
-                                        [disabled]="
-                                            editMode &&
-                                            solicitudForm.get('anexos').value &&
-                                            !isChanged
-                                        "
-                                    >
-                                        <ng-template pTemplate="content">
-                                            <div
-                                                *ngIf="
-                                                    editMode &&
-                                                    anexosFiles.length
+                                        <div
+                                            class="flex flex-row w-full justify-content-between"
+                                        >
+                                            <p-fileUpload
+                                                #FormatoA
+                                                name="linkFormatoA"
+                                                mode="basic"
+                                                [auto]="true"
+                                                accept=".pdf"
+                                                chooseIcon="pi pi-file"
+                                                class="w-full max-w-30rem"
+                                                maxFileSize="2000000"
+                                                (onSelect)="
+                                                    onFileSelectFormatoA($event)
                                                 "
-                                                class="w-full flex justify-content-between align-items-center"
+                                                chooseLabel="Buscar documento"
+                                                [disabled]="
+                                                    solicitudForm.get(
+                                                        'linkFormatoA'
+                                                    ).value
+                                                "
                                             >
-                                                <span class="ml-4"
-                                                    >Descargar ({{
-                                                        anexosFiles.length
-                                                    }}) documentos</span
+                                            </p-fileUpload>
+                                            <button
+                                                *ngIf="FileFormatoA"
+                                                pButton
+                                                class="p-button-secondary"
+                                                icon="pi pi-times"
+                                                type="button"
+                                                (click)="
+                                                    onFileClear('linkFormatoA')
+                                                "
+                                            ></button>
+                                        </div>
+                                        <div
+                                            class="text-description mt-2"
+                                            *ngIf="FileFormatoA"
+                                            style="word-break: break-word"
+                                        >
+                                            {{ FileFormatoA.name }} -
+                                            {{ FileFormatoA.size | bytesToKb }}
+                                            KB
+                                        </div>
+                                    </div>
+                                    <button
+                                        *ngIf="editMode && FileFormatoA"
+                                        pButton
+                                        class="p-button-secondary"
+                                        type="button"
+                                        icon="pi pi-download"
+                                        pTooltip="Descargar documento"
+                                        (click)="
+                                            getFileAndSetValue('linkFormatoA')
+                                        "
+                                    ></button>
+                                    <button
+                                        *ngIf="!FileFormatoA"
+                                        pButton
+                                        icon="pi pi-plus"
+                                        class="align-self-center"
+                                        label="Crear Documento"
+                                        [pTooltip]="
+                                            !this
+                                                .evaluadorInternoSeleccionado ||
+                                            !this.evaluadorExternoSeleccionado
+                                                ? 'Debes seleccionar los evaluadores'
+                                                : ''
+                                        "
+                                        tooltipPosition="top"
+                                        (click)="showFormatoA()"
+                                        [loading]="loading"
+                                        [disabled]="
+                                            !this
+                                                .evaluadorInternoSeleccionado ||
+                                            !this.evaluadorExternoSeleccionado
+                                        "
+                                    ></button>
+                                </div>
+                                <div
+                                    class="text-description mt-2"
+                                    *ngIf="!FileFormatoA"
+                                >
+                                    <p>No has seleccionado ningún documento.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field grid justify-content-center">
+                            <div class="col-5 mt-4">
+                                <label class="label-required"
+                                    >Anteproyecto presentado a Examen (Formato D
+                                    .pdf, .rar, .zip)
+                                </label>
+                                <div
+                                    style="max-width: 50rem"
+                                    class="flex flex-wrap gap-2 mt-2 align-items-start"
+                                >
+                                    <div
+                                        class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                    >
+                                        <div
+                                            class="flex flex-row w-full justify-content-between"
+                                        >
+                                            <p-fileUpload
+                                                #FormatoD
+                                                name="linkFormatoD"
+                                                mode="basic"
+                                                [auto]="true"
+                                                accept=".pdf,.zip,.rar"
+                                                chooseIcon="pi pi-file"
+                                                class="w-full max-w-30rem"
+                                                maxFileSize="5000000"
+                                                (onSelect)="
+                                                    onFileSelectFormatoD($event)
+                                                "
+                                                chooseLabel="Buscar documento"
+                                                [disabled]="
+                                                    solicitudForm.get(
+                                                        'linkFormatoD'
+                                                    ).value
+                                                "
+                                            >
+                                            </p-fileUpload>
+                                            <button
+                                                *ngIf="FileFormatoD"
+                                                pButton
+                                                class="p-button-secondary"
+                                                icon="pi pi-times"
+                                                type="button"
+                                                (click)="
+                                                    onFileClear('linkFormatoD')
+                                                "
+                                            ></button>
+                                        </div>
+                                        <div
+                                            class="text-description mt-2"
+                                            *ngIf="FileFormatoD"
+                                            style="word-break: break-word"
+                                        >
+                                            {{ FileFormatoD.name }} -
+                                            {{ FileFormatoD.size | bytesToKb }}
+                                            KB
+                                        </div>
+                                    </div>
+                                    <button
+                                        *ngIf="editMode && FileFormatoD"
+                                        pButton
+                                        class="p-button-secondary"
+                                        type="button"
+                                        icon="pi pi-download"
+                                        pTooltip="Descargar documento"
+                                        (click)="
+                                            getFileAndSetValue('linkFormatoD')
+                                        "
+                                    ></button>
+                                </div>
+                                <div
+                                    class="text-description mt-2"
+                                    *ngIf="!FileFormatoD"
+                                >
+                                    <p>No has seleccionado ningún documento.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field grid justify-content-center">
+                            <div class="col-5 mt-4">
+                                <label class="label-required"
+                                    >Examen de valoración (Formato E, .pdf,
+                                    .rar, .zip)
+                                </label>
+                                <div
+                                    style="max-width: 50rem"
+                                    class="flex flex-wrap gap-2 mt-2 align-items-start"
+                                >
+                                    <div
+                                        class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                    >
+                                        <div
+                                            class="flex flex-row w-full justify-content-between"
+                                        >
+                                            <p-fileUpload
+                                                #FormatoE
+                                                mode="basic"
+                                                [auto]="true"
+                                                name="linkFormatoE"
+                                                chooseIcon="pi pi-file"
+                                                accept=".pdf,.zip,.rar"
+                                                class="w-full max-w-30rem"
+                                                maxFileSize="5000000"
+                                                (onSelect)="
+                                                    onFileSelectFormatoE($event)
+                                                "
+                                                chooseLabel="Buscar documento"
+                                                [disabled]="
+                                                    solicitudForm.get(
+                                                        'linkFormatoE'
+                                                    ).value
+                                                "
+                                            ></p-fileUpload>
+                                            <button
+                                                *ngIf="FileFormatoE"
+                                                pButton
+                                                class="p-button-secondary"
+                                                icon="pi pi-times"
+                                                type="button"
+                                                (click)="
+                                                    onFileClear('linkFormatoE')
+                                                "
+                                            ></button>
+                                        </div>
+                                        <div
+                                            class="text-description mt-2"
+                                            *ngIf="FileFormatoE"
+                                            style="word-break: break-word"
+                                        >
+                                            {{ FileFormatoE.name }} -
+                                            {{ FileFormatoE.size | bytesToKb }}
+                                            KB
+                                        </div>
+                                    </div>
+                                    <button
+                                        *ngIf="editMode && FileFormatoE"
+                                        pButton
+                                        class="p-button-secondary"
+                                        type="button"
+                                        icon="pi pi-download"
+                                        pTooltip="Descargar documento"
+                                        (click)="
+                                            getFileAndSetValue('linkFormatoE')
+                                        "
+                                    ></button>
+                                </div>
+                                <div
+                                    class="text-description mt-2"
+                                    *ngIf="!FileFormatoE"
+                                >
+                                    <p>No has seleccionado ningún documento.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field grid justify-content-center">
+                            <div class="col-5 mt-4">
+                                <label class="label-required"
+                                    >Anexos (.pdf, .rar, .zip)
+                                </label>
+                                <div
+                                    style="max-width: 50rem"
+                                    class="flex flex-wrap gap-2 mt-2 align-items-start"
+                                >
+                                    <div
+                                        class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                    >
+                                        <div
+                                            class="flex flex-row w-full justify-content-between"
+                                        >
+                                            <p-fileUpload
+                                                name="anexos"
+                                                class="w-full"
+                                                chooseIcon="pi pi-file"
+                                                multiple="multiple"
+                                                accept=".pdf"
+                                                maxFileSize="5000000"
+                                                chooseLabel="Buscar documento"
+                                                (onSelect)="onUpload($event)"
+                                                [disabled]="
+                                                    editMode &&
+                                                    solicitudForm.get('anexos')
+                                                        .value &&
+                                                    !isChanged
+                                                "
+                                            >
+                                                <ng-template
+                                                    pTemplate="content"
+                                                >
+                                                    <div
+                                                        *ngIf="
+                                                            editMode &&
+                                                            anexosFiles.length
+                                                        "
+                                                        class="w-full flex justify-content-between align-items-center"
+                                                    >
+                                                        <span class="ml-4"
+                                                            >Descargar ({{
+                                                                anexosFiles.length
+                                                            }}) documentos</span
+                                                        >
+                                                        <button
+                                                            *ngIf="
+                                                                editMode &&
+                                                                anexosFiles.length >
+                                                                    0
+                                                            "
+                                                            type="button"
+                                                            pButton
+                                                            class="p-button-secondary"
+                                                            icon="pi pi-download"
+                                                            pTooltip="Descargar documentos"
+                                                            (click)="
+                                                                getFileAndSetValue(
+                                                                    'anexos'
+                                                                )
+                                                            "
+                                                        ></button>
+                                                    </div>
+                                                    <ul
+                                                        *ngIf="
+                                                            anexosFiles.length
+                                                        "
+                                                    >
+                                                        <li
+                                                            class="flex justify-content-between align-items-center mb-2"
+                                                            *ngFor="
+                                                                let file of anexosFiles;
+                                                                let i = index
+                                                            "
+                                                        >
+                                                            <span
+                                                                class="w-15rem"
+                                                                style="
+                                                                    word-break: break-word;
+                                                                "
+                                                            >
+                                                                {{ file.name }}
+                                                                -
+                                                                {{
+                                                                    file.size
+                                                                        | bytesToKb
+                                                                }}
+                                                                KB
+                                                            </span>
+                                                            <button
+                                                                pButton
+                                                                class="p-button-secondary"
+                                                                icon="pi pi-times"
+                                                                type="button"
+                                                                (click)="
+                                                                    removeFile(
+                                                                        i
+                                                                    )
+                                                                "
+                                                            ></button>
+                                                        </li>
+                                                    </ul>
+                                                </ng-template>
+                                            </p-fileUpload>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="field grid justify-content-center"
+                            *ngIf="
+                                role.includes('ROLE_COORDINADOR') ||
+                                role.includes('ROLE_DOCENTE')
+                            "
+                        >
+                            <div class="col-5 mt-4">
+                                <label class="label-required"
+                                    >Evaluador Externo</label
+                                >
+
+                                <div
+                                    class="mt-2"
+                                    *ngIf="
+                                        evaluadorExternoSeleccionado;
+                                        else noEvaluadorSelected
+                                    "
+                                >
+                                    <div class="flex align-items-center">
+                                        <p-card class="w-full m-0">
+                                            <div
+                                                class="flex justify-content-between"
+                                            >
+                                                <span
+                                                    style="
+                                                        font-size: 18px;
+                                                        font-weight: bold;
+                                                    "
+                                                    >Datos del Evaluador
+                                                    Externo</span
                                                 >
                                                 <button
-                                                    *ngIf="
-                                                        editMode &&
-                                                        anexosFiles.length > 0
-                                                    "
-                                                    type="button"
                                                     pButton
                                                     class="p-button-secondary"
-                                                    icon="pi pi-download"
-                                                    pTooltip="Descargar documentos"
+                                                    icon="pi pi-times"
                                                     (click)="
-                                                        getFileAndSetValue(
-                                                            'anexos'
-                                                        )
+                                                        limpiarEvaluadorExterno()
                                                     "
                                                 ></button>
                                             </div>
-                                            <ul *ngIf="anexosFiles.length">
-                                                <li
-                                                    class="flex justify-content-between align-items-center mb-2"
-                                                    *ngFor="
-                                                        let file of anexosFiles;
-                                                        let i = index
-                                                    "
-                                                >
-                                                    <span
-                                                        class="w-15rem"
-                                                        style="
-                                                            word-break: break-word;
-                                                        "
-                                                    >
-                                                        {{ file.name }} -
-                                                        {{
-                                                            file.size
-                                                                | bytesToKb
-                                                        }}
-                                                        KB
-                                                    </span>
-                                                    <button
-                                                        pButton
-                                                        class="p-button-secondary"
-                                                        icon="pi pi-times"
-                                                        type="button"
-                                                        (click)="removeFile(i)"
-                                                    ></button>
-                                                </li>
-                                            </ul>
-                                        </ng-template>
-                                    </p-fileUpload>
+                                            <div
+                                                class="mt-2 flex justify-content-between"
+                                            >
+                                                <span>Nombres y Apellidos</span>
+                                                <span
+                                                    >{{
+                                                        evaluadorExternoSeleccionado.nombres
+                                                    }}
+                                                </span>
+                                            </div>
+                                            <div
+                                                class="mt-2 flex justify-content-between"
+                                            >
+                                                <span>Universidad</span>
+                                                <span>{{
+                                                    evaluadorExternoSeleccionado.universidad
+                                                }}</span>
+                                            </div>
+                                            <div
+                                                class="mt-2 flex justify-content-between"
+                                            >
+                                                <span>Correo</span>
+                                                <span>{{
+                                                    evaluadorExternoSeleccionado.correo
+                                                }}</span>
+                                            </div>
+                                        </p-card>
+                                    </div>
+                                </div>
+                                <div
+                                    class="align-self-center mt-2"
+                                    *ngIf="!evaluadorExternoSeleccionado"
+                                >
+                                    <button
+                                        pButton
+                                        icon="pi pi-plus"
+                                        label="Seleccionar Evaluador"
+                                        (click)="
+                                            onSeleccionarEvaluadorExterno()
+                                        "
+                                    ></button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_DOCENTE')
-                    "
-                >
-                    <div class="col-5 col-label text-right align-self-center">
-                        <label class="label-required">Evaluador Externo</label>
-                    </div>
-                    <div
-                        class="col-7 col-input"
-                        *ngIf="
-                            evaluadorExternoSeleccionado;
-                            else noEvaluadorSelected
-                        "
-                    >
-                        <div class="flex align-items-center">
-                            <p-card class="w-full max-w-30rem m-0">
-                                <div class="flex justify-content-between">
-                                    <span
-                                        style="
-                                            font-size: 18px;
-                                            font-weight: bold;
-                                        "
-                                        >Datos del Evaluador Externo</span
-                                    >
-                                    <button
-                                        pButton
-                                        class="p-button-secondary"
-                                        icon="pi pi-times"
-                                        (click)="limpiarEvaluadorExterno()"
-                                    ></button>
-                                </div>
-                                <div class="mt-2 flex justify-content-between">
-                                    <span>Nombres y Apellidos</span>
-                                    <span
-                                        >{{
-                                            evaluadorExternoSeleccionado.nombres
-                                        }}
-                                    </span>
-                                </div>
-                                <div class="mt-2 flex justify-content-between">
-                                    <span>Universidad</span>
-                                    <span>{{
-                                        evaluadorExternoSeleccionado.universidad
-                                    }}</span>
-                                </div>
-                                <div class="mt-2 flex justify-content-between">
-                                    <span>Correo</span>
-                                    <span>{{
-                                        evaluadorExternoSeleccionado.correo
-                                    }}</span>
-                                </div>
-                            </p-card>
-                        </div>
-                    </div>
-                    <div
-                        class="align-self-center"
-                        *ngIf="!evaluadorExternoSeleccionado"
-                    >
-                        <button
-                            pButton
-                            icon="pi pi-plus"
-                            label="Seleccionar Evaluador"
-                            (click)="onSeleccionarEvaluadorExterno()"
-                        ></button>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') ||
-                        role.includes('ROLE_DOCENTE')
-                    "
-                >
-                    <div class="col-5 col-label text-right align-self-center">
-                        <label class="label-required">Evaluador Interno</label>
-                    </div>
-                    <div
-                        class="col-7 col-input"
-                        *ngIf="
-                            evaluadorInternoSeleccionado;
-                            else noEvaluadorSelected
-                        "
-                    >
-                        <div class="flex align-items-center">
-                            <p-card class="w-full max-w-30rem m-0">
-                                <div class="flex justify-content-between">
-                                    <span
-                                        style="
-                                            font-size: 18px;
-                                            font-weight: bold;
-                                        "
-                                        >Datos del Evaluador Interno</span
-                                    >
-                                    <button
-                                        pButton
-                                        class="p-button-secondary"
-                                        icon="pi pi-times"
-                                        (click)="limpiarEvaluadorInterno()"
-                                    ></button>
-                                </div>
-                                <div class="mt-2 flex justify-content-between">
-                                    <span>Nombres y Apellidos</span>
-                                    <span>{{
-                                        evaluadorInternoSeleccionado.nombres
-                                    }}</span>
-                                </div>
-                                <div class="mt-2 flex justify-content-between">
-                                    <span>Universidad</span>
-                                    <span>{{
-                                        evaluadorInternoSeleccionado.universidad
-                                    }}</span>
-                                </div>
-                                <div class="mt-2 flex justify-content-between">
-                                    <span>Correo</span>
-                                    <span>{{
-                                        evaluadorInternoSeleccionado.correo
-                                    }}</span>
-                                </div>
-                            </p-card>
-                        </div>
-                    </div>
-                    <div
-                        class="align-self-center"
-                        *ngIf="!evaluadorInternoSeleccionado"
-                    >
-                        <button
-                            pButton
-                            icon="pi pi-plus"
-                            label="Seleccionar Evaluador"
-                            (click)="onSeleccionarEvaluadorInterno()"
-                        ></button>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="role.includes('ROLE_COORDINADOR') && isDocente"
-                >
-                    <div
-                        class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
-                    >
                         <div
-                            *ngFor="let estado of estados"
-                            class="field-checkbox"
+                            class="field grid justify-content-center"
+                            *ngIf="
+                                role.includes('ROLE_COORDINADOR') ||
+                                role.includes('ROLE_DOCENTE')
+                            "
                         >
-                            <p-radioButton
-                                [inputId]="estado + 'coordinador'"
-                                [value]="estado"
-                                formControlName="conceptoCoordinadorDocumentos"
-                            ></p-radioButton>
-                            <label
-                                [for]="estado + 'coordinador'"
-                                class="ml-2"
-                                >{{ estado }}</label
-                            >
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="role.includes('ROLE_COORDINADOR') && isDocente"
-                >
-                    <div class="col-2 col-label text-right align-self-center">
-                        <label class="label-required">Asunto</label>
-                    </div>
-                    <div class="col-9 col-input">
-                        <div class="flex m-4 align-items-center">
-                            <input
-                                class="p-inputtext-md"
-                                style="flex: 0.5"
-                                pInputText
-                                [maxLength]="250"
-                                formControlName="asuntoCoordinador"
-                            />
-                            <span class="p-float-label ml-4" style="flex: 0.5">
-                                <textarea
-                                    id="float-input"
-                                    class="w-full"
-                                    rows="5"
-                                    cols="30"
-                                    pInputTextarea
-                                    [autoResize]="true"
-                                    formControlName="mensajeCoordinador"
-                                ></textarea>
-                                <label for="float-input">Observación</label>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
-                    "
-                >
-                    <div
-                        class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
-                    >
-                        <div
-                            *ngFor="let estado of estados"
-                            class="field-checkbox"
-                        >
-                            <p-radioButton
-                                [inputId]="estado + 'comite'"
-                                [value]="estado"
-                                formControlName="conceptoComite"
-                            ></p-radioButton>
-                            <label [for]="estado + 'comite'" class="ml-2">{{
-                                estado
-                            }}</label>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
-                    "
-                >
-                    <div class="col-2 col-label text-right align-self-center">
-                        <label class="label-required">Asunto</label>
-                    </div>
-                    <div class="col-9 col-input">
-                        <div class="flex m-4 align-items-center">
-                            <input
-                                class="p-inputtext-md"
-                                style="flex: 0.5"
-                                pInputText
-                                [maxLength]="250"
-                                formControlName="asuntoComite"
-                            />
-                            <span class="p-float-label ml-4" style="flex: 0.5">
-                                <textarea
-                                    id="float-input"
-                                    class="w-full"
-                                    rows="5"
-                                    cols="30"
-                                    pInputTextarea
-                                    [autoResize]="true"
-                                    formControlName="mensajeComite"
-                                ></textarea>
-                                <label for="float-input">Observación</label>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
-                    "
-                >
-                    <div class="col-5 col-label text-right align-self-center">
-                        <label class="label-required"
-                            >No Acta de aprobacion del examen</label
-                        >
-                    </div>
-                    <div class="col-7 col-input">
-                        <input pInputText formControlName="numeroActa" />
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
-                    "
-                >
-                    <div class="col-5 col-label text-right align-self-center">
-                        <label class="label-required">Fecha del Acta</label>
-                    </div>
-                    <div class="col-7 col-input">
-                        <p-calendar
-                            formControlName="fechaActa"
-                            [showIcon]="true"
-                            dateFormat="dd.mm.yy"
-                        ></p-calendar>
-                    </div>
-                </div>
-                <div
-                    class="field grid"
-                    *ngIf="
-                        role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1 &&
-                        solicitudForm.get('conceptoComite').value == 'Aceptado'
-                    "
-                >
-                    <div class="col-5 col-label text-right align-self-center">
-                        <label class="label-required"
-                            >Ofcio dirigido a jurados sobre instrucciones para
-                            el examen de valoración (.pdf)
-                        </label>
-                    </div>
-                    <div class="col-7 col-input">
-                        <div
-                            class="flex flex-wrap gap-2 max-w-30rem align-items-start"
-                        >
-                            <div
-                                class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
-                            >
-                                <div
-                                    class="flex flex-row w-full justify-content-between"
+                            <div class="col-5 mt-4">
+                                <label class="label-required"
+                                    >Evaluador Interno</label
                                 >
-                                    <p-fileUpload
-                                        #OficioDirigidoEvaluadores
-                                        name="linkOficioDirigidoEvaluadores"
-                                        mode="basic"
-                                        [auto]="true"
-                                        accept=".pdf"
-                                        chooseIcon="pi pi-file"
-                                        class="w-full max-w-30rem"
-                                        maxFileSize="2000000"
-                                        (onSelect)="
-                                            onFileSelectOficioDirigidoEvaluadores(
-                                                $event
-                                            )
-                                        "
-                                        chooseLabel="Buscar documento"
-                                        [disabled]="
-                                            solicitudForm.get(
-                                                'linkOficioDirigidoEvaluadores'
-                                            ).value
-                                        "
-                                    >
-                                    </p-fileUpload>
-                                    <button
-                                        *ngIf="FileOficioDirigidoEvaluadores"
-                                        pButton
-                                        class="p-button-secondary"
-                                        icon="pi pi-times"
-                                        type="button"
-                                        (click)="
-                                            onFileClear(
-                                                'linkOficioDirigidoEvaluadores'
-                                            )
-                                        "
-                                    ></button>
-                                </div>
                                 <div
                                     class="mt-2"
-                                    *ngIf="FileOficioDirigidoEvaluadores"
-                                    style="word-break: break-word"
+                                    *ngIf="
+                                        evaluadorInternoSeleccionado;
+                                        else noEvaluadorSelected
+                                    "
                                 >
-                                    {{ FileOficioDirigidoEvaluadores.name }} -
-                                    {{
-                                        FileOficioDirigidoEvaluadores.size
-                                            | bytesToKb
-                                    }}
-                                    KB
+                                    <div class="flex align-items-center">
+                                        <p-card class="w-full m-0">
+                                            <div
+                                                class="flex justify-content-between"
+                                            >
+                                                <span
+                                                    style="
+                                                        font-size: 18px;
+                                                        font-weight: bold;
+                                                    "
+                                                    >Datos del Evaluador
+                                                    Interno</span
+                                                >
+                                                <button
+                                                    pButton
+                                                    class="p-button-secondary"
+                                                    icon="pi pi-times"
+                                                    (click)="
+                                                        limpiarEvaluadorInterno()
+                                                    "
+                                                ></button>
+                                            </div>
+                                            <div
+                                                class="mt-2 flex justify-content-between"
+                                            >
+                                                <span>Nombres y Apellidos</span>
+                                                <span>{{
+                                                    evaluadorInternoSeleccionado.nombres
+                                                }}</span>
+                                            </div>
+                                            <div
+                                                class="mt-2 flex justify-content-between"
+                                            >
+                                                <span>Universidad</span>
+                                                <span>{{
+                                                    evaluadorInternoSeleccionado.universidad
+                                                }}</span>
+                                            </div>
+                                            <div
+                                                class="mt-2 flex justify-content-between"
+                                            >
+                                                <span>Correo</span>
+                                                <span>{{
+                                                    evaluadorInternoSeleccionado.correo
+                                                }}</span>
+                                            </div>
+                                        </p-card>
+                                    </div>
+                                </div>
+                                <div
+                                    class="align-self-center mt-2"
+                                    *ngIf="!evaluadorInternoSeleccionado"
+                                >
+                                    <button
+                                        pButton
+                                        icon="pi pi-plus"
+                                        label="Seleccionar Evaluador"
+                                        (click)="
+                                            onSeleccionarEvaluadorInterno()
+                                        "
+                                    ></button>
                                 </div>
                             </div>
-                            <button
-                                *ngIf="
-                                    editMode && FileOficioDirigidoEvaluadores
-                                "
-                                pButton
-                                type="button"
-                                class="p-button-secondary"
-                                icon="pi pi-download"
-                                pTooltip="Descargar documento"
-                                (click)="
-                                    getFileAndSetValue(
-                                        'linkOficioDirigidoEvaluadores'
-                                    )
-                                "
-                            ></button>
                         </div>
-                        <div
-                            class="mt-2"
-                            *ngIf="!FileOficioDirigidoEvaluadores"
-                        >
-                            <p>No has seleccionado ningún documento.</p>
-                        </div>
-                    </div>
+                    </p-fieldset>
                 </div>
                 <div
-                    class="field grid"
+                    class="card"
+                    *ngIf="role.includes('ROLE_COORDINADOR') && isDocente"
+                >
+                    <div class="mb-4">
+                        <p class="text-xl font-bold mb-0">
+                            <i class="pi pi-check-square mr-2"></i>Paso 2 -
+                            Respuesta Concepto Coordinador
+                        </p>
+                        <p>
+                            Complete los datos requeridos para realizar la
+                            solicitud
+                        </p>
+                    </div>
+                    <p-fieldset
+                        legend="Coordinador"
+                        styleClass="bg-bluegray-50"
+                    >
+                        <div class="field grid">
+                            <div
+                                class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
+                            >
+                                <div
+                                    *ngFor="let estado of estados"
+                                    class="field-checkbox"
+                                >
+                                    <p-radioButton
+                                        [inputId]="estado + 'coordinador'"
+                                        [value]="estado"
+                                        formControlName="conceptoCoordinadorDocumentos"
+                                    ></p-radioButton>
+                                    <label
+                                        [for]="estado + 'coordinador'"
+                                        class="ml-2"
+                                        >{{ estado }}</label
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field grid justify-content-center">
+                            <div class="col-5">
+                                <div>
+                                    <label class="label-required">Asunto</label>
+                                    <input
+                                        class="p-inputtext-md w-full mt-2"
+                                        pInputText
+                                        [maxLength]="250"
+                                        formControlName="asuntoCoordinador"
+                                    />
+                                </div>
+                                <div class="mt-4">
+                                    <label class="label-required"
+                                        >Observación</label
+                                    >
+                                    <textarea
+                                        class="w-full mt-2"
+                                        rows="5"
+                                        cols="30"
+                                        pInputTextarea
+                                        [autoResize]="true"
+                                        formControlName="mensajeCoordinador"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </p-fieldset>
+                </div>
+                <div
+                    class="card"
                     *ngIf="
-                        role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1 &&
-                        solicitudForm.get('conceptoComite').value == 'Aceptado'
+                        role.includes('ROLE_COORDINADOR') && isCoordinadorFase1
                     "
                 >
-                    <div class="col-5 col-label text-right align-self-center">
-                        <label class="label-required"
-                            >Fecha maxima de la evaluación</label
+                    <div class="mb-4">
+                        <p class="text-xl font-bold mb-0">
+                            <i class="pi pi-check-square mr-2"></i>Paso 3 -
+                            Respuesta Concepto Comite
+                        </p>
+                        <p>
+                            Complete los datos requeridos para realizar la
+                            solicitud
+                        </p>
+                    </div>
+                    <p-fieldset legend="Comite" styleClass="bg-bluegray-50">
+                        <div class="field grid">
+                            <div
+                                class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
+                            >
+                                <div
+                                    *ngFor="let estado of estados"
+                                    class="field-checkbox"
+                                >
+                                    <p-radioButton
+                                        [inputId]="estado + 'comite'"
+                                        [value]="estado"
+                                        formControlName="conceptoComite"
+                                    ></p-radioButton>
+                                    <label
+                                        [for]="estado + 'comite'"
+                                        class="ml-2"
+                                        >{{ estado }}</label
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field grid justify-content-center">
+                            <div class="col-5">
+                                <div>
+                                    <label class="label-required">Asunto</label>
+                                    <input
+                                        class="p-inputtext-md w-full mt-2"
+                                        pInputText
+                                        [maxLength]="250"
+                                        formControlName="asuntoComite"
+                                    />
+                                </div>
+                                <div class="mt-4">
+                                    <label class="label-required"
+                                        >Observación</label
+                                    >
+                                    <textarea
+                                        class="w-full mt-2"
+                                        rows="5"
+                                        cols="30"
+                                        pInputTextarea
+                                        [autoResize]="true"
+                                        formControlName="mensajeComite"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field grid justify-content-center">
+                            <div
+                                class="col-5 flex flex-nowrap justify-content-between align-items-center"
+                            >
+                                <label class="label-required"
+                                    >No Acta de aprobacion del examen</label
+                                >
+                                <input
+                                    class="max-w-4rem ml-2"
+                                    pInputText
+                                    formControlName="numeroActa"
+                                />
+                                <label class="label-required ml-4"
+                                    >Fecha del Acta</label
+                                >
+                                <p-calendar
+                                    class="ml-2"
+                                    formControlName="fechaActa"
+                                    [showIcon]="true"
+                                    dateFormat="dd.mm.yy"
+                                ></p-calendar>
+                            </div>
+                        </div>
+                        <div
+                            class="field grid justify-content-center"
+                            *ngIf="
+                                solicitudForm.get('conceptoComite').value ==
+                                'Aceptado'
+                            "
                         >
-                    </div>
-                    <div class="col-7 col-input">
-                        <p-calendar
-                            formControlName="fechaMaximaEvaluacion"
-                            [showIcon]="true"
-                            dateFormat="dd.mm.yy"
-                        ></p-calendar>
-                    </div>
+                            <div class="col-5 mt-4">
+                                <label class="label-required"
+                                    >Ofcio dirigido a jurados sobre
+                                    instrucciones para el examen de valoración
+                                    (.pdf)
+                                </label>
+                                <div
+                                    style="max-width: 50rem"
+                                    class="flex flex-wrap gap-2 mt-2 align-items-start"
+                                >
+                                    <div
+                                        class="flex flex-column row-gap-2 align-items-start justify-content-start flex-1"
+                                    >
+                                        <div
+                                            class="flex flex-row w-full justify-content-between"
+                                        >
+                                            <p-fileUpload
+                                                #OficioDirigidoEvaluadores
+                                                name="linkOficioDirigidoEvaluadores"
+                                                mode="basic"
+                                                [auto]="true"
+                                                accept=".pdf"
+                                                chooseIcon="pi pi-file"
+                                                class="w-full max-w-30rem"
+                                                maxFileSize="2000000"
+                                                (onSelect)="
+                                                    onFileSelectOficioDirigidoEvaluadores(
+                                                        $event
+                                                    )
+                                                "
+                                                chooseLabel="Buscar documento"
+                                                [disabled]="
+                                                    solicitudForm.get(
+                                                        'linkOficioDirigidoEvaluadores'
+                                                    ).value
+                                                "
+                                            >
+                                            </p-fileUpload>
+                                            <button
+                                                *ngIf="
+                                                    FileOficioDirigidoEvaluadores
+                                                "
+                                                pButton
+                                                class="p-button-secondary"
+                                                icon="pi pi-times"
+                                                type="button"
+                                                (click)="
+                                                    onFileClear(
+                                                        'linkOficioDirigidoEvaluadores'
+                                                    )
+                                                "
+                                            ></button>
+                                        </div>
+                                        <div
+                                            class="text-description mt-2"
+                                            *ngIf="
+                                                FileOficioDirigidoEvaluadores
+                                            "
+                                            style="word-break: break-word"
+                                        >
+                                            {{
+                                                FileOficioDirigidoEvaluadores.name
+                                            }}
+                                            -
+                                            {{
+                                                FileOficioDirigidoEvaluadores.size
+                                                    | bytesToKb
+                                            }}
+                                            KB
+                                        </div>
+                                    </div>
+                                    <button
+                                        *ngIf="
+                                            editMode &&
+                                            FileOficioDirigidoEvaluadores
+                                        "
+                                        pButton
+                                        type="button"
+                                        class="p-button-secondary"
+                                        icon="pi pi-download"
+                                        pTooltip="Descargar documento"
+                                        (click)="
+                                            getFileAndSetValue(
+                                                'linkOficioDirigidoEvaluadores'
+                                            )
+                                        "
+                                    ></button>
+                                </div>
+                                <div
+                                    class="text-description mt-2"
+                                    *ngIf="!FileOficioDirigidoEvaluadores"
+                                >
+                                    <p>No has seleccionado ningún documento.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="field grid justify-content-center"
+                            *ngIf="
+                                solicitudForm.get('conceptoComite').value ==
+                                'Aceptado'
+                            "
+                        >
+                            <div
+                                class="col-5 mt-4 flex flex-nowrap justify-content-between align-items-center"
+                            >
+                                <label class="label-required"
+                                    >Fecha maxima de la evaluación</label
+                                >
+                                <p-calendar
+                                    formControlName="fechaMaximaEvaluacion"
+                                    [showIcon]="true"
+                                    dateFormat="dd.mm.yy"
+                                ></p-calendar>
+                            </div>
+                        </div>
+                    </p-fieldset>
                 </div>
             </div>
             <div
@@ -1060,7 +1135,7 @@
     </ng-template>
 </p-panel>
 <ng-template #noEvaluadorSelected>
-    <p-fieldset legend="Cargar Evaluador" class="mr-5"></p-fieldset>
+    <p-fieldset legend="Cargar Evaluador"></p-fieldset>
 </ng-template>
 <ng-template #spinner>
     <p-progressSpinner ariaLabel="loading" class="spinner"></p-progressSpinner>

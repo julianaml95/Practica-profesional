@@ -292,6 +292,13 @@ export class SolicitudExamenComponent implements OnInit {
                 next: (response) => {
                     if (response) {
                         this.estudianteSeleccionado = response;
+                    } else {
+                        const isDocenteOrEstudiante =
+                            this.role.includes('ROLE_DOCENTE') ||
+                            this.role.includes('ROLE_ESTUDIANTE');
+                        if (isDocenteOrEstudiante) {
+                            this.router.navigate(['examen-de-valoracion']);
+                        }
                     }
                 },
                 error: (e) => {
