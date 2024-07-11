@@ -29,10 +29,10 @@ export class AuthService {
                 tap((response) => {
                     localStorage.setItem('token', response.token);
                     localStorage.setItem('role', JSON.stringify(response.role));
-                    localStorage.setItem('username', response.username);
+                    localStorage.setItem('usuario', response.usuario);
                     this.loggedIn.next(true);
                     this.roleSubject.next(response.role);
-                    this.usernameSubject.next(response.username);
+                    this.usernameSubject.next(response.usuario);
                 })
             );
     }
@@ -40,7 +40,8 @@ export class AuthService {
     logout(): void {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
-        localStorage.removeItem('username');
+        localStorage.removeItem('usuario');
+        localStorage.removeItem('est');
         this.loggedIn.next(false);
         this.roleSubject.next([]);
         this.usernameSubject.next('');

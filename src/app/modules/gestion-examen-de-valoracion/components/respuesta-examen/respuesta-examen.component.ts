@@ -1,8 +1,11 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { MessageService } from 'primeng/api';
-import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { Router } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MessageService } from 'primeng/api';
+import { Subscription, catchError, of } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid';
+import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
+import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { Aviso, EstadoProceso, Mensaje } from 'src/app/core/enums/enums';
 import {
     errorMessage,
@@ -11,9 +14,6 @@ import {
 } from 'src/app/core/utils/message-util';
 import { RespuestaService } from '../../services/respuesta.service';
 import { Experto } from '../../models/experto';
-import { Subscription } from 'rxjs';
-import { v4 as uuidv4 } from 'uuid';
-import { Docente } from 'src/app/modules/gestion-docentes/models/docente';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import { ResolucionService } from '../../services/resolucion.service';
@@ -30,7 +30,9 @@ export class RespuestaExamenComponent implements OnInit {
     private estudianteSubscription: Subscription;
     private tituloSubscription: Subscription;
     private trabajoSeleccionadoSubscription: Subscription;
+    private resolucionValidSubscription: Subscription;
     private resolucionSubscription: Subscription;
+    private respuestaValidSubscription: Subscription;
     private sustentacionSubscription: Subscription;
     private evaluadorInternoSubscription: Subscription;
     private evaluadorExternoSubscription: Subscription;
@@ -91,19 +93,7 @@ export class RespuestaExamenComponent implements OnInit {
         this.initForm();
         await this.subscribeToObservers();
         this.checkEstados();
-        this.loadData();
-    }
-
-    async loadData() {
-        try {
-            await this.loadRespuestas();
-        } catch ({ error }) {
-            this.messageService.add({
-                severity: 'warn',
-                summary: error.mensaje,
-                detail: EstadoProceso.PENDIENTE_RESULTADO_EXAMEN_DE_VALORACION,
-            });
-        }
+        this.loadRespuestas();
     }
 
     subscribeToObservers(): Promise<void[]> {
@@ -154,22 +144,73 @@ export class RespuestaExamenComponent implements OnInit {
                                     this.estado = response.estado;
                                     this.trabajoDeGradoId = response.id;
 
-                                    this.resolucionService
-                                        .getResolucionCoordinadorFase3(
-                                            this.trabajoDeGradoId
-                                        )
-                                        .subscribe({
-                                            next: (response) => {
-                                                if (
-                                                    response?.numeroActaConsejoFacultad &&
-                                                    response?.fechaActaConsejoFacultad
-                                                ) {
-                                                    this.isResolucionValid =
-                                                        true;
-                                                }
-                                            },
-                                        });
+                                    this.resolucionValidSubscription =
+                                        this.resolucionService
+                                            .getResolucionCoordinadorFase3(
+                                                this.trabajoDeGradoId
+                                            )
+                                            .pipe(
+                                                catchError(() => {
+                                                    return of(null);
+                                                })
+                                            )
+                                            .subscribe({
+                                                next: (response) => {
+                                                    if (
+                                                        response?.numeroActaConsejoFacultad &&
+                                                        response?.fechaActaConsejoFacultad
+                                                    ) {
+                                                        this.isResolucionValid =
+                                                            true;
+                                                    }
+                                                },
+                                            });
                                     resolve();
+
+                                    this.respuestaValidSubscription =
+                                        this.respuestaService
+                                            .getRespuestasExamen(
+                                                this.trabajoDeGradoId
+                                            )
+                                            .pipe(
+                                                catchError(() => {
+                                                    return of(null);
+                                                })
+                                            )
+                                            .subscribe({
+                                                next: (response) => {
+                                                    if (
+                                                        response?.evaluador_externo &&
+                                                        response?.evaluador_interno
+                                                    ) {
+                                                        const evaluadorExternoAprobado =
+                                                            response.evaluador_externo.find(
+                                                                (
+                                                                    evaluador: any
+                                                                ) =>
+                                                                    evaluador.respuestaExamenValoracion ===
+                                                                    'APROBADO'
+                                                            );
+
+                                                        const evaluadorInternoAprobado =
+                                                            response.evaluador_interno.find(
+                                                                (
+                                                                    evaluador: any
+                                                                ) =>
+                                                                    evaluador.respuestaExamenValoracion ===
+                                                                    'APROBADO'
+                                                            );
+
+                                                        if (
+                                                            evaluadorExternoAprobado &&
+                                                            evaluadorInternoAprobado
+                                                        ) {
+                                                            this.isRespuestaValid =
+                                                                true;
+                                                        }
+                                                    }
+                                                },
+                                            });
                                 }
                             },
                             error: (e) => {
@@ -184,8 +225,7 @@ export class RespuestaExamenComponent implements OnInit {
                         {
                             next: (response) => {
                                 if (response) {
-                                    this.resolucionId =
-                                        response.idGeneracionResolucion;
+                                    this.resolucionId = response.id;
                                 }
                                 resolve();
                             },
@@ -201,8 +241,7 @@ export class RespuestaExamenComponent implements OnInit {
                         {
                             next: (response) => {
                                 if (response) {
-                                    this.sustentacionId =
-                                        response.idSustentacionTrabajoInvestigacion;
+                                    this.sustentacionId = response.id;
                                 }
                                 resolve();
                             },
@@ -435,13 +474,10 @@ export class RespuestaExamenComponent implements OnInit {
     checkEstados() {
         switch (this.estado) {
             case EstadoProceso.PENDIENTE_RESULTADO_EXAMEN_DE_VALORACION:
-                this.isRespuestaValid = false;
-                break;
             case EstadoProceso.EXAMEN_DE_VALORACION_APLAZADO_EVALUADOR_1 ||
                 EstadoProceso.EXAMEN_DE_VALORACION_APLAZADO_EVALUADOR_2:
             case EstadoProceso.EXAMEN_DE_VALORACION_NO_APROBADO_EVALUADOR_1 ||
                 EstadoProceso.EXAMEN_DE_VALORACION_NO_APROBADO_EVALUADOR_2:
-                this.isRespuestaValid = false;
                 this.messageService.add({
                     severity: 'warn',
                     summary: 'Advertencia',
@@ -449,7 +485,6 @@ export class RespuestaExamenComponent implements OnInit {
                 });
                 break;
             case EstadoProceso.EXAMEN_DE_VALORACION_CANCELADO:
-                this.isRespuestaValid = false;
                 this.messageService.add({
                     severity: 'warn',
                     summary: 'Advertencia',
@@ -458,7 +493,6 @@ export class RespuestaExamenComponent implements OnInit {
                 this.router.navigate(['examen-de-valoracion']);
                 break;
             case EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_1:
-                this.isRespuestaValid = false;
                 this.messageService.add({
                     severity: 'info',
                     summary: 'Informacion',
@@ -466,50 +500,38 @@ export class RespuestaExamenComponent implements OnInit {
                 });
                 break;
             case EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2:
-                this.isRespuestaValid = true;
-                this.trabajoDeGradoService.setRespuestaValid(
-                    this.isRespuestaValid
-                );
+                this.messageService.add({
+                    severity: 'info',
+                    summary: 'Informacion',
+                    detail: EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2,
+                });
                 break;
             default:
-                this.isRespuestaValid = true;
-                this.trabajoDeGradoService.setRespuestaValid(
-                    this.isRespuestaValid
-                );
                 break;
         }
     }
 
-    async loadRespuestas(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (!this.trabajoDeGradoId) {
-                const error = new Error('trabajoDeGradoId is undefined');
-                this.handlerResponseException(error);
-                return reject(error);
-            }
+    loadRespuestas() {
+        this.isLoading = true;
+        this.evaluacionExpertoIds = [];
+        this.evaluacionDocenteIds = [];
+        this.selectedFiles = {};
 
-            this.isLoading = true;
-            this.evaluacionExpertoIds = [];
-            this.evaluacionDocenteIds = [];
-            this.selectedFiles = {};
-
-            this.respuestaService
-                .getRespuestasExamen(this.trabajoDeGradoId)
-                .subscribe({
-                    next: (response) => {
-                        this.initializeFormFromResponse(response);
-                        this.isLoading = false;
-                        resolve();
-                    },
-                    error: (e) => {
-                        this.handlerResponseException(e);
-                        this.isLoading = false;
-                        reject(e);
-                    },
-                });
-        }).catch((e) => {
-            throw e;
-        });
+        this.respuestaService
+            .getRespuestasExamen(this.trabajoDeGradoId)
+            .pipe(
+                catchError((error) => {
+                    this.handlerResponseException(error);
+                    this.isLoading = false;
+                    return of(null);
+                })
+            )
+            .subscribe({
+                next: (response) => {
+                    this.initializeFormFromResponse(response);
+                    this.isLoading = false;
+                },
+            });
     }
 
     ngOnDestroy() {
@@ -523,6 +545,12 @@ export class RespuestaExamenComponent implements OnInit {
             this.trabajoSeleccionadoSubscription.unsubscribe();
         }
         if (this.resolucionSubscription) {
+            this.resolucionSubscription.unsubscribe();
+        }
+        if (this.resolucionValidSubscription) {
+            this.resolucionSubscription.unsubscribe();
+        }
+        if (this.respuestaValidSubscription) {
             this.resolucionSubscription.unsubscribe();
         }
         if (this.sustentacionSubscription) {
@@ -542,9 +570,7 @@ export class RespuestaExamenComponent implements OnInit {
 
         respuestas?.evaluador_externo?.forEach((respuesta) => {
             if (respuesta.tipoEvaluador == 'EXTERNO') {
-                this.evaluacionExpertoIds.push(
-                    respuesta.idRespuestaExamenValoracion
-                );
+                this.evaluacionExpertoIds.push(respuesta.id);
                 this.respuestaForm.patchValue({
                     observacion: respuesta.observacion,
                 });
@@ -553,10 +579,7 @@ export class RespuestaExamenComponent implements OnInit {
                 });
 
                 const evaluacionFormGroup = this.fb.group({
-                    ['id']: [
-                        respuesta.idRespuestaExamenValoracion,
-                        Validators.required,
-                    ],
+                    ['id']: [respuesta.id, Validators.required],
                     ['linkFormatoB' + indexExperto]: [
                         respuesta.linkFormatoB,
                         Validators.required,
@@ -600,9 +623,7 @@ export class RespuestaExamenComponent implements OnInit {
 
         respuestas?.evaluador_interno?.forEach((respuesta) => {
             if (respuesta.tipoEvaluador == 'INTERNO') {
-                this.evaluacionDocenteIds.push(
-                    respuesta.idRespuestaExamenValoracion
-                );
+                this.evaluacionDocenteIds.push(respuesta.id);
                 this.respuestaForm.patchValue({
                     observacion: respuesta.observacion,
                 });
@@ -610,10 +631,7 @@ export class RespuestaExamenComponent implements OnInit {
                     estadoFinalizado: respuesta.estadoFinalizado,
                 });
                 const evaluacionFormGroup = this.fb.group({
-                    ['id']: [
-                        respuesta.idRespuestaExamenValoracion,
-                        Validators.required,
-                    ],
+                    ['id']: [respuesta.id, Validators.required],
                     ['linkFormatoB' + indexDocente]: [
                         respuesta.linkFormatoB,
                         Validators.required,
@@ -818,7 +836,7 @@ export class RespuestaExamenComponent implements OnInit {
                         this[formArrayName]
                             .at(this[formArrayName].length - 1)
                             .patchValue({
-                                id: response.idRespuestaExamenValoracion,
+                                id: response.id,
                             });
                         this.messageService.add(
                             infoMessage(
@@ -892,7 +910,7 @@ export class RespuestaExamenComponent implements OnInit {
                         this[formArrayName]
                             .at(this[formArrayName].length - 1)
                             .patchValue({
-                                id: response.idRespuestaExamenValoracion,
+                                id: response.id,
                             });
                         this.messageService.add(
                             infoMessage(Aviso.RESPUESTA_GUARDADA_CORRECTAMENTE)
@@ -967,10 +985,10 @@ export class RespuestaExamenComponent implements OnInit {
         });
     }
 
-    async eliminarRespuestaExamen(formArrayName: string, index: number) {
+    eliminarRespuestaExamen(formArrayName: string, index: number) {
         this[formArrayName].removeAt(index);
         this.updateControlNames(this[formArrayName]);
-        await this.loadRespuestas();
+        this.loadRespuestas();
     }
 
     onRemove(arr: any) {
@@ -1074,11 +1092,16 @@ export class RespuestaExamenComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        if (response.status != 500) return;
-        const mapException = mapResponseException(response.error);
-        mapException.forEach((value, _) => {
-            this.messageService.add(errorMessage(value));
-        });
+        const error = response?.error;
+        if (!error) return;
+        if (response.status === 500) {
+            const mapException = mapResponseException(error);
+            mapException.forEach((value) => {
+                this.messageService.add(errorMessage(value));
+            });
+        } else if (response.status === 409) {
+            this.messageService.add(errorMessage(error.mensaje));
+        }
     }
 
     isActiveIndex(): Boolean {

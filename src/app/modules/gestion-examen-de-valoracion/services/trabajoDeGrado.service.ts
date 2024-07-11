@@ -29,9 +29,6 @@ export class TrabajoDeGradoService {
     private evaluadorExternoSeleccionadoSubject = new BehaviorSubject<Experto>(
         null
     );
-    private respuestaValidSubject = new BehaviorSubject<boolean>(null);
-    private resolucionValidSubject = new BehaviorSubject<boolean>(null);
-    private sustentacionValidSubject = new BehaviorSubject<boolean>(null);
 
     estudianteSeleccionado$: Observable<Estudiante> =
         this.estudianteSeleccionadoSubject.asObservable();
@@ -62,15 +59,6 @@ export class TrabajoDeGradoService {
 
     evaluadorExternoSeleccionadoSubject$: Observable<Experto> =
         this.evaluadorExternoSeleccionadoSubject.asObservable();
-
-    respuestaValid$: Observable<boolean> =
-        this.respuestaValidSubject.asObservable();
-
-    resolucionValid$: Observable<boolean> =
-        this.resolucionValidSubject.asObservable();
-
-    sustentacionValid$: Observable<boolean> =
-        this.sustentacionValidSubject.asObservable();
 
     setEstudianteSeleccionado(estudiante: Estudiante) {
         this.estudianteSeleccionadoSubject.next(estudiante);
@@ -109,18 +97,6 @@ export class TrabajoDeGradoService {
     }
     setEvaluadorExternoSeleccionadoSubject(experto: Experto) {
         this.evaluadorExternoSeleccionadoSubject.next(experto);
-    }
-
-    setRespuestaValid(isValid: boolean) {
-        this.respuestaValidSubject.next(isValid);
-    }
-
-    setResolucionValid(isValid: boolean) {
-        this.resolucionValidSubject.next(isValid);
-    }
-
-    setSustentacionValid(isValid: boolean) {
-        this.sustentacionValidSubject.next(isValid);
     }
 
     getEstudiantes(): Observable<any> {

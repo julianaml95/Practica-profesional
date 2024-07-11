@@ -1,4 +1,4 @@
-<p-panel>
+<p-panel class="bandeja-examen-de-valoracion">
     <ng-template pTemplate="header">
         <div
             class="flex flex-column align-items-center justify-content-center w-full row-gap-4"
@@ -48,9 +48,15 @@
         </div>
     </ng-template>
     <ng-template pTemplate="content">
-        <div class="flex justify-content-center mb-3 w-full">
+        <div
+            class="flex flex-column justify-content-center align-items-center mb-3 w-full"
+        >
             <button
-                *ngIf="role.includes('ROLE_DOCENTE') && !estudianteSeleccionado"
+                *ngIf="
+                    (role.includes('ROLE_DOCENTE') ||
+                        role.includes('ROLE_ESTUDIANTE')) &&
+                    !estudianteSeleccionado
+                "
                 pButton
                 icon="pi pi-plus"
                 label="Seleccionar Estudiante"
@@ -65,7 +71,7 @@
             ></button>
             <span
                 style="max-width: 80rem; line-height: 1.4; text-align: center"
-                *ngIf="!role.includes('ROLE_DOCENTE')"
+                *ngIf="role.includes('ROLE_COORDINADOR')"
                 >En esta sección se gestionan las solicitudes y el estado de los
                 exámenes de valoración. Los usuarios autorizados pueden revisar
                 y actualizar la información correspondiente a cada estudiante.
@@ -102,11 +108,7 @@
                             <th scope="col" style="min-width: 200px">
                                 Estado Actual
                             </th>
-                            <th
-                                scope="col"
-                                style="min-width: 200px"
-                                *ngIf="!role.includes('ROLE_ESTUDIANTE')"
-                            >
+                            <th scope="col" style="min-width: 200px">
                                 Opciones
                             </th>
                         </tr>
@@ -122,10 +124,7 @@
                             <td style="min-width: 200px">
                                 {{ solicitud.estado }}
                             </td>
-                            <td
-                                *ngIf="!role.includes('ROLE_ESTUDIANTE')"
-                                style="min-width: 200px"
-                            >
+                            <td style="min-width: 200px">
                                 <button
                                     pButton
                                     pTooltip="Editar"

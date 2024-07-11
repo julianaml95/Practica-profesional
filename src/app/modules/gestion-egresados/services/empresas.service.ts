@@ -11,36 +11,41 @@ import { Empresa } from '../models/empresa';
 export class EmpresaService {
     constructor(private http: HttpClient) {}
 
-    getEmpresa(id: number) {
-        return this.http.get<Empresa>(backendGestionEgresados(`empresa/${id}`), {
-            headers: getHeaders(),
-        });
+    getEmpresa(id: number): Observable<any> {
+        return this.http.get<Empresa>(
+            backendGestionEgresados(`empresa/${id}`),
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
-    addEmpresa(empresa: Empresa) {
-        return this.http.post<any>(backendGestionEgresados('empresa'), empresa, {
-            headers: getHeaders(),
-        });
+    addEmpresa(empresa: Empresa): Observable<any> {
+        return this.http.post<any>(
+            backendGestionEgresados('empresa'),
+            empresa,
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
-    updateEmpresa(id: number, empresa: Empresa) {
-        return this.http.put<any>(backendGestionEgresados(`empresa/${id}`), empresa, {
-            headers: getHeaders(),
-        });
-    }
-
-    deleteEmpresa(id: number) {
-        return this.http.delete<any>(backendGestionEgresados(`empresa/${id}`), {
-            headers: getHeaders(),
-        });
+    updateEmpresa(id: number, empresa: Empresa): Observable<any> {
+        return this.http.put<any>(
+            backendGestionEgresados(`empresa/${id}`),
+            empresa,
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 
     listEmpresas(id: number): Observable<Empresa[]> {
-        return this.http.get<Empresa[]>(backendGestionEgresados('empresa'), {
-            headers: getHeaders(),
-            params: {
-                idEstudiante: id,
-            },
-        });
+        return this.http.get<Empresa[]>(
+            backendGestionEgresados(`empresa/listarEmpresas/${id}`),
+            {
+                headers: getHeaders(),
+            }
+        );
     }
 }

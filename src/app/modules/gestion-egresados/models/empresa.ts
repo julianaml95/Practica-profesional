@@ -7,5 +7,4 @@ export interface Empresa {
     telefono?: string;
     correo?: string;
     estado?: string;
-    estudiante?: number;
 }

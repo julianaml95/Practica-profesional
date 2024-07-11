@@ -47,7 +47,7 @@ export class SustentacionService {
     ): Observable<any> {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase1/${idTrabajoGrado}`
+                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadoFase1/${idTrabajoGrado}`
             ),
             sustentacion,
             {
@@ -62,7 +62,7 @@ export class SustentacionService {
     ): Observable<any> {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase2/${idTrabajoGrado}`
+                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadoFase2/${idTrabajoGrado}`
             ),
             sustentacion,
             {
@@ -77,7 +77,7 @@ export class SustentacionService {
     ): Observable<any> {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase3/${idTrabajoGrado}`
+                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadoFase3/${idTrabajoGrado}`
             ),
             sustentacion,
             {
@@ -92,7 +92,7 @@ export class SustentacionService {
     ): Observable<any> {
         return this.http.post<any>(
             backendGestionTrabajoDeGrado(
-                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadorFase4/${idTrabajoGrado}`
+                `sustentacion_proyecto_investigacion/insertarInformacionCoordinadoFase4/${idTrabajoGrado}`
             ),
             sustentacion,
             {

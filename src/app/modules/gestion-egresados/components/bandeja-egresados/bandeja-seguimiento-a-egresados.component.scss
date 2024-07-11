@@ -1,41 +1,10 @@
-::ng-deep .p-dialog-content {
-    overflow-y: visible !important;
-}
-
 @media (max-width: 1440px) {
     .bandeja-title {
         font-size: 2rem;
     }
-
-    ::ng-deep.p-dialog {
-        width: 50% !important;
-    }
-}
-
-@media (max-width: 1240px) {
-    ::ng-deep.p-dialog {
-        width: 60% !important;
-    }
-}
-
-@media (max-width: 1024px) {
-    ::ng-deep.p-dialog {
-        width: 70% !important;
-    }
-}
-
-@media (max-width: 900px) {
-    ::ng-deep.p-dialog {
-        width: 80% !important;
-    }
 }
 
 @media (max-width: 768px) {
-    ::ng-deep.p-dialog {
-        width: 90% !important;
-        top: -10% !important;
-    }
-
     .col-label,
     .col-input {
         flex: 0 0 100%;
@@ -59,7 +28,7 @@
         font-size: 1.5rem;
     }
 
-    ::ng-deep.p-card .p-card-title {
+    .bandeja-egresados ::ng-deep.p-card .p-card-title {
         text-align: center;
     }
 

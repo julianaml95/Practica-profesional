@@ -1,7 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { backendGestionTrabajoDeGrado } from 'src/app/core/constants/api-url';
+import {
+    backendGestionEgresados,
+    backendGestionTrabajoDeGrado,
+} from 'src/app/core/constants/api-url';
 import { getHeaders } from 'src/app/core/constants/header';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 
@@ -25,6 +28,15 @@ export class EstudianteService {
             backendGestionTrabajoDeGrado(
                 `inicio_trabajo_grado/obtenerInformacionEstudiante/${idEstudiante}`
             ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    getEstudianteEgresado(idEstudiante: number): Observable<any> {
+        return this.http.get<Estudiante>(
+            backendGestionEgresados(`informacion_general/${idEstudiante}`),
             {
                 headers: getHeaders(),
             }

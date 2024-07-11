@@ -72,7 +72,7 @@ export class ResolucionService {
     }
 
     updateResolucionDocente(
-        resolucion: Resolucion,
+        resolucion: any,
         trabajoDeGradoId: number
     ): Observable<any> {
         return this.http.put<any>(

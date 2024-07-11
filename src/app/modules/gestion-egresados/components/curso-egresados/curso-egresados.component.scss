@@ -1,15 +1,47 @@
-// ::ng-deep {
-//     .p-datepicker tr > td {
-//         padding: 0.25rem !important;
-//     }
+.curso-egresados ::ng-deep .p-dropdown {
+    width: 100%;
+}
 
-//     .p-datepicker td > span {
-//         width: 18px !important;
-//         height: 18px !important;
-//     }
-// }
+::ng-deep .dialog-curso {
+    .p-dialog-content {
+        overflow-y: visible !important;
+    }
+}
+
+@media (max-width: 1440px) {
+    .bandeja-title {
+        font-size: 2rem;
+    }
+
+    ::ng-deep .dialog-curso {
+        width: 50% !important;
+    }
+}
+
+@media (max-width: 1240px) {
+    ::ng-deep .dialog-curso {
+        width: 60% !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    ::ng-deep .dialog-curso {
+        width: 70% !important;
+    }
+}
+
+@media (max-width: 900px) {
+    ::ng-deep .dialog-curso {
+        width: 80% !important;
+    }
+}
 
 @media (max-width: 768px) {
+    ::ng-deep .dialog-curso {
+        width: 90% !important;
+        top: -10% !important;
+    }
+
     .col-label,
     .col-input {
         flex: 0 0 100%;

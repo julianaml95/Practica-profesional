@@ -1,7 +1,7 @@
-<p-panel>
+<p-panel class="bandeja-egresados">
     <ng-template pTemplate="header">
         <div class="flex flex-column w-full">
-            <div class="text-center">
+            <div class="text-center mb-2">
                 <span
                     class="font-medium w-full text-center"
                     *ngIf="!estudianteSeleccionado"
@@ -17,10 +17,7 @@
             <div *ngIf="estudianteSeleccionado">
                 <div class="field grid">
                     <div class="col-2 card-label">
-                        <div
-                            class="flex justify-content-center"
-                            *ngIf="estudianteSeleccionado"
-                        >
+                        <div class="flex justify-content-center">
                             <button
                                 pButton
                                 icon="pi pi-plus"
@@ -54,7 +51,7 @@
                                         }}</span
                                     >
                                 </div>
-                                <!--  <div
+                                <div
                                     class="mt-2 card-data flex justify-content-between"
                                 >
                                     <span>Cohorte</span>
@@ -68,9 +65,8 @@
                                     <span>Periodo de Ingreso</span>
                                     <span>{{
                                         estudianteSeleccionado.periodoIngreso
-                                    }}</span> 
+                                    }}</span>
                                 </div>
-                                -->
                             </p-card>
                         </div>
                     </div>
@@ -86,8 +82,8 @@
                             <input
                                 pInputText
                                 [maxLength]="250"
-                                class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
-                                value="01/01/2023"
+                                class="p-inputtext-md min-w-8rem max-w-25rem w-full"
+                                [value]="estudianteSeleccionado.fechaGrado"
                                 disabled
                             />
                         </div>
@@ -102,8 +98,8 @@
                             <input
                                 pInputText
                                 [maxLength]="250"
-                                class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
-                                value="123-456-7890"
+                                class="p-inputtext-md min-w-8rem max-w-25rem w-full"
+                                [value]="estudianteSeleccionado.telefono"
                                 disabled
                             />
                         </div>
@@ -118,8 +114,8 @@
                             <input
                                 pInputText
                                 [maxLength]="250"
-                                class="p-inputtext-sm min-w-8rem max-w-25rem w-full"
-                                value="correo@example.com"
+                                class="p-inputtext-md min-w-8rem max-w-25rem w-full"
+                                [value]="estudianteSeleccionado.correo"
                                 disabled
                             />
                         </div>
@@ -161,7 +157,6 @@
             <div class="field grid">
                 <div class="col-2 col-label"></div>
                 <div class="col-10 col-input">
-                    <!-- Tabla de Empresas -->
                     <p-table
                         [value]="empresas"
                         [paginator]="true"
@@ -176,56 +171,56 @@
                             <tr>
                                 <th
                                     scope="col"
-                                    class="text-center"
-                                    style="min-width: 200px"
+                                    class="text-left"
+                                    style="min-width: 150px"
                                 >
                                     Empresa
                                 </th>
                                 <th
                                     scope="col"
-                                    class="text-center"
-                                    style="min-width: 200px"
+                                    class="text-left"
+                                    style="min-width: 150px"
                                 >
                                     Ubicación
                                 </th>
                                 <th
                                     scope="col"
-                                    class="text-center"
+                                    class="text-left"
                                     style="min-width: 200px"
                                 >
                                     Cargo
                                 </th>
                                 <th
                                     scope="col"
-                                    class="text-center"
+                                    class="text-left"
                                     style="min-width: 200px"
                                 >
                                     Jefe Directo
                                 </th>
                                 <th
                                     scope="col"
-                                    class="text-center"
-                                    style="min-width: 200px"
+                                    class="text-left"
+                                    style="min-width: 150px"
                                 >
                                     Teléfono de la Empresa
                                 </th>
                                 <th
                                     scope="col"
-                                    class="text-center"
+                                    class="text-left"
                                     style="min-width: 200px"
                                 >
                                     Correo Electrónico
                                 </th>
                                 <th
                                     scope="col"
-                                    class="text-center"
+                                    class="text-left"
                                     style="min-width: 200px"
                                 >
                                     Estado
                                 </th>
                                 <th
                                     scope="col"
-                                    class="text-center"
+                                    class="text-left"
                                     style="min-width: 200px"
                                 >
                                     Opciones
@@ -234,10 +229,10 @@
                         </ng-template>
                         <ng-template pTemplate="body" let-empresa>
                             <tr>
-                                <td style="min-width: 200px">
+                                <td style="min-width: 150px">
                                     {{ empresa.nombre }}
                                 </td>
-                                <td style="min-width: 200px">
+                                <td style="min-width: 150px">
                                     {{ empresa.ubicacion }}
                                 </td>
                                 <td style="min-width: 200px">
@@ -246,7 +241,7 @@
                                 <td style="min-width: 200px">
                                     {{ empresa.jefeDirecto }}
                                 </td>
-                                <td style="min-width: 200px">
+                                <td style="min-width: 150px">
                                     {{ empresa.telefono }}
                                 </td>
                                 <td style="min-width: 200px">
@@ -264,21 +259,6 @@
                                         class="p-button-rounded p-button-text p-button-warning"
                                         (click)="showUpdateEmpresa(empresa.id)"
                                     ></button>
-                                    <button
-                                        pButton
-                                        pTooltip="Eliminar"
-                                        type="button"
-                                        icon="pi pi-trash"
-                                        class="p-button-rounded p-button-text p-button-danger"
-                                        (click)="
-                                            onDelete(
-                                                $event,
-                                                empresa.id,
-                                                'empresa'
-                                            )
-                                        "
-                                    ></button>
-                                    <p-confirmPopup></p-confirmPopup>
                                 </td>
                             </tr>
                         </ng-template>
@@ -319,7 +299,6 @@
             <div class="field grid">
                 <div class="col-2 col-label"></div>
                 <div class="col-10 col-input">
-                    <!-- Tabla de Cursos -->
                     <p-table
                         [value]="cursos"
                         [paginator]="true"
@@ -329,40 +308,47 @@
                         [showCurrentPageReport]="true"
                         [scrollable]="true"
                         currentPageReportTemplate="{first} - {last} de {totalRecords}"
+                        sortMode="multiple"
                     >
                         <ng-template pTemplate="header">
                             <tr>
                                 <th
                                     scope="col"
-                                    class="text-center"
+                                    class="text-left"
                                     style="min-width: 200px"
+                                    pSortableColumn="nombre"
                                 >
                                     Curso
+                                    <p-sortIcon field="nombre"></p-sortIcon>
                                 </th>
                                 <th
                                     scope="col"
-                                    class="text-center"
+                                    class="text-left"
                                     style="min-width: 200px"
                                 >
                                     Orientado a
                                 </th>
                                 <th
                                     scope="col"
-                                    class="text-center"
+                                    class="text-left"
                                     style="min-width: 200px"
+                                    pSortableColumn="fechaInicio"
                                 >
                                     Fecha inicio
+                                    <p-sortIcon
+                                        field="fechaInicio"
+                                    ></p-sortIcon>
                                 </th>
                                 <th
                                     scope="col"
-                                    class="text-center"
+                                    class="text-left"
                                     style="min-width: 200px"
                                 >
                                     Fecha Fin
                                 </th>
                                 <th
                                     scope="col"
-                                    class="text-center"
+                                    class="text-left"
                                     style="min-width: 200px"
                                 >
                                     Opciones
@@ -392,21 +378,9 @@
                                         class="p-button-rounded p-button-text p-button-warning"
                                         (click)="showUpdateCurso(curso.id)"
                                     ></button>
-                                    <button
-                                        pButton
-                                        pTooltip="Eliminar"
-                                        type="button"
-                                        icon="pi pi-trash"
-                                        class="p-button-rounded p-button-text p-button-danger"
-                                        (click)="
-                                            onDelete($event, curso.id, 'curso')
-                                        "
-                                    ></button>
-                                    <p-confirmPopup></p-confirmPopup>
                                 </td>
                             </tr>
                         </ng-template>
-                        <!-- Mensaje sin registros -->
                         <ng-template pTemplate="emptymessage" let-columns>
                             <tr>
                                 <td [attr.colspan]="5">

@@ -160,8 +160,7 @@
                 icon="pi pi-paperclip"
                 class="w-15rem p-button-info"
                 label="Generacion de resolucion"
-                [disabled]="role == 'ROLE_ESTUDIANTE'"
-                [disabled]="isActiveIndex()"
+                [disabled]="role == 'ROLE_ESTUDIANTE' || isActiveIndex()"
             ></button>
             <button
                 pButton
@@ -176,7 +175,7 @@
     </div>
     <ng-template class="w-full" pTemplate="footer">
         <form [formGroup]="resolucionForm" enctype="multipart/form-data">
-            <div class="flex flex-column gap-2">
+            <div class="resolucion flex flex-column gap-2">
                 <div class="text-center font-medium mb-4">
                     <p>
                         <b
@@ -239,7 +238,9 @@
                                                 }}</span
                                             >
                                             <ng-template #director>
-                                                {{ directorSeleccionado }}
+                                                {{
+                                                    directorSeleccionado.nombres
+                                                }}
                                             </ng-template>
                                             <button
                                                 pButton
@@ -284,7 +285,9 @@
                                                 }}</span
                                             >
                                             <ng-template #coodirector>
-                                                {{ codirectorSeleccionado }}
+                                                {{
+                                                    codirectorSeleccionado.nombres
+                                                }}
                                             </ng-template>
                                             <button
                                                 pButton
@@ -506,7 +509,7 @@
                                 class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
                             >
                                 <div
-                                    *ngFor="let estado of estados"
+                                    *ngFor="let estado of estadosVerificacion"
                                     class="field-checkbox"
                                 >
                                     <p-radioButton
@@ -572,7 +575,7 @@
                                 class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
                             >
                                 <div
-                                    *ngFor="let estado of estados"
+                                    *ngFor="let estado of estadosRespuesta"
                                     class="field-checkbox"
                                 >
                                     <p-radioButton
@@ -616,13 +619,13 @@
                         </div>
                         <div class="field grid justify-content-center">
                             <div
-                                class="col-5 flex flex-nowrap justify-content-between align-items-center"
+                                class="col-5 flex flex-nowrap align-items-center justify-content-between"
                             >
                                 <label class="label-required">
                                     No de resolucion generada por el comite
                                 </label>
                                 <input
-                                    class="max-w-4rem ml-2"
+                                    class="ml-2"
                                     pInputText
                                     formControlName="numeroActa"
                                 />
@@ -641,7 +644,7 @@
                             class="field grid justify-content-center"
                             *ngIf="
                                 resolucionForm.get('conceptoComite').value ==
-                                'APROBADO'
+                                'Aprobado'
                             "
                         >
                             <div class="col-5 mt-4">
@@ -651,6 +654,7 @@
                                     (.pdf)
                                 </label>
                                 <div
+                                    style="max-width: 50rem"
                                     class="flex flex-wrap gap-2 mt-2 align-items-start"
                                 >
                                     <div
@@ -750,14 +754,14 @@
                     <p-fieldset legend="Consejo" styleClass="bg-bluegray-50">
                         <div class="field grid justify-content-center">
                             <div
-                                class="col-5 flex flex-nowrap justify-content-between align-items-center"
+                                class="col-5 flex flex-nowrap align-items-center justify-content-between"
                             >
                                 <label class="label-required">
                                     No de resolución generada por el consejo de
                                     facultad
                                 </label>
                                 <input
-                                    class="max-w-4rem ml-2"
+                                    class="ml-2"
                                     pInputText
                                     formControlName="numeroActaConsejoFacultad"
                                 />
@@ -798,7 +802,9 @@
                     icon="pi pi-pencil"
                     [label]="getButtonLabel()"
                     (click)="createOrUpdateResolucion()"
-                    [disabled]="!isReviewed"
+                    [disabled]="
+                        role.includes('ROLE_COORDINADOR') && !isReviewed
+                    "
                 ></button>
             </div>
         </form>

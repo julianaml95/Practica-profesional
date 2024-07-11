@@ -77,7 +77,7 @@
     </div>
     <ng-template class="w-full" pTemplate="footer">
         <form [formGroup]="respuestaForm" enctype="multipart/form-data">
-            <div class="flex flex-column gap-2">
+            <div class="respuesta flex flex-column gap-2">
                 <div class="text-center font-medium mb-4">
                     <p>
                         <b>Respuesta del examen de valoración </b>
@@ -109,7 +109,20 @@
                         >
                     </div>
                 </div>
-
+                <div
+                    style="max-width: 90%; margin: -1rem auto"
+                    class="col-12 flex justify-content-end p-0"
+                >
+                    <button
+                        pButton
+                        type="button"
+                        class="p-button-secondary"
+                        pTooltip="Agregar evaluacion"
+                        tooltipPosition="top"
+                        icon="pi pi-plus"
+                        (click)="agregarEvaluacion('expertoEvaluaciones')"
+                    ></button>
+                </div>
                 <div class="field grid">
                     <div style="max-width: 90%" class="col-12 flex m-auto">
                         <div formArrayName="expertoEvaluaciones" class="w-full">
@@ -137,44 +150,6 @@
                                         icon="pi pi-times"
                                         (click)="
                                             eliminarRespuestaExamen(
-                                                'expertoEvaluaciones',
-                                                i
-                                            )
-                                        "
-                                    ></button>
-                                    <button
-                                        *ngIf="
-                                            !isExamenCreado(
-                                                'expertoEvaluaciones',
-                                                i
-                                            )
-                                        "
-                                        pButton
-                                        class="p-button-secondary"
-                                        type="button"
-                                        pTooltip="Guardar Respuesta"
-                                        tooltipPosition="top"
-                                        icon="pi pi-save"
-                                        (click)="
-                                            createRespuestaExamen(
-                                                'expertoEvaluaciones',
-                                                i
-                                            )
-                                        "
-                                    ></button>
-                                    <button
-                                        *ngIf="
-                                            isExamenCreado(
-                                                'expertoEvaluaciones',
-                                                i
-                                            )
-                                        "
-                                        pButton
-                                        class="p-button-secondary"
-                                        type="button"
-                                        icon="pi pi-pencil"
-                                        (click)="
-                                            updateRespuestaExamen(
                                                 'expertoEvaluaciones',
                                                 i
                                             )
@@ -226,7 +201,7 @@
                                                         "
                                                     ></app-custom-file-upload>
                                                     <div
-                                                        class="mt-2"
+                                                        class="text-description mt-2"
                                                         style="
                                                             width: '200px';
                                                             word-break: break-word;
@@ -335,7 +310,7 @@
                                                         "
                                                     ></app-custom-file-upload>
                                                     <div
-                                                        class="mt-2"
+                                                        class="text-description mt-2"
                                                         style="
                                                             width: '200px';
                                                             word-break: break-word;
@@ -446,7 +421,7 @@
                                                         "
                                                     ></app-custom-file-upload>
                                                     <div
-                                                        class="mt-2"
+                                                        class="text-description mt-2"
                                                         style="
                                                             width: '200px';
                                                             word-break: break-word;
@@ -631,7 +606,7 @@
                                                                         "
                                                                     >
                                                                         <span
-                                                                            class="w-15rem"
+                                                                            class="text-description w-15rem"
                                                                             style="
                                                                                 word-break: break-word;
                                                                             "
@@ -702,7 +677,23 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="grid column-gap-4 mb-6">
+                                    <div
+                                        class="grid column-gap-4 mb-6"
+                                        *ngIf="
+                                            expertoEvaluaciones
+                                                .at(i)
+                                                .get(
+                                                    'respuestaExamenValoracionExperto' +
+                                                        i
+                                                )?.value == 'APLAZADO' ||
+                                            expertoEvaluaciones
+                                                .at(i)
+                                                .get(
+                                                    'respuestaExamenValoracionExperto' +
+                                                        i
+                                                )?.value == 'NO_APROBADO'
+                                        "
+                                    >
                                         <div
                                             class="label-required col-2 text-right"
                                         >
@@ -711,23 +702,7 @@
                                                 Correciones</label
                                             >
                                         </div>
-                                        <div
-                                            class="col-9 flex column-gap-4"
-                                            *ngIf="
-                                                expertoEvaluaciones
-                                                    .at(i)
-                                                    .get(
-                                                        'respuestaExamenValoracionExperto' +
-                                                            i
-                                                    )?.value == 'APLAZADO' ||
-                                                expertoEvaluaciones
-                                                    .at(i)
-                                                    .get(
-                                                        'respuestaExamenValoracionExperto' +
-                                                            i
-                                                    )?.value == 'NO_APROBADO'
-                                            "
-                                        >
+                                        <div class="col-9 flex column-gap-4">
                                             <p-calendar
                                                 [formControlName]="
                                                     'fechaMaximaEntrega' + i
@@ -737,21 +712,49 @@
                                             ></p-calendar>
                                         </div>
                                     </div>
+                                    <div
+                                        class="col-12 flex align-items-center mt-4 m-auto justify-content-end"
+                                    >
+                                        <button
+                                            *ngIf="
+                                                isExamenCreado(
+                                                    'expertoEvaluaciones',
+                                                    i
+                                                )
+                                            "
+                                            pButton
+                                            type="button"
+                                            icon="pi pi-pencil"
+                                            label="Modificar evaluacion"
+                                            (click)="
+                                                updateRespuestaExamen(
+                                                    'expertoEvaluaciones',
+                                                    i
+                                                )
+                                            "
+                                        ></button>
+                                        <button
+                                            *ngIf="
+                                                !isExamenCreado(
+                                                    'expertoEvaluaciones',
+                                                    i
+                                                )
+                                            "
+                                            pButton
+                                            type="button"
+                                            label="Guardar"
+                                            icon="pi pi-save"
+                                            (click)="
+                                                createRespuestaExamen(
+                                                    'expertoEvaluaciones',
+                                                    i
+                                                )
+                                            "
+                                        ></button>
+                                    </div>
                                 </p-fieldset>
                             </div>
                         </div>
-                    </div>
-                    <div
-                        style="max-width: 90%"
-                        class="col-12 flex align-items-center mt-4 m-auto justify-content-end"
-                    >
-                        <button
-                            pButton
-                            type="button"
-                            icon="pi pi-plus"
-                            label="Agregar Evaluacion"
-                            (click)="agregarEvaluacion('expertoEvaluaciones')"
-                        ></button>
                     </div>
                 </div>
                 <p-divider layout="horizontal" [align]="'center'"
@@ -770,6 +773,20 @@
                             {{ docenteSeleccionado?.universidad }}</span
                         >
                     </div>
+                </div>
+                <div
+                    style="max-width: 90%; margin: -1rem auto"
+                    class="col-12 flex justify-content-end p-0"
+                >
+                    <button
+                        pButton
+                        class="p-button-secondary"
+                        type="button"
+                        pTooltip="Agregar evaluacion"
+                        tooltipPosition="top"
+                        icon="pi pi-plus"
+                        (click)="agregarEvaluacion('docenteEvaluaciones')"
+                    ></button>
                 </div>
                 <div class="field grid">
                     <div style="max-width: 90%" class="col-12 flex m-auto">
@@ -798,44 +815,6 @@
                                         icon="pi pi-times"
                                         (click)="
                                             eliminarRespuestaExamen(
-                                                'docenteEvaluaciones',
-                                                i
-                                            )
-                                        "
-                                    ></button>
-                                    <button
-                                        *ngIf="
-                                            !isExamenCreado(
-                                                'docenteEvaluaciones',
-                                                i
-                                            )
-                                        "
-                                        pButton
-                                        class="p-button-secondary"
-                                        type="button"
-                                        pTooltip="Guardar Respuesta"
-                                        tooltipPosition="top"
-                                        icon="pi pi-save"
-                                        (click)="
-                                            createRespuestaExamen(
-                                                'docenteEvaluaciones',
-                                                i
-                                            )
-                                        "
-                                    ></button>
-                                    <button
-                                        *ngIf="
-                                            isExamenCreado(
-                                                'docenteEvaluaciones',
-                                                i
-                                            )
-                                        "
-                                        pButton
-                                        class="p-button-secondary"
-                                        type="button"
-                                        icon="pi pi-pencil"
-                                        (click)="
-                                            updateRespuestaExamen(
                                                 'docenteEvaluaciones',
                                                 i
                                             )
@@ -887,7 +866,7 @@
                                                         "
                                                     ></app-custom-file-upload>
                                                     <div
-                                                        class="mt-2"
+                                                        class="text-description mt-2"
                                                         style="
                                                             width: '200px';
                                                             word-break: break-word;
@@ -996,7 +975,7 @@
                                                         "
                                                     ></app-custom-file-upload>
                                                     <div
-                                                        class="mt-2"
+                                                        class="text-description mt-2"
                                                         style="
                                                             width: '200px';
                                                             word-break: break-word;
@@ -1107,7 +1086,7 @@
                                                         "
                                                     ></app-custom-file-upload>
                                                     <div
-                                                        class="mt-2"
+                                                        class="text-description mt-2"
                                                         style="
                                                             width: '200px';
                                                             word-break: break-word;
@@ -1292,7 +1271,7 @@
                                                                         "
                                                                     >
                                                                         <span
-                                                                            class="w-15rem"
+                                                                            class="text-description w-15rem"
                                                                             style="
                                                                                 word-break: break-word;
                                                                             "
@@ -1398,21 +1377,49 @@
                                             ></p-calendar>
                                         </div>
                                     </div>
+                                    <div
+                                        class="col-12 flex align-items-center mt-4 m-auto justify-content-end"
+                                    >
+                                        <button
+                                            *ngIf="
+                                                isExamenCreado(
+                                                    'docenteEvaluaciones',
+                                                    i
+                                                )
+                                            "
+                                            pButton
+                                            type="button"
+                                            icon="pi pi-pencil"
+                                            label="Modificar evaluacion"
+                                            (click)="
+                                                updateRespuestaExamen(
+                                                    'docenteEvaluaciones',
+                                                    i
+                                                )
+                                            "
+                                        ></button>
+                                        <button
+                                            *ngIf="
+                                                !isExamenCreado(
+                                                    'docenteEvaluaciones',
+                                                    i
+                                                )
+                                            "
+                                            pButton
+                                            type="button"
+                                            label="Guardar"
+                                            icon="pi pi-save"
+                                            (click)="
+                                                createRespuestaExamen(
+                                                    'docenteEvaluaciones',
+                                                    i
+                                                )
+                                            "
+                                        ></button>
+                                    </div>
                                 </p-fieldset>
                             </div>
                         </div>
-                    </div>
-                    <div
-                        style="max-width: 90%"
-                        class="col-12 flex align-items-center mt-4 m-auto justify-content-end"
-                    >
-                        <button
-                            pButton
-                            type="button"
-                            icon="pi pi-plus"
-                            label="Agregar Evaluacion"
-                            (click)="agregarEvaluacion('docenteEvaluaciones')"
-                        ></button>
                     </div>
                 </div>
                 <p-divider layout="horizontal" [align]="'center'"

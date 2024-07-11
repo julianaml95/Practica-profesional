@@ -55,7 +55,6 @@ export class ResolucionExamenComponent implements OnInit {
     private respuestaSubscription: Subscription;
     private sustentacionSubscription: Subscription;
     private solicitudSubscription: Subscription;
-    private respuestaValidSubscription: Subscription;
     private resolucionValidSubscription: Subscription;
 
     @ViewChild('AnteproyectoFinal') AnteproyectoFinal!: FileUpload;
@@ -84,7 +83,8 @@ export class ResolucionExamenComponent implements OnInit {
 
     role: string[];
     pdfUrls: { name: string; url: string }[] = [];
-    estados: string[] = ['APROBADO', 'NO_APROBADO'];
+    estadosRespuesta: string[] = ['Aprobado', 'No Aprobado'];
+    estadosVerificacion: string[] = ['Aceptado', 'Rechazado'];
 
     trabajoDeGradoId: number;
     respuestaId: number;
@@ -159,7 +159,7 @@ export class ResolucionExamenComponent implements OnInit {
         this.resolucionForm
             .get('conceptoDocumentosCoordinador')
             .valueChanges.subscribe((value) => {
-                if (value == 'APROBADO') {
+                if (value == 'Aceptado') {
                     this.resolucionForm
                         .get('asuntoCoordinador')
                         .setValue(
@@ -172,7 +172,7 @@ export class ResolucionExamenComponent implements OnInit {
                             'Solicito comedidamente revisar el resolucion de valoracion del estudiante para aprobacion.'
                         );
                 }
-                if (value == 'NO_APROBADO') {
+                if (value == 'Rechazado') {
                     this.resolucionForm
                         .get('asuntoCoordinador')
                         .setValue(
@@ -189,7 +189,7 @@ export class ResolucionExamenComponent implements OnInit {
         this.resolucionForm
             .get('conceptoComite')
             .valueChanges.subscribe((value) => {
-                if (value == 'APROBADO') {
+                if (value == 'Aprobado') {
                     this.resolucionForm
                         .get('asuntoComite')
                         .setValue('Envio evaluadores');
@@ -199,7 +199,7 @@ export class ResolucionExamenComponent implements OnInit {
                             'Envio documentos para que por favor los revisen y den respuesta oportuna.'
                         );
                 }
-                if (value == 'NO_APROBADO') {
+                if (value == 'No Aprobado') {
                     this.resolucionForm
                         .get('asuntoComite')
                         .setValue('Envio correcion por parte del comite');
@@ -237,11 +237,11 @@ export class ResolucionExamenComponent implements OnInit {
                 this.resolucionForm
                     .get('conceptoComite')
                     .valueChanges.subscribe((value) => {
-                        if (value == 'APROBADO') {
+                        if (value == 'Aprobado') {
                             this.resolucionForm
                                 .get('linkSolicitudConsejoFacultad')
                                 .enable();
-                        } else if (value == 'NO_APROBADO') {
+                        } else if (value == 'No Aprobado') {
                             this.resolucionForm
                                 .get('linkSolicitudConsejoFacultad')
                                 .disable();
@@ -274,6 +274,7 @@ export class ResolucionExamenComponent implements OnInit {
                 },
                 error: (e) => this.handlerResponseException(e),
             });
+
         this.tituloSubscription =
             this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
                 next: (response) => {
@@ -283,58 +284,23 @@ export class ResolucionExamenComponent implements OnInit {
                 },
                 error: (e) => this.handlerResponseException(e),
             });
+
         this.trabajoSeleccionadoSubscription =
             this.trabajoDeGradoService.trabajoSeleccionadoSubject$.subscribe({
                 next: (response) => {
                     if (response) {
                         this.trabajoDeGradoId = response.id;
                         this.estado = response.estado;
-                        if (
-                            this.estado ==
-                                EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2 &&
-                            this.role.includes('ROLE_COORDINADOR')
-                        ) {
-                            this.router.navigate(['examen-de-valoracion']);
-                        }
-                    } else {
-                        this.router.navigate(['examen-de-valoracion']);
-                    }
-                },
-                error: (e) => this.handlerResponseException(e),
-            });
-        this.resolucionSubscription =
-            this.trabajoDeGradoService.resolucionSeleccionadaSubject$.subscribe(
-                {
-                    next: (response) => {
-                        if (response) {
-                            this.resolucionId = response.idGeneracionResolucion;
-                        }
-                    },
-                    error: (e) => this.handlerResponseException(e),
-                }
-            );
-        this.sustentacionSubscription =
-            this.trabajoDeGradoService.sustentacionSeleccionadaSubject$.subscribe(
-                {
-                    next: (response) => {
-                        if (response) {
-                            this.sustentacionId =
-                                response.idSustentacionTrabajoInvestigacion;
-                        }
-                    },
-                    error: (e) => this.handlerResponseException(e),
-                }
-            );
-        this.resolucionSubscription =
-            this.trabajoDeGradoService.resolucionValid$.subscribe({
-                next: (response) => {
-                    if (response) {
-                        this.isResolucionValid = response;
-                    } else {
-                        if (this.trabajoDeGradoId) {
+
+                        this.resolucionValidSubscription =
                             this.resolucionService
                                 .getResolucionCoordinadorFase3(
                                     this.trabajoDeGradoId
+                                )
+                                .pipe(
+                                    catchError(() => {
+                                        return of(null);
+                                    })
                                 )
                                 .subscribe({
                                     next: (response) => {
@@ -349,11 +315,44 @@ export class ResolucionExamenComponent implements OnInit {
                                         this.handlerResponseException(e);
                                     },
                                 });
+
+                        if (
+                            this.estado ==
+                                EstadoProceso.EXAMEN_DE_VALORACION_APROBADO_EVALUADOR_2 &&
+                            this.role.includes('ROLE_COORDINADOR')
+                        ) {
+                            this.router.navigate(['examen-de-valoracion']);
                         }
+                    } else {
+                        this.router.navigate(['examen-de-valoracion']);
                     }
                 },
                 error: (e) => this.handlerResponseException(e),
             });
+
+        this.resolucionSubscription =
+            this.trabajoDeGradoService.resolucionSeleccionadaSubject$.subscribe(
+                {
+                    next: (response) => {
+                        if (response) {
+                            this.resolucionId = response.id;
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                }
+            );
+
+        this.sustentacionSubscription =
+            this.trabajoDeGradoService.sustentacionSeleccionadaSubject$.subscribe(
+                {
+                    next: (response) => {
+                        if (response) {
+                            this.sustentacionId = response.id;
+                        }
+                    },
+                    error: (e) => this.handlerResponseException(e),
+                }
+            );
     }
 
     ngOnDestroy() {
@@ -371,9 +370,6 @@ export class ResolucionExamenComponent implements OnInit {
         }
         if (this.respuestaSubscription) {
             this.respuestaSubscription.unsubscribe();
-        }
-        if (this.respuestaValidSubscription) {
-            this.respuestaValidSubscription.unsubscribe();
         }
         if (this.resolucionSubscription) {
             this.resolucionSubscription.unsubscribe();
@@ -601,12 +597,8 @@ export class ResolucionExamenComponent implements OnInit {
                     ? this.resolucionService
                           .getResolucionDocente(this.trabajoDeGradoId)
                           .pipe(
-                              catchError((error) => {
+                              catchError(() => {
                                   this.isDocenteCreated = false;
-                                  console.error(
-                                      'Error al obtener resolución de docente:',
-                                      error
-                                  );
                                   return of(null);
                               })
                           )
@@ -616,12 +608,8 @@ export class ResolucionExamenComponent implements OnInit {
                 ? this.resolucionService
                       .getResolucionCoordinadorFase1(this.trabajoDeGradoId)
                       .pipe(
-                          catchError((error) => {
+                          catchError(() => {
                               this.isCoordinadorFase1Created = false;
-                              console.error(
-                                  'Error al obtener resolución de coordinador fase 1:',
-                                  error
-                              );
                               return of(null);
                           })
                       )
@@ -631,12 +619,8 @@ export class ResolucionExamenComponent implements OnInit {
                 ? this.resolucionService
                       .getResolucionCoordinadorFase2(this.trabajoDeGradoId)
                       .pipe(
-                          catchError((error) => {
+                          catchError(() => {
                               this.isCoordinadorFase2Created = false;
-                              console.error(
-                                  'Error al obtener resolución de coordinador fase 2:',
-                                  error
-                              );
                               return of(null);
                           })
                       )
@@ -646,12 +630,8 @@ export class ResolucionExamenComponent implements OnInit {
                 ? this.resolucionService
                       .getResolucionCoordinadorFase3(this.trabajoDeGradoId)
                       .pipe(
-                          catchError((error) => {
+                          catchError(() => {
                               this.isCoordinadorFase3Created = false;
-                              console.error(
-                                  'Error al obtener resolución de coordinador fase 3:',
-                                  error
-                              );
                               return of(null);
                           })
                       )
@@ -671,20 +651,24 @@ export class ResolucionExamenComponent implements OnInit {
                         this.trabajoDeGradoService.setTituloSeleccionadoSubject(
                             data.titulo
                         );
-                        this.codirectorSeleccionado = data.codirector;
-                        this.directorSeleccionado = data.director;
+                        this.codirectorSeleccionado = data?.codirector;
+                        this.directorSeleccionado = data?.director;
+                        this.director.setValue(this.directorSeleccionado.id);
+                        this.codirector.setValue(
+                            this.codirectorSeleccionado.id
+                        );
                     }
 
                     if (responses.coordinadorFase1) {
                         this.isCoordinadorFase1Created = true;
                         const data = responses.coordinadorFase1;
-                        data.conceptoDocumentosCoordinador == 'APROBADO'
+                        data.conceptoDocumentosCoordinador == 'ACEPTADO'
                             ? this.resolucionForm
                                   .get('conceptoDocumentosCoordinador')
-                                  .setValue('APROBADO')
+                                  .setValue('Aceptado')
                             : this.resolucionForm
                                   .get('conceptoDocumentosCoordinador')
-                                  .setValue('NO_APROBADO');
+                                  .setValue('Rechazado');
                     }
 
                     if (responses.coordinadorFase2) {
@@ -710,8 +694,8 @@ export class ResolucionExamenComponent implements OnInit {
                             .get('conceptoComite')
                             .setValue(
                                 actaConceptoComite == 'APROBADO'
-                                    ? 'APROBADO'
-                                    : 'NO_APROBADO'
+                                    ? 'Aprobado'
+                                    : 'No Aprobado'
                             );
                     }
 
@@ -737,7 +721,9 @@ export class ResolucionExamenComponent implements OnInit {
                     if (this.role.includes('ROLE_COORDINADOR')) {
                         this.setup('linkAnteproyectoFinal');
                         this.setup('linkSolicitudComite');
-                        this.setup('linkSolicitudConsejoFacultad');
+                        if (this.isCoordinadorFase2Created) {
+                            this.setup('linkSolicitudConsejoFacultad');
+                        }
                     }
                     this.isLoading = false;
                     resolve();
@@ -796,9 +782,9 @@ export class ResolucionExamenComponent implements OnInit {
 
                     const resolucionData =
                         this.resolucionForm.get('conceptoDocumentosCoordinador')
-                            .value == 'APROBADO'
+                            .value == 'Aceptado'
                             ? {
-                                  conceptoDocumentosCoordinador: 'APROBADO',
+                                  conceptoDocumentosCoordinador: 'ACEPTADO',
                                   envioEmail: {
                                       asunto: this.resolucionForm.get(
                                           'asuntoCoordinador'
@@ -814,7 +800,7 @@ export class ResolucionExamenComponent implements OnInit {
                                   },
                               }
                             : {
-                                  conceptoDocumentosCoordinador: 'NO_APROBADO',
+                                  conceptoDocumentosCoordinador: 'RECHAZADO',
                                   envioEmail: {
                                       asunto: this.resolucionForm.get(
                                           'asuntoCoordinador'
@@ -846,7 +832,7 @@ export class ResolucionExamenComponent implements OnInit {
 
                     const resolucionData =
                         this.resolucionForm.get('conceptoComite').value ==
-                        'APROBADO'
+                        'Aprobado'
                             ? {
                                   actaFechaRespuestaComite: [
                                       {
@@ -916,9 +902,9 @@ export class ResolucionExamenComponent implements OnInit {
 
                     const resolucionData =
                         this.resolucionForm.get('conceptoDocumentosCoordinador')
-                            .value == 'APROBADO'
+                            .value == 'Aceptado'
                             ? {
-                                  conceptoDocumentosCoordinador: 'APROBADO',
+                                  conceptoDocumentosCoordinador: 'ACEPTADO',
                                   envioEmail: {
                                       asunto: this.resolucionForm.get(
                                           'asuntoCoordinador'
@@ -934,7 +920,7 @@ export class ResolucionExamenComponent implements OnInit {
                                   },
                               }
                             : {
-                                  conceptoDocumentosCoordinador: 'NO_APROBADO',
+                                  conceptoDocumentosCoordinador: 'RECHAZADO',
                                   envioEmail: {
                                       asunto: this.resolucionForm.get(
                                           'asuntoCoordinador'
@@ -966,7 +952,7 @@ export class ResolucionExamenComponent implements OnInit {
 
                     const resolucionData =
                         this.resolucionForm.get('conceptoComite').value ==
-                        'APROBADO'
+                        'Aprobado'
                             ? {
                                   actaFechaRespuestaComite: [
                                       {

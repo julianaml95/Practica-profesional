@@ -1,34 +1,29 @@
-::ng-deep.p-steps .p-steps-item .p-menuitem-link:not(.p-disabled):focus {
-    outline: 0 none !important;
-    outline-offset: 0 !important;
-    box-shadow: 0 0 0 0 !important;
-}
-
-::ng-deep.p-calendar {
-    max-width: 14rem !important;
-}
-
-::ng-deep.p-fieldset {
+.solicitud ::ng-deep.p-fieldset {
     margin-top: 2rem !important;
 }
 
-::ng-deep.p-fileupload .p-message {
+.solicitud ::ng-deep.p-fileupload .p-message {
     display: none;
 }
 
-::ng-deep.p-fileupload-buttonbar p-button[ng-reflect-label="Upload"] {
+.solicitud
+    ::ng-deep.p-fileupload-buttonbar
+    p-button[ng-reflect-label="Upload"] {
     display: none;
 }
 
-::ng-deep.p-fileupload-buttonbar p-button[ng-reflect-label="Cancel"] {
+.solicitud
+    ::ng-deep.p-fileupload-buttonbar
+    p-button[ng-reflect-label="Cancel"] {
     display: none;
 }
 
-::ng-deep.p-fileupload-content .p-fileupload-files.ng-star-inserted {
+.solicitud ::ng-deep.p-fileupload-content .p-fileupload-files.ng-star-inserted {
     display: none;
 }
 
-::ng-deep
+.solicitud
+    ::ng-deep
     p-fileupload[ng-reflect-name="firmaEstudiante"]
     .p-fileupload-content
     .p-fileupload-files.ng-star-inserted {

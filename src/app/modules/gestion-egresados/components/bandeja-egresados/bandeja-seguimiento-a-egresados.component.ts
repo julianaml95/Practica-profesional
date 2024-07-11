@@ -1,18 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { BreadcrumbService } from 'src/app/core/components/breadcrumb/app.breadcrumb.service';
-import { EmpresaService } from '../../services/empresas.service';
-import { Empresa } from '../../models/empresa';
-import { Curso } from '../../models/curso';
-import { CursoService } from '../../services/cursos.service';
 import { DialogService } from 'primeng/dynamicdialog';
-import { EmpresaEgresadoComponent } from '../empresa-egresados/empresa-egresados.component';
-import { ConfirmationService, MessageService, PrimeIcons } from 'primeng/api';
-import { Aviso } from 'src/app/core/enums/enums';
-import { infoMessage } from 'src/app/core/utils/message-util';
-import { CursoEgresadoComponent } from '../curso-egresados/curso-egresados.component';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
 import { LocalStorageService } from 'src/app/shared/services/localstorage.service';
+import { Empresa } from '../../models/empresa';
+import { CursoResponse } from '../../models/curso';
+import { EmpresaService } from '../../services/empresas.service';
+import { CursoService } from '../../services/cursos.service';
+import { EmpresaEgresadoComponent } from '../empresa-egresados/empresa-egresados.component';
+import { CursoEgresadoComponent } from '../curso-egresados/curso-egresados.component';
+import { EstudianteService } from 'src/app/shared/services/estudiante.service';
 
 @Component({
     selector: 'app-bandeja-seguimiento-a-egresados',
@@ -21,30 +18,26 @@ import { LocalStorageService } from 'src/app/shared/services/localstorage.servic
 })
 export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     empresas: Empresa[] = [];
-    cursos: Curso[] = [];
+    cursos: CursoResponse[] = [];
 
     estudianteSeleccionado: Estudiante;
 
     loading: boolean;
 
     constructor(
-        private breadcrumbService: BreadcrumbService,
         private empresaService: EmpresaService,
+        private estudianteService: EstudianteService,
         private localStorageService: LocalStorageService,
         private cursoService: CursoService,
-        private dialogService: DialogService,
-        private messageService: MessageService,
-        private confirmationService: ConfirmationService
+        private dialogService: DialogService
     ) {}
 
     ngOnInit(): void {
         this.loadData();
-        this.setBreadcrumb();
     }
 
     loadData() {
         const estudiante = this.localStorageService.getLocalStorage('est');
-
         if (estudiante) {
             this.estudianteSeleccionado = estudiante;
             this.listCursos();
@@ -58,9 +51,12 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
             codigo: estudiante.codigo,
             nombre: estudiante.nombre,
             apellido: estudiante.apellido,
-            // identificacion: estudiante.persona.identificacion,
-            // periodoIngreso: estudiante.informacionMaestria.periodoIngreso,
-            // cohorte: estudiante.informacionMaestria.cohorte,
+            identificacion: estudiante.identificacion,
+            periodoIngreso: estudiante.periodoIngreso,
+            cohorte: estudiante.cohorte,
+            fechaGrado: estudiante.fechaGrado,
+            telefono: estudiante.telefono,
+            correo: estudiante.correo,
         };
     }
 
@@ -80,27 +76,29 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
         this.limpiarEstudiante();
         const ref = this.showBuscadorEstudiantes();
         ref.onClose.subscribe({
-            next: (response) => {
-                if (response) {
-                    this.estudianteSeleccionado =
-                        this.mapEstudianteLabel(response);
-                    this.localStorageService.saveLocalStorage(
-                        this.mapEstudianteLabel(response),
-                        'est'
-                    );
-                    this.listCursos();
-                    this.listEmpresas();
+            next: (estudiante) => {
+                if (estudiante) {
+                    this.estudianteService
+                        .getEstudianteEgresado(estudiante.id)
+                        .subscribe({
+                            next: (response) => {
+                                if (response) {
+                                    this.estudianteSeleccionado =
+                                        this.mapEstudianteLabel(response);
+                                    this.localStorageService.saveLocalStorage(
+                                        this.mapEstudianteLabel(response),
+                                        'est'
+                                    );
+                                    this.listCursos();
+                                    this.listEmpresas();
+                                }
+                            },
+                            error: (e) => console.error(e),
+                        });
                 }
             },
             error: (e) => console.error(e),
         });
-    }
-
-    setBreadcrumb() {
-        this.breadcrumbService.setItems([
-            { label: 'Trabajos de Grado' },
-            { label: 'Seguimiento A Egresados' },
-        ]);
     }
 
     listEmpresas() {
@@ -125,7 +123,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
             .subscribe({
                 next: (response) => {
                     if (response) {
-                        this.cursos = response.filter((d) => d.id !== null);
+                        this.cursos = response.filter((d) => d.nombre !== null);
                     }
                 },
                 error: (e) => console.error(e),
@@ -138,6 +136,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
             header: 'Agregar empresa',
             height: '60vh',
             width: '40%',
+            styleClass: 'dialog-empresa',
             data: { estudianteId: this.estudianteSeleccionado.id },
         });
         ref.onClose.subscribe(() => {
@@ -150,6 +149,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
             header: 'Editar empresa',
             height: '60vh',
             width: '40%',
+            styleClass: 'dialog-empresa',
             data: {
                 empresaId: id,
                 estudianteId: this.estudianteSeleccionado.id,
@@ -165,6 +165,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
             header: 'Agregar curso',
             height: '58vh',
             width: '40%',
+            styleClass: 'dialog-curso',
             data: { estudianteId: this.estudianteSeleccionado.id },
         });
         ref.onClose.subscribe(() => {
@@ -177,46 +178,11 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
             header: 'Editar curso',
             height: '58vh',
             width: '40%',
+            styleClass: 'dialog-curso',
             data: { cursoId: id, estudianteId: this.estudianteSeleccionado.id },
         });
         ref.onClose.subscribe(() => {
             this.listCursos();
-        });
-    }
-
-    deleteEmpresa(id: number) {
-        this.empresaService.deleteEmpresa(id).subscribe({
-            next: () => {
-                this.messageService.add(
-                    infoMessage(Aviso.EMPRESA_ELIMINADA_CORRECTAMENTE)
-                );
-                this.listEmpresas();
-            },
-        });
-    }
-
-    deleteCurso(id: number) {
-        this.cursoService.deleteCurso(id).subscribe({
-            next: () => {
-                this.messageService.add(
-                    infoMessage(Aviso.CURSO_ELIMINADO_CORRECTAMENTE)
-                );
-                this.listCursos();
-            },
-        });
-    }
-
-    onDelete(event: any, id: number, name: string) {
-        this.confirmationService.confirm({
-            target: event.target,
-            message: Aviso.CONFIRMAR_ELIMINAR_REGISTRO,
-            icon: PrimeIcons.EXCLAMATION_TRIANGLE,
-            acceptLabel: 'Si, eliminar',
-            rejectLabel: 'No',
-            accept: () =>
-                name === 'curso'
-                    ? this.deleteCurso(id)
-                    : this.deleteEmpresa(id),
         });
     }
 }

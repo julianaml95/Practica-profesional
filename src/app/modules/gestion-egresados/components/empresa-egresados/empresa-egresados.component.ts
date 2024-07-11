@@ -115,6 +115,10 @@ export class EmpresaEgresadoComponent implements OnInit {
             .add(() => (this.loading = false));
     }
 
+    onCancel(): void {
+        this.closeDialog();
+    }
+
     onSave() {
         if (this.empresaForm.invalid) {
             this.handleWarningMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS);
@@ -124,29 +128,28 @@ export class EmpresaEgresadoComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        if (response.status !== 501) return;
-
+        if (response.status !== 500) return;
         const mapException = mapResponseException(response.error);
         mapException.forEach((value) => {
             this.messageService.add(errorMessage(value));
         });
     }
 
-    private handleSuccessMessage(message: string) {
+    handleSuccessMessage(message: string) {
         this.messageService.add(infoMessage(message));
     }
 
-    private handleWarningMessage(message: string) {
+    handleWarningMessage(message: string) {
         this.messageService.clear();
         this.messageService.add(warnMessage(message));
     }
 
-    private handleErrorResponse(error: any) {
+    handleErrorResponse(error: any) {
         this.handlerResponseException(error);
         this.loading = false;
     }
 
-    private closeDialog() {
+    closeDialog() {
         this.ref.close();
     }
 }

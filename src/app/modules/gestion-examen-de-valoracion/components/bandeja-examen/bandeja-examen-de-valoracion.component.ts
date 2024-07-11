@@ -10,7 +10,7 @@ import { RespuestaService } from '../../services/respuesta.service';
 import { ResolucionService } from '../../services/resolucion.service';
 import { SustentacionService } from '../../services/sustentacion.service';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { Subscription } from 'rxjs';
+import { Subscription, catchError, of } from 'rxjs';
 import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { LocalStorageService } from 'src/app/shared/services/localstorage.service';
@@ -117,16 +117,6 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                         this.loading = false;
                     },
                 });
-
-            this.trabajoDeGradoService.setSustentacionValid(null);
-            this.trabajoDeGradoService.setResolucionValid(null);
-            this.trabajoDeGradoService.setRespuestaValid(null);
-            this.trabajoDeGradoService.setSustentacionSeleccionada(null);
-            this.trabajoDeGradoService.setResolucionSeleccionada(null);
-            this.trabajoDeGradoService.setRespuestaSeleccionada(null);
-            this.trabajoDeGradoService.setSolicitudSeleccionada(null);
-            this.trabajoDeGradoService.setTituloSeleccionadoSubject(null);
-            this.trabajoDeGradoService.setTrabajoSeleccionado(null);
         });
     }
 
@@ -149,17 +139,6 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
                         this.loading = false;
                     },
                 });
-
-            this.trabajoDeGradoService.setEstudianteSeleccionado(null);
-            this.trabajoDeGradoService.setSustentacionValid(null);
-            this.trabajoDeGradoService.setResolucionValid(null);
-            this.trabajoDeGradoService.setRespuestaValid(null);
-            this.trabajoDeGradoService.setSustentacionSeleccionada(null);
-            this.trabajoDeGradoService.setResolucionSeleccionada(null);
-            this.trabajoDeGradoService.setRespuestaSeleccionada(null);
-            this.trabajoDeGradoService.setSolicitudSeleccionada(null);
-            this.trabajoDeGradoService.setTituloSeleccionadoSubject(null);
-            this.trabajoDeGradoService.setTrabajoSeleccionado(null);
         });
     }
 
@@ -169,90 +148,113 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
 
     onEditar(id: number, estudianteId: number) {
         this.unsubscribePreviousSubscriptions();
+
         if (estudianteId) {
-            if (this.estudianteSubscription) {
-                this.estudianteSubscription.unsubscribe();
-            }
             this.estudianteSubscription = this.estudianteService
                 .getEstudiante(estudianteId)
-                .subscribe({
-                    next: (response) => {
-                        if (response) {
-                            this.estudiante = this.mapEstudianteLabel(response);
-                            this.trabajoDeGradoService.setEstudianteSeleccionado(
-                                this.estudiante
-                            );
-                        }
-                    },
+                .pipe(
+                    catchError(() => {
+                        return of(null);
+                    })
+                )
+                .subscribe((response) => {
+                    if (response) {
+                        this.estudiante = this.mapEstudianteLabel(response);
+                        this.trabajoDeGradoService.setEstudianteSeleccionado(
+                            this.estudiante
+                        );
+                    }
                 });
         }
+
         this.trabajoDeGradoSubscription = this.trabajoDeGradoService
             .getTrabajoDeGrado(id)
-            .subscribe({
-                next: (response) => {
-                    if (response) {
-                        this.trabajoDeGradoService.setTrabajoSeleccionado(
-                            response
-                        );
-                    }
-                },
+            .pipe(
+                catchError(() => {
+                    return of(null);
+                })
+            )
+            .subscribe((response) => {
+                if (response) {
+                    this.trabajoDeGradoService.setTrabajoSeleccionado(response);
+                }
             });
+
         this.solicitudSubscription = this.solicitudService
             .getSolicitudDocente(id)
-            .subscribe({
-                next: (response) => {
-                    if (response) {
-                        this.trabajoDeGradoService.setSolicitudSeleccionada(
-                            response
-                        );
-                    }
-                },
+            .pipe(
+                catchError(() => {
+                    return of(null);
+                })
+            )
+            .subscribe((response) => {
+                if (response) {
+                    this.trabajoDeGradoService.setSolicitudSeleccionada(
+                        response
+                    );
+                }
             });
+
         this.respuestaSubscription = this.respuestaService
             .getRespuestasExamen(id)
-            .subscribe({
-                next: (response) => {
-                    if (response) {
-                        this.trabajoDeGradoService.setRespuestaSeleccionada(
-                            response
-                        );
-                    }
-                },
+            .pipe(
+                catchError(() => {
+                    return of(null);
+                })
+            )
+            .subscribe((response) => {
+                if (response) {
+                    this.trabajoDeGradoService.setRespuestaSeleccionada(
+                        response
+                    );
+                }
             });
+
         this.resolucionSubscription = this.resolucionService
             .getResolucionDocente(id)
-            .subscribe({
-                next: (response) => {
-                    if (response) {
-                        this.trabajoDeGradoService.setResolucionSeleccionada(
-                            response
-                        );
-                    }
-                },
+            .pipe(
+                catchError(() => {
+                    return of(null);
+                })
+            )
+            .subscribe((response) => {
+                if (response) {
+                    this.trabajoDeGradoService.setResolucionSeleccionada(
+                        response
+                    );
+                }
             });
+
         this.sustentacionSubscription = this.sustentacionService
             .getSustentacionDocente(id)
-            .subscribe({
-                next: (response) => {
-                    if (response) {
-                        this.trabajoDeGradoService.setSustentacionSeleccionada(
-                            response
-                        );
-                        if (this.role.includes('ROLE_ESTUDIANTE')) {
-                            this.router.navigate([
-                                'examen-de-valoracion/sustentacion/editar',
-                                id,
-                            ]);
-                        }
+            .pipe(
+                catchError(() => {
+                    return of(null);
+                })
+            )
+            .subscribe((response) => {
+                if (response) {
+                    this.trabajoDeGradoService.setSustentacionSeleccionada(
+                        response
+                    );
+                    if (this.role.includes('ROLE_ESTUDIANTE')) {
+                        this.router.navigate([
+                            'examen-de-valoracion/sustentacion/editar',
+                            id,
+                        ]);
                     }
-                },
+                }
             });
+
         if (!this.role.includes('ROLE_ESTUDIANTE')) {
             this.router.navigate(['examen-de-valoracion/solicitud/editar', id]);
         }
     }
 
     private unsubscribePreviousSubscriptions() {
+        if (this.estudianteSubscription) {
+            this.estudianteSubscription.unsubscribe();
+        }
         if (this.trabajoDeGradoSubscription) {
             this.trabajoDeGradoSubscription.unsubscribe();
         }

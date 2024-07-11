@@ -113,7 +113,8 @@ export class SolicitudExamenComponent implements OnInit {
     anexosFiles: File[] = [];
     anexosBase64: { linkAnexo: string }[] = [];
     pdfUrls: { name: string; url: string }[] = [];
-    estados: string[] = ['Aceptado', 'Rechazado'];
+    estadosRespuesta: string[] = ['Aprobado', 'No Aprobado'];
+    estadosVerificacion: string[] = ['Aceptado', 'Rechazado'];
 
     estado: string;
     currentFormat: string = 'formatoB';
@@ -149,10 +150,8 @@ export class SolicitudExamenComponent implements OnInit {
         this.subscribeToEstudiante();
         this.initForm();
         if (this.router.url.includes('editar')) {
-            this.isLoading = true;
             await this.subscribeToObservers();
             this.loadEditMode();
-            this.isLoading = false;
         }
         this.checkEstados();
     }
@@ -214,7 +213,7 @@ export class SolicitudExamenComponent implements OnInit {
         this.solicitudForm
             .get('conceptoComite')
             .valueChanges.subscribe((value) => {
-                if (value == 'Aceptado') {
+                if (value == 'Aprobado') {
                     this.solicitudForm
                         .get('asuntoComite')
                         .setValue('Envio evaluadores');
@@ -224,7 +223,7 @@ export class SolicitudExamenComponent implements OnInit {
                             'Envio documentos para que por favor los revisen y den respuesta oportuna.'
                         );
                 }
-                if (value == 'Rechazado') {
+                if (value == 'No Aprobado') {
                     this.solicitudForm
                         .get('asuntoComite')
                         .setValue('Envio correcion por parte del comite');
@@ -331,6 +330,11 @@ export class SolicitudExamenComponent implements OnInit {
                                         .getSolicitudCoordinadorFase2(
                                             this.trabajoDeGradoId
                                         )
+                                        .pipe(
+                                            catchError(() => {
+                                                return of(null);
+                                            })
+                                        )
                                         .subscribe({
                                             next: (response) => {
                                                 if (
@@ -355,6 +359,11 @@ export class SolicitudExamenComponent implements OnInit {
                                     this.respuestaService
                                         .getRespuestasExamen(
                                             this.trabajoDeGradoId
+                                        )
+                                        .pipe(
+                                            catchError(() => {
+                                                return of(null);
+                                            })
                                         )
                                         .subscribe({
                                             next: (response) => {
@@ -392,6 +401,11 @@ export class SolicitudExamenComponent implements OnInit {
                                         .getResolucionCoordinadorFase3(
                                             this.trabajoDeGradoId
                                         )
+                                        .pipe(
+                                            catchError(() => {
+                                                return of(null);
+                                            })
+                                        )
                                         .subscribe({
                                             next: (response) => {
                                                 if (
@@ -419,7 +433,7 @@ export class SolicitudExamenComponent implements OnInit {
                     {
                         next: (response) => {
                             if (response) {
-                                this.solicitudId = response.idExamenValoracion;
+                                this.solicitudId = response.id;
                                 checkCompletion();
                             }
                         },
@@ -451,8 +465,7 @@ export class SolicitudExamenComponent implements OnInit {
                     {
                         next: (response) => {
                             if (response) {
-                                this.resolucionId =
-                                    response.idGeneracionResolucion;
+                                this.resolucionId = response.id;
                             }
                             checkCompletion();
                         },
@@ -468,8 +481,7 @@ export class SolicitudExamenComponent implements OnInit {
                     {
                         next: (response) => {
                             if (response) {
-                                this.sustentacionId =
-                                    response.idSustentacionTrabajoInvestigacion;
+                                this.sustentacionId = response.id;
                             }
                             checkCompletion();
                         },
@@ -511,14 +523,14 @@ export class SolicitudExamenComponent implements OnInit {
                 this.solicitudForm
                     .get('conceptoComite')
                     .valueChanges.subscribe((value) => {
-                        if (value == 'Aceptado') {
+                        if (value == 'Aprobado') {
                             this.solicitudForm
                                 .get('linkOficioDirigidoEvaluadores')
                                 .enable();
                             this.solicitudForm
                                 .get('fechaMaximaEvaluacion')
                                 .enable();
-                        } else if (value == 'Rechazado') {
+                        } else if (value == 'No Aprobado') {
                             this.solicitudForm
                                 .get('linkOficioDirigidoEvaluadores')
                                 .disable();
@@ -984,7 +996,7 @@ export class SolicitudExamenComponent implements OnInit {
                     let b64FormatoC = '';
                     let b64Oficio = '';
 
-                    if (conceptoComite == 'Aceptado') {
+                    if (conceptoComite == 'Aprobado') {
                         if (!this.formatoB || !this.formatoC) {
                             this.isLoading = false;
                             return this.messageService.add(
@@ -1008,7 +1020,7 @@ export class SolicitudExamenComponent implements OnInit {
                     }
 
                     const solicitudData =
-                        conceptoComite == 'Aceptado'
+                        conceptoComite == 'Aprobado'
                             ? {
                                   ...restOfFormValues,
                                   actaFechaRespuestaComite: [
@@ -1162,7 +1174,7 @@ export class SolicitudExamenComponent implements OnInit {
                     let b64FormatoC = '';
                     let b64Oficio = '';
 
-                    if (conceptoComite == 'Aceptado') {
+                    if (conceptoComite == 'Aprobado') {
                         if (!this.formatoB || !this.formatoC) {
                             this.isLoading = false;
                             return this.messageService.add(
@@ -1186,7 +1198,7 @@ export class SolicitudExamenComponent implements OnInit {
                     }
 
                     const solicitudData =
-                        conceptoComite == 'Aceptado'
+                        conceptoComite == 'Aprobado'
                             ? {
                                   ...restOfFormValues,
                                   actaFechaRespuestaComite: [
@@ -1401,6 +1413,7 @@ export class SolicitudExamenComponent implements OnInit {
 
     loadSolicitud() {
         return new Promise<void>((resolve, reject) => {
+            this.isLoading = true;
             const docenteObs =
                 this.role.includes('ROLE_DOCENTE') ||
                 this.role.includes('ROLE_COORDINADOR')
@@ -1522,8 +1535,8 @@ export class SolicitudExamenComponent implements OnInit {
                             .get('conceptoComite')
                             .setValue(
                                 actaConceptoComite == 'APROBADO'
-                                    ? 'Aceptado'
-                                    : 'Rechazado'
+                                    ? 'Aprobado'
+                                    : 'No Aprobado'
                             );
 
                         this.solicitudForm
@@ -1537,7 +1550,10 @@ export class SolicitudExamenComponent implements OnInit {
                 },
                 error: (e) => this.handlerResponseException(e),
                 complete: () => {
-                    if (this.role.includes('ROLE_DOCENTE')) {
+                    if (
+                        this.role.includes('ROLE_DOCENTE') &&
+                        this.isDocenteCreated
+                    ) {
                         this.setup('linkFormatoA');
                         this.setup('linkFormatoD');
                         this.setup('linkFormatoE');
@@ -1548,8 +1564,11 @@ export class SolicitudExamenComponent implements OnInit {
                         this.setup('linkFormatoD');
                         this.setup('linkFormatoE');
                         this.setup('anexos');
-                        this.setup('linkOficioDirigidoEvaluadores');
+                        if (this.isCoordinadorFase2Created) {
+                            this.setup('linkOficioDirigidoEvaluadores');
+                        }
                     }
+                    this.isLoading = false;
                     resolve();
                 },
             });
@@ -1805,7 +1824,7 @@ export class SolicitudExamenComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        if (response.status != 500) return;
+        if (response.status != 500 && response.status != 409) return;
         const mapException = mapResponseException(response.error);
         mapException.forEach((value, _) => {
             this.messageService.add(errorMessage(value));

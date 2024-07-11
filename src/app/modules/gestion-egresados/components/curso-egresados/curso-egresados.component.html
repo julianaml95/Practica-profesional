@@ -1,21 +1,27 @@
-<form [formGroup]="cursoForm" class="cursoForm mt-5">
-    <div class="flex flex-column gap-3">
+<form [formGroup]="cursoForm" class="mt-5">
+    <div class="curso-egresados flex flex-column gap-3">
         <div class="field grid">
             <div class="col-3 col-label text-right align-self-center">
                 <label class="label-required">Nombre del Curso</label>
             </div>
             <div class="col-9 col-input">
-                <input
-                    pInputText
-                    [maxLength]="250"
-                    class="p-inputtext-sm w-full"
-                    formControlName="nombre"
+                <p-dropdown
+                    class="dropdown-custom"
+                    [options]="asignaturas"
+                    formControlName="idCurso"
+                    placeholder="Selecciona una asignatura"
+                    [virtualScroll]="true"
+                    [itemSize]="31"
+                    [filter]="false"
                     [ngClass]="{
                         'ng-invalid ng-dirty':
-                            getFormControl('nombre').invalid &&
-                            getFormControl('nombre').touched
+                            getFormControl('idCurso').invalid &&
+                            getFormControl('idCurso').dirty,
+                        'ng-invalid ng-touched':
+                            getFormControl('idCurso').invalid &&
+                            getFormControl('idCurso').touched
                     }"
-                />
+                ></p-dropdown>
             </div>
         </div>
         <div class="field grid">
@@ -26,13 +32,8 @@
                 <input
                     pInputText
                     [maxLength]="250"
-                    class="p-inputtext-sm w-full"
+                    class="p-inputtext-md w-full"
                     formControlName="orientadoA"
-                    [ngClass]="{
-                        'ng-invalid ng-dirty':
-                            getFormControl('orientadoA').invalid &&
-                            getFormControl('orientadoA').touched
-                    }"
                 />
             </div>
         </div>
@@ -45,11 +46,6 @@
                     formControlName="fechaInicio"
                     [showIcon]="true"
                     dateFormat="dd.mm.yy"
-                    [ngClass]="{
-                        'ng-invalid ng-dirty':
-                            getFormControl('fechaInicio').invalid &&
-                            getFormControl('fechaInicio').touched
-                    }"
                 ></p-calendar>
             </div>
         </div>
@@ -62,16 +58,19 @@
                     formControlName="fechaFin"
                     [showIcon]="true"
                     dateFormat="dd.mm.yy"
-                    [ngClass]="{
-                        'ng-invalid ng-dirty':
-                            getFormControl('fechaFin').invalid &&
-                            getFormControl('fechaFin').touched
-                    }"
                 ></p-calendar>
             </div>
         </div>
     </div>
-    <div class="flex align-items-center justify-content-center mt-8">
+    <div class="flex align-items-center justify-content-end column-gap-2 mt-4">
+        <button
+            pButton
+            type="button"
+            class="p-button-secondary"
+            icon="pi pi-mark"
+            label="Cancelar"
+            (click)="onCancel()"
+        ></button>
         <button
             pButton
             *ngIf="!editMode"

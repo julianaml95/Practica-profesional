@@ -14,8 +14,8 @@ import {
     warnMessage,
 } from 'src/app/core/utils/message-util';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
-import { Curso } from '../../models/curso';
 import { CursoService } from '../../services/cursos.service';
+import { CursoRequest } from '../../models/curso';
 
 @Component({
     selector: 'curso-egresados',
@@ -32,6 +32,9 @@ export class CursoEgresadoComponent implements OnInit {
     editMode: boolean;
     loading: boolean = false;
 
+    asignaturaSelected: number;
+    asignaturas: any[] = [];
+
     constructor(
         private fb: FormBuilder,
         private ref: DynamicDialogRef,
@@ -42,29 +45,14 @@ export class CursoEgresadoComponent implements OnInit {
 
     ngOnInit() {
         this.initForm();
-        if (this.config.data?.estudianteId) {
-            this.extractEstudianteIdFromData();
-        }
-        if (this.config.data?.cursoId) {
-            this.extractCursoIdFromData();
-        }
-    }
-
-    extractEstudianteIdFromData(): void {
-        this.estudianteId = Number(this.config.data.estudianteId);
-        this.cursoForm.get('idEstudiante').setValue(this.estudianteId);
-    }
-
-    extractCursoIdFromData(): void {
-        this.editMode = true;
-        this.cursoId = Number(this.config.data.cursoId);
-        this.loadDataForEdit(this.cursoId);
+        this.loadAsignaturas();
+        this.extractIdsFromConfig();
     }
 
     initForm(): void {
         this.cursoForm = this.fb.group({
+            idCurso: [null, Validators.required],
             idEstudiante: [null, Validators.required],
-            nombre: [null, Validators.required],
             orientadoA: [null, Validators.required],
             fechaInicio: [null, Validators.required],
             fechaFin: [null, Validators.required],
@@ -73,33 +61,36 @@ export class CursoEgresadoComponent implements OnInit {
         this.formReady.emit(this.cursoForm);
     }
 
-    setValuesForm(curso: Curso) {
-        this.cursoForm.patchValue({
-            ...curso,
+    loadAsignaturas(): void {
+        this.cursoService.listarAsignaturas().subscribe({
+            next: (response) => {
+                if (response) {
+                    this.asignaturas = response.map((asignatura: any) => ({
+                        label: asignatura.nombreAsignatura,
+                        value: asignatura.idAsignatura,
+                    }));
+                }
+            },
+            error: (e) => this.handleErrorResponse(e),
         });
     }
 
-    getFormControl(formControlName: string): FormControl {
-        return this.cursoForm.get(formControlName) as FormControl;
+    extractIdsFromConfig(): void {
+        if (this.config.data?.estudianteId) {
+            this.estudianteId = Number(this.config.data.estudianteId);
+            this.cursoForm.get('idEstudiante').setValue(this.estudianteId);
+        }
+        if (this.config.data?.cursoId) {
+            this.editMode = true;
+            this.cursoId = Number(this.config.data.cursoId);
+            this.loadDataForEdit(this.cursoId);
+        }
     }
 
-    addCurso() {
-        this.loading = true;
-        this.cursoService
-            .addCurso(this.cursoForm.value)
-            .subscribe({
-                next: () => this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO),
-                error: (e) => this.handleErrorResponse(e),
-                complete: () => this.closeDialog(),
-            })
-            .add(() => (this.loading = false));
-    }
-
-    loadDataForEdit(id: number) {
+    loadDataForEdit(id: number): void {
         this.cursoService.getCurso(id).subscribe({
             next: (response) => {
                 this.setValuesForm(response);
-                this.extractEstudianteIdFromData();
                 this.cursoForm
                     .get('fechaInicio')
                     .setValue(
@@ -117,7 +108,27 @@ export class CursoEgresadoComponent implements OnInit {
         });
     }
 
-    updateCurso() {
+    setValuesForm(curso: CursoRequest): void {
+        this.cursoForm.patchValue({ ...curso });
+    }
+
+    getFormControl(formControlName: string): FormControl {
+        return this.cursoForm.get(formControlName) as FormControl;
+    }
+
+    addCurso(): void {
+        this.loading = true;
+        this.cursoService
+            .addCurso(this.cursoForm.value)
+            .subscribe({
+                next: () => this.handleSuccessMessage(Mensaje.GUARDADO_EXITOSO),
+                error: (e) => this.handleErrorResponse(e),
+                complete: () => this.closeDialog(),
+            })
+            .add(() => (this.loading = false));
+    }
+
+    updateCurso(): void {
         this.loading = true;
         this.cursoService
             .updateCurso(this.cursoId, this.cursoForm.value)
@@ -130,7 +141,11 @@ export class CursoEgresadoComponent implements OnInit {
             .add(() => (this.loading = false));
     }
 
-    onSave() {
+    onCancel(): void {
+        this.closeDialog();
+    }
+
+    onSave(): void {
         if (this.cursoForm.invalid) {
             this.handleWarningMessage(Mensaje.REGISTRE_CAMPOS_OBLIGATORIOS);
             return;
@@ -138,30 +153,29 @@ export class CursoEgresadoComponent implements OnInit {
         this.editMode ? this.updateCurso() : this.addCurso();
     }
 
-    handlerResponseException(response: any) {
-        if (response.status !== 501) return;
-
+    handlerResponseException(response: any): void {
+        if (response.status !== 500) return;
         const mapException = mapResponseException(response.error);
         mapException.forEach((value) => {
             this.messageService.add(errorMessage(value));
         });
     }
 
-    private handleSuccessMessage(message: string) {
+    handleSuccessMessage(message: string): void {
         this.messageService.add(infoMessage(message));
     }
 
-    private handleWarningMessage(message: string) {
+    handleWarningMessage(message: string): void {
         this.messageService.clear();
         this.messageService.add(warnMessage(message));
     }
 
-    private handleErrorResponse(error: any) {
+    handleErrorResponse(error: any): void {
         this.handlerResponseException(error);
         this.loading = false;
     }
 
-    private closeDialog() {
+    closeDialog(): void {
         this.ref.close();
     }
 }

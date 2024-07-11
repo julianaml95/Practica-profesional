@@ -5,70 +5,81 @@
         >
     </ng-template>
     <div class="col flex align-items-center justify-content-center">
-        <div>
-            <p-dialog
-                [header]="currentFormat"
-                [(visible)]="displayFormatos"
-                [style]="{ width: '70vw' }"
-                [modal]="true"
-                [maximizable]="true"
-                [baseZIndex]="10000"
-                [draggable]="false"
-                [resizable]="false"
-            >
-                <ng-container *ngIf="currentFormat == 'formatoB'">
-                    <documento-formatoB
-                        (formatoBPdfGenerated)="
-                            handleFormatoBPdfGenerated($event)
-                        "
-                    ></documento-formatoB>
-                </ng-container>
-                <ng-container *ngIf="currentFormat == 'formatoC'">
-                    <documento-formatoC
-                        (formatoCPdfGenerated)="
-                            handleFormatoCPdfGenerated($event)
-                        "
-                    ></documento-formatoC>
-                </ng-container>
-                <ng-template pTemplate="footer">
-                    <p-button
-                        *ngIf="currentFormat != 'formatoB'"
-                        icon="pi pi-chevron-left"
-                        label="Anterior"
-                        styleClass="p-button-text"
-                        (click)="previousFormat()"
-                    ></p-button>
-                    <p-button
-                        *ngIf="currentFormat != 'formatoC'"
-                        icon="pi pi-chevron-right"
-                        iconPos="right"
-                        label="Siguiente"
-                        styleClass="p-button-text"
-                        (click)="nextFormat()"
-                    ></p-button>
-                </ng-template>
-            </p-dialog>
-        </div>
-        <div>
-            <p-dialog
-                header="Formato A"
-                [(visible)]="displayFormatoA"
-                [style]="{ width: '70vw' }"
-                [modal]="true"
-                [maximizable]="true"
-                [baseZIndex]="10000"
-                [draggable]="false"
-                [resizable]="false"
-            >
-                <ng-container>
-                    <documento-formatoA
-                        (formatoAPdfGenerated)="
-                            handleFormatoAPdfGenerated($event)
-                        "
-                    ></documento-formatoA>
-                </ng-container>
-            </p-dialog>
-        </div>
+        <p-card
+            class="m-2 w-full max-w-30rem"
+            header="Datos del Estudiante"
+            *ngIf="estudianteSeleccionado"
+        >
+            <div class="mt-2 card-data flex justify-content-between">
+                <span>Codigo</span>
+                <span>{{ estudianteSeleccionado.codigo }}</span>
+            </div>
+            <div class="mt-2 card-data flex justify-content-between">
+                <span>Numero de Identificacion</span>
+                <span>{{ estudianteSeleccionado.identificacion }}</span>
+            </div>
+            <div class="mt-2 card-data flex justify-content-between">
+                <span>Nombres y Apellidos</span>
+                <span
+                    >{{ estudianteSeleccionado.nombre }}
+                    {{ estudianteSeleccionado.apellido }}</span
+                >
+            </div>
+        </p-card>
+        <p-dialog
+            [header]="currentFormat"
+            [(visible)]="displayFormatos"
+            [style]="{ width: '70vw' }"
+            [modal]="true"
+            [maximizable]="true"
+            [baseZIndex]="10000"
+            [draggable]="false"
+            [resizable]="false"
+        >
+            <ng-container *ngIf="currentFormat == 'formatoB'">
+                <documento-formatoB
+                    (formatoBPdfGenerated)="handleFormatoBPdfGenerated($event)"
+                ></documento-formatoB>
+            </ng-container>
+            <ng-container *ngIf="currentFormat == 'formatoC'">
+                <documento-formatoC
+                    (formatoCPdfGenerated)="handleFormatoCPdfGenerated($event)"
+                ></documento-formatoC>
+            </ng-container>
+            <ng-template pTemplate="footer">
+                <p-button
+                    *ngIf="currentFormat != 'formatoB'"
+                    icon="pi pi-chevron-left"
+                    label="Anterior"
+                    styleClass="p-button-text"
+                    (click)="previousFormat()"
+                ></p-button>
+                <p-button
+                    *ngIf="currentFormat != 'formatoC'"
+                    icon="pi pi-chevron-right"
+                    iconPos="right"
+                    label="Siguiente"
+                    styleClass="p-button-text"
+                    (click)="nextFormat()"
+                ></p-button>
+            </ng-template>
+        </p-dialog>
+        <p-dialog
+            header="Formato A"
+            [(visible)]="displayFormatoA"
+            [style]="{ width: '70vw' }"
+            [modal]="true"
+            [maximizable]="true"
+            [baseZIndex]="10000"
+            [draggable]="false"
+            [resizable]="false"
+        >
+            <ng-container>
+                <documento-formatoA
+                    (formatoAPdfGenerated)="handleFormatoAPdfGenerated($event)"
+                ></documento-formatoA>
+            </ng-container>
+        </p-dialog>
         <p-dialog
             header="PDF Viewer"
             [(visible)]="displayModal"
@@ -237,7 +248,7 @@
     </div>
     <ng-template class="w-full" pTemplate="footer">
         <form [formGroup]="solicitudForm" enctype="multipart/form-data">
-            <div class="flex flex-column gap-2">
+            <div class="solicitud flex flex-column gap-2">
                 <div class="text-center font-medium mb-4">
                     <p>
                         <b
@@ -832,7 +843,7 @@
                                 class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
                             >
                                 <div
-                                    *ngFor="let estado of estados"
+                                    *ngFor="let estado of estadosVerificacion"
                                     class="field-checkbox"
                                 >
                                     <p-radioButton
@@ -898,7 +909,7 @@
                                 class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
                             >
                                 <div
-                                    *ngFor="let estado of estados"
+                                    *ngFor="let estado of estadosRespuesta"
                                     class="field-checkbox"
                                 >
                                     <p-radioButton
@@ -948,7 +959,7 @@
                                     >No Acta de aprobacion del examen</label
                                 >
                                 <input
-                                    class="max-w-4rem ml-2"
+                                    class="ml-2"
                                     pInputText
                                     formControlName="numeroActa"
                                 />
@@ -967,7 +978,7 @@
                             class="field grid justify-content-center"
                             *ngIf="
                                 solicitudForm.get('conceptoComite').value ==
-                                'Aceptado'
+                                'Aprobado'
                             "
                         >
                             <div class="col-5 mt-4">
@@ -1070,7 +1081,7 @@
                             class="field grid justify-content-center"
                             *ngIf="
                                 solicitudForm.get('conceptoComite').value ==
-                                'Aceptado'
+                                'Aprobado'
                             "
                         >
                             <div
@@ -1096,7 +1107,8 @@
                     *ngIf="
                         editMode &&
                         role.includes('ROLE_COORDINADOR') &&
-                        isCoordinadorFase1
+                        isCoordinadorFase1 &&
+                        solicitudForm.get('conceptoComite').value == 'Aprobado'
                     "
                     pButton
                     pTooltip="Formatos B y C"
