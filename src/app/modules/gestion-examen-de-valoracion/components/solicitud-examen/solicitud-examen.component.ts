@@ -79,6 +79,7 @@ export class SolicitudExamenComponent implements OnInit {
 
     displayFormatos: boolean = false;
     displayFormatoA: boolean = false;
+    displayFormatoOficioDirigidoEvaluadores: boolean = false;
     displayModal: boolean = false;
     errorMessageShown: boolean = false;
     editMode: boolean = false;
@@ -419,6 +420,8 @@ export class SolicitudExamenComponent implements OnInit {
                                         });
 
                                 checkCompletion();
+                            } else {
+                                this.router.navigate(['examen-de-valoracion']);
                             }
                         },
                         error: (e) => {
@@ -719,6 +722,7 @@ export class SolicitudExamenComponent implements OnInit {
 
     closeModal() {
         this.displayModal = false;
+        this.displayFormatos = false;
         this.pdfUrls = [];
     }
     //#endregion
@@ -726,6 +730,10 @@ export class SolicitudExamenComponent implements OnInit {
     //#region Modal FormatoA, FormatoB and FormatoC
     showFormatoA() {
         this.displayFormatoA = true;
+    }
+
+    showFormatoOficioDirigidoEvaluadores() {
+        this.displayFormatoOficioDirigidoEvaluadores = true;
     }
 
     showFormatoB() {
@@ -755,6 +763,26 @@ export class SolicitudExamenComponent implements OnInit {
                 this.solicitudForm
                     .get('linkFormatoA')
                     .setValue(`linkFormatoA.pdf-${base64}`);
+            })
+            .catch((error) => {
+                console.error('Error al convertir el archivo a base64:', error);
+            });
+    }
+
+    handleFormatoOficioDirigidoEvaluadoresPdfGenerated(file: File) {
+        const pdfFile = new File(
+            [file],
+            'formatoOficioDirigidoEvaluadores.pdf',
+            {
+                type: 'application/pdf',
+            }
+        );
+        this.FileOficioDirigidoEvaluadores = pdfFile;
+        this.convertFileToBase64(pdfFile)
+            .then((base64) => {
+                this.solicitudForm
+                    .get('linkOficioDirigidoEvaluadores')
+                    .setValue(`linkOficioDirigidoEvaluadores.pdf-${base64}`);
             })
             .catch((error) => {
                 console.error('Error al convertir el archivo a base64:', error);
@@ -834,6 +862,51 @@ export class SolicitudExamenComponent implements OnInit {
                         EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COORDINADOR ||
                         this.estado ==
                             EstadoProceso.DEVUELTO_EXAMEN_DE_VALORACION_POR_COMITE)
+                ) {
+                    const formatoA = await this.formatFileString(
+                        this.FileFormatoA,
+                        'linkFormatoA'
+                    );
+
+                    const formatoD = await this.formatFileString(
+                        this.FileFormatoD,
+                        'linkFormatoD'
+                    );
+
+                    const formatoE = await this.formatFileString(
+                        this.FileFormatoE,
+                        'linkFormatoE'
+                    );
+
+                    const anexos = await this.formatFileString(
+                        this.anexosFiles,
+                        'anexos'
+                    );
+
+                    const anexosBase64 = anexos.map(
+                        (anexo: string, index: number) => ({
+                            linkAnexo: `Anexos${index}.pdf-${anexo}`,
+                        })
+                    );
+
+                    const solicitudData = {
+                        ...this.solicitudForm.value,
+                        linkFormatoA: `formatoA.pdf-${formatoA}`,
+                        linkFormatoD: `formatoD.pdf-${formatoD}`,
+                        linkFormatoE: `formatoE.pdf-${formatoE}`,
+                        anexos: anexosBase64,
+                    };
+
+                    await lastValueFrom(
+                        this.solicitudService.updateSolicitudDocente(
+                            solicitudData,
+                            this.trabajoDeGradoId
+                        )
+                    );
+                } else if (
+                    this.isDocenteCreated == true &&
+                    this.isCoordinadorFase1Created == false &&
+                    this.estado == EstadoProceso.PENDIENTE_REVISION_COORDINADOR
                 ) {
                     const formatoA = await this.formatFileString(
                         this.FileFormatoA,
@@ -1420,12 +1493,8 @@ export class SolicitudExamenComponent implements OnInit {
                     ? this.solicitudService
                           .getSolicitudDocente(this.trabajoDeGradoId)
                           .pipe(
-                              catchError((error) => {
+                              catchError(() => {
                                   this.isDocenteCreated = false;
-                                  console.error(
-                                      'Error al obtener solicitud de docente:',
-                                      error
-                                  );
                                   return of(null);
                               })
                           )
@@ -1435,12 +1504,8 @@ export class SolicitudExamenComponent implements OnInit {
                 ? this.solicitudService
                       .getSolicitudCoordinadorFase1(this.trabajoDeGradoId)
                       .pipe(
-                          catchError((error) => {
+                          catchError(() => {
                               this.isCoordinadorFase1Created = false;
-                              console.error(
-                                  'Error al obtener solicitud de coordinador fase 1:',
-                                  error
-                              );
                               return of(null);
                           })
                       )
@@ -1450,12 +1515,8 @@ export class SolicitudExamenComponent implements OnInit {
                 ? this.solicitudService
                       .getSolicitudCoordinadorFase2(this.trabajoDeGradoId)
                       .pipe(
-                          catchError((error) => {
+                          catchError(() => {
                               this.isCoordinadorFase2Created = false;
-                              console.error(
-                                  'Error al obtener solicitud de coordinador fase 2:',
-                                  error
-                              );
                               return of(null);
                           })
                       )

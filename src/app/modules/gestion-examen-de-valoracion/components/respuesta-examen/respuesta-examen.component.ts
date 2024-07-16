@@ -821,6 +821,19 @@ export class RespuestaExamenComponent implements OnInit {
             estadoFinalizado: Number(rest.estadoFinalizado),
         };
 
+        const formatoB = await this.formatFileString(
+            this.selectedFiles[`${formArrayName}.linkFormatoB${index}`],
+            'linkFormatoB'
+        );
+
+        const formatoC = await this.formatFileString(
+            this.selectedFiles[`${formArrayName}.linkFormatoC${index}`],
+            'linkFormatoC'
+        );
+
+        evaluacionData.linkFormatoB = formatoB;
+        evaluacionData.linkFormatoC = formatoC;
+
         this.respuestaService
             .updateRespuestaExamen(respuestaId, {
                 ...castBit,
@@ -854,8 +867,22 @@ export class RespuestaExamenComponent implements OnInit {
             });
     }
 
-    convertFileToBase64(file: File): Promise<string> {
+    async formatFileString(file: any, fileControlName: string): Promise<any> {
+        try {
+            const base64 = await this.convertFileToBase64(file);
+            return `${fileControlName}.pdf-${base64}`;
+        } catch (error) {
+            console.error('Error al convertir el archivo a base64:', error);
+            throw error;
+        }
+    }
+
+    convertFileToBase64(file: File | Blob): Promise<string> {
         return new Promise<string>((resolve, reject) => {
+            if (!(file instanceof File || file instanceof Blob)) {
+                reject(new Error('El parámetro no es de tipo File o Blob'));
+                return;
+            }
             const reader = new FileReader();
             reader.onload = () => {
                 const base64String = reader.result as string;

@@ -101,17 +101,95 @@ export class SustentacionService {
         );
     }
 
-    // updateSustentacion(sustentacion: Sustentacion, sustentacionId: number):Observable<any> {
-    //     return this.http.put<any>(
-    //         backendGestionTrabajoDeGrado(
-    //             `sustentacion_proyecto_investigacion/${sustentacionId}`
-    //         ),
-    //         sustentacion,
-    //         {
-    //             headers: getHeaders(),
-    //         }
-    //     );
-    // }
+    updateSustentacionDocente(
+        sustentacion: Sustentacion,
+        sustentacionId: number
+    ): Observable<any> {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/actualizarInformacionDocente/${sustentacionId}`
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    updateSustentacionCoordinadorFase1(
+        sustentacion: any,
+        sustentacionId: number
+    ): Observable<any> {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/actualizarInformacionCoordinadoFase1/${sustentacionId}`
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    updateSustentacionCoordinadorFase2(
+        sustentacion: Sustentacion,
+        sustentacionId: number
+    ): Observable<any> {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/actualizarInformacionCoordinadoFase2/${sustentacionId}`
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    updateSustentacionCoordinadorFase3(
+        sustentacion: any,
+        sustentacionId: number
+    ): Observable<any> {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/actualizarInformacionCoordinadoFase3/${sustentacionId}`
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    updateSustentacionEstudiante(
+        sustentacion: Sustentacion,
+        sustentacionId: number
+    ): Observable<any> {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/actualizarInformacionEstudiante/${sustentacionId}`
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
+    updateSustentacionCoordinadorFase4(
+        sustentacion: Sustentacion,
+        sustentacionId: number
+    ): Observable<any> {
+        return this.http.put<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/actualizarInformacionCoordinadoFase4/${sustentacionId}`
+            ),
+            sustentacion,
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
 
     getSustentacionDocente(trabajoDeGradoId: number): Observable<Sustentacion> {
         return this.http.get<Sustentacion>(

@@ -68,6 +68,7 @@
                 icon="pi pi-plus"
                 label="Crear Examen de Valoracion"
                 (click)="onProcesoExamen()"
+                [disabled]="isCrearExamenDisabled()"
             ></button>
             <span
                 style="max-width: 80rem; line-height: 1.4; text-align: center"

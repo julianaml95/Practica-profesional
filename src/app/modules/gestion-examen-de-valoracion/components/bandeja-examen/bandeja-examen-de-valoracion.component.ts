@@ -1,8 +1,12 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subscription, catchError, firstValueFrom, of } from 'rxjs';
+import { DialogService } from 'primeng/dynamicdialog';
+import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
+import { LocalStorageService } from 'src/app/shared/services/localstorage.service';
 import { EstadoProceso } from 'src/app/core/enums/enums';
-import { Solicitud } from '../../models/solicitud';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
+import { Solicitud } from '../../models/solicitud';
 import { SolicitudService } from '../../services/solicitud.service';
 import { EstudianteService } from 'src/app/shared/services/estudiante.service';
 import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
@@ -10,10 +14,6 @@ import { RespuestaService } from '../../services/respuesta.service';
 import { ResolucionService } from '../../services/resolucion.service';
 import { SustentacionService } from '../../services/sustentacion.service';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { Subscription, catchError, of } from 'rxjs';
-import { BuscadorEstudiantesComponent } from 'src/app/shared/components/buscador-estudiantes/buscador-estudiantes.component';
-import { DialogService } from 'primeng/dynamicdialog';
-import { LocalStorageService } from 'src/app/shared/services/localstorage.service';
 
 @Component({
     selector: 'app-bandeja-examen-de-valoracion',
@@ -26,6 +26,11 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
 
     loading: boolean;
 
+    estadosPermitidos: string[] = [
+        EstadoProceso.EXAMEN_DE_VALORACION_CANCELADO,
+        EstadoProceso.CANCELADO_TRABAJO_GRADO,
+        EstadoProceso.SUSTENTACION_APROBADA,
+    ];
     estados: any[] = Object.keys(EstadoProceso).map((value, index) => ({
         index,
         text: value
@@ -142,112 +147,136 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
         });
     }
 
+    isCrearExamenDisabled(): boolean {
+        if (this.solicitudesPorEstudiante.length === 0) {
+            return true;
+        }
+        const ultimoTrabajoDeGrado =
+            this.solicitudesPorEstudiante[
+                this.solicitudesPorEstudiante.length - 1
+            ];
+        return !this.estadosPermitidos.includes(ultimoTrabajoDeGrado.estado);
+    }
+
     onProcesoExamen() {
         this.router.navigate(['examen-de-valoracion/solicitud']);
     }
 
-    onEditar(id: number, estudianteId: number) {
+    async onEditar(id: number, estudianteId: number) {
         this.unsubscribePreviousSubscriptions();
 
         if (estudianteId) {
-            this.estudianteSubscription = this.estudianteService
-                .getEstudiante(estudianteId)
-                .pipe(
-                    catchError(() => {
-                        return of(null);
-                    })
-                )
-                .subscribe((response) => {
-                    if (response) {
-                        this.estudiante = this.mapEstudianteLabel(response);
-                        this.trabajoDeGradoService.setEstudianteSeleccionado(
-                            this.estudiante
-                        );
-                    }
-                });
+            try {
+                const estudianteResponse = await firstValueFrom(
+                    this.estudianteService
+                        .getEstudiante(estudianteId)
+                        .pipe(catchError(() => of(null)))
+                );
+
+                if (estudianteResponse) {
+                    this.estudiante =
+                        this.mapEstudianteLabel(estudianteResponse);
+                    this.trabajoDeGradoService.setEstudianteSeleccionado(
+                        this.estudiante
+                    );
+                }
+            } catch (error) {
+                // Manejar error si es necesario
+            }
         }
 
-        this.trabajoDeGradoSubscription = this.trabajoDeGradoService
-            .getTrabajoDeGrado(id)
-            .pipe(
-                catchError(() => {
-                    return of(null);
-                })
-            )
-            .subscribe((response) => {
-                if (response) {
-                    this.trabajoDeGradoService.setTrabajoSeleccionado(response);
-                }
-            });
+        try {
+            const trabajoDeGradoResponse = await firstValueFrom(
+                this.trabajoDeGradoService
+                    .getTrabajoDeGrado(id)
+                    .pipe(catchError(() => of(null)))
+            );
 
-        this.solicitudSubscription = this.solicitudService
-            .getSolicitudDocente(id)
-            .pipe(
-                catchError(() => {
-                    return of(null);
-                })
-            )
-            .subscribe((response) => {
-                if (response) {
-                    this.trabajoDeGradoService.setSolicitudSeleccionada(
-                        response
-                    );
-                }
-            });
+            if (trabajoDeGradoResponse) {
+                this.trabajoDeGradoService.setTrabajoSeleccionado(
+                    trabajoDeGradoResponse
+                );
+            }
+        } catch (error) {
+            // Manejar error si es necesario
+        }
 
-        this.respuestaSubscription = this.respuestaService
-            .getRespuestasExamen(id)
-            .pipe(
-                catchError(() => {
-                    return of(null);
-                })
-            )
-            .subscribe((response) => {
-                if (response) {
-                    this.trabajoDeGradoService.setRespuestaSeleccionada(
-                        response
-                    );
-                }
-            });
+        try {
+            const solicitudResponse = await firstValueFrom(
+                this.solicitudService
+                    .getSolicitudDocente(id)
+                    .pipe(catchError(() => of(null)))
+            );
 
-        this.resolucionSubscription = this.resolucionService
-            .getResolucionDocente(id)
-            .pipe(
-                catchError(() => {
-                    return of(null);
-                })
-            )
-            .subscribe((response) => {
-                if (response) {
-                    this.trabajoDeGradoService.setResolucionSeleccionada(
-                        response
-                    );
-                }
-            });
+            if (solicitudResponse) {
+                this.trabajoDeGradoService.setSolicitudSeleccionada(
+                    solicitudResponse
+                );
+            }
+        } catch (error) {
+            // Manejar error si es necesario
+        }
 
-        this.sustentacionSubscription = this.sustentacionService
-            .getSustentacionDocente(id)
-            .pipe(
-                catchError(() => {
-                    return of(null);
-                })
-            )
-            .subscribe((response) => {
-                if (response) {
-                    this.trabajoDeGradoService.setSustentacionSeleccionada(
-                        response
-                    );
-                    if (this.role.includes('ROLE_ESTUDIANTE')) {
-                        this.router.navigate([
-                            'examen-de-valoracion/sustentacion/editar',
-                            id,
-                        ]);
-                    }
+        try {
+            const respuestaResponse = await firstValueFrom(
+                this.respuestaService
+                    .getRespuestasExamen(id)
+                    .pipe(catchError(() => of(null)))
+            );
+
+            if (respuestaResponse) {
+                this.trabajoDeGradoService.setRespuestaSeleccionada(
+                    respuestaResponse
+                );
+            }
+        } catch (error) {
+            // Manejar error si es necesario
+        }
+
+        try {
+            const resolucionResponse = await firstValueFrom(
+                this.resolucionService
+                    .getResolucionDocente(id)
+                    .pipe(catchError(() => of(null)))
+            );
+
+            if (resolucionResponse) {
+                this.trabajoDeGradoService.setResolucionSeleccionada(
+                    resolucionResponse
+                );
+            }
+        } catch (error) {
+            // Manejar error si es necesario
+        }
+
+        try {
+            const sustentacionResponse = await firstValueFrom(
+                this.sustentacionService
+                    .getSustentacionDocente(id)
+                    .pipe(catchError(() => of(null)))
+            );
+
+            if (sustentacionResponse) {
+                this.trabajoDeGradoService.setSustentacionSeleccionada(
+                    sustentacionResponse
+                );
+                if (this.role.includes('ROLE_ESTUDIANTE')) {
+                    await this.router.navigate([
+                        'examen-de-valoracion/sustentacion/editar',
+                        id,
+                    ]);
+                    return;
                 }
-            });
+            }
+        } catch (error) {
+            // Manejar error si es necesario
+        }
 
         if (!this.role.includes('ROLE_ESTUDIANTE')) {
-            this.router.navigate(['examen-de-valoracion/solicitud/editar', id]);
+            await this.router.navigate([
+                'examen-de-valoracion/solicitud/editar',
+                id,
+            ]);
         }
     }
 

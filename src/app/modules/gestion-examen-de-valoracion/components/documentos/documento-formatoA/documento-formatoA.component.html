@@ -29,6 +29,13 @@
         <form class="mt-4" [formGroup]="formatoAForm">
             <div class="flex flex-column gap-4">
                 <div class="field grid">
+                    <!-- FIELD TO PDF -->
+                    <div class="field-content p-show">
+                        <label>Asunto:</label>
+                        <span>{{ formatoAForm.get("asunto").value }}</span>
+                    </div>
+                    <!-- END -->
+
                     <div
                         class="col-2 col-label text-right mr-2 align-self-start p-hide"
                     >
@@ -39,14 +46,12 @@
                         >
                     </div>
                     <div class="col-9 col-input">
-                        <p>
-                            Por la presente, me permito formalmente solicitar la
-                            presentación del examen de valoración ante el
-                            honorable Comité de Programa de la Maestría en
-                            Computación. La realización de este examen es un
-                            requisito esencial en el marco de mi programa
-                            académico en la Universidad del Cauca.
-                        </p>
+                        <textarea
+                            pInputTextarea
+                            [maxLength]="250"
+                            class="p-inputtextarea-md w-full"
+                            formControlName="asunto"
+                        ></textarea>
                     </div>
                 </div>
                 <div class="field grid">
@@ -320,7 +325,7 @@
                     <div class="field-estudiante p-show">
                         <b>Firma estudiante</b>
                         <img
-                            [src]="firmaEstudiantePreview"
+                            [src]="firmaEstudiante"
                             alt="Vista Previa de la Firma"
                             style="
                                 min-height: 120px;
@@ -345,16 +350,71 @@
                             class="w-full max-w-30rem"
                             previewWidth="100"
                             [auto]="true"
-                            (onSelect)="onFirmaEstudianteChange($event)"
+                            (onSelect)="
+                                onFirmaChange($event, 'firmaEstudiante')
+                            "
                         >
                             <ng-template
                                 let-file
                                 pTemplate="file"
                                 data-file="firma"
                             >
-                                <div *ngIf="firmaEstudiantePreview">
+                                <div *ngIf="firmaEstudiante">
                                     <img
-                                        [src]="firmaEstudiantePreview"
+                                        [src]="firmaEstudiante"
+                                        alt="Vista Previa de la Firma"
+                                        style="
+                                            min-height: 120px;
+                                            min-width: 150px;
+                                            width: 100%;
+                                            height: 100%;
+                                        "
+                                    />
+                                </div>
+                            </ng-template>
+                        </p-fileUpload>
+                    </div>
+                </div>
+                <div class="field grid">
+                    <!-- FIELD TO PDF -->
+                    <div class="field-estudiante p-show">
+                        <b>Firma Tutor</b>
+                        <img
+                            [src]="firmaTutor"
+                            alt="Vista Previa de la Firma"
+                            style="
+                                min-height: 120px;
+                                min-width: 150px;
+                                width: 100%;
+                                height: 100%;
+                            "
+                        />
+                    </div>
+                    <!-- END -->
+                    <span
+                        class="col-10 col-label--firma text-right align-self-start"
+                    >
+                        <b>Firma tutor</b>
+                    </span>
+                    <div class="col-2 col-input--firma text-center">
+                        <p-fileUpload
+                            name="firmaEstudiante"
+                            chooseIcon="pi pi-file"
+                            accept=".png"
+                            chooseLabel="Seleccionar"
+                            class="w-full max-w-30rem"
+                            previewWidth="100"
+                            [auto]="true"
+                            (onSelect)="onFirmaChange($event, 'firmaTutor')"
+                        >
+                            <ng-template
+                                let-file
+                                pTemplate="file"
+                                data-file="firma"
+                            >
+                                <div *ngIf="firmaTutor">
+                                    <img
+                                        [src]="firmaTutor"
                                         alt="Vista Previa de la Firma"
                                         style="
                                             min-height: 120px;

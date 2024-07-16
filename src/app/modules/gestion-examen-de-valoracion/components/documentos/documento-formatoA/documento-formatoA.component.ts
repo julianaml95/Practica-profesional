@@ -26,9 +26,9 @@ import { enumToSelectItems } from 'src/app/core/utils/util';
 import { BuscadorDocentesComponent } from 'src/app/shared/components/buscador-docentes/buscador-docentes.component';
 import { BuscadorExpertosComponent } from 'src/app/shared/components/buscador-expertos/buscador-expertos.component';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
-import { Orientador } from '../../models/orientador';
+import { Orientador } from '../../../models/orientador';
 import { PdfService } from 'src/app/shared/services/pdf.service';
-import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
+import { TrabajoDeGradoService } from '../../../services/trabajoDeGrado.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -55,7 +55,8 @@ export class DocumentoFormatoAComponent implements OnInit {
     rolSeleccionado = '';
 
     fechaActual: Date;
-    firmaEstudiantePreview: string | ArrayBuffer;
+    firmaEstudiante: string | ArrayBuffer;
+    firmaTutor: string | ArrayBuffer;
     estudianteSeleccionado: Estudiante = {};
 
     orientadores: Orientador[] = [];
@@ -159,6 +160,7 @@ export class DocumentoFormatoAComponent implements OnInit {
 
     initForm(): void {
         this.formatoAForm = this.fb.group({
+            asunto: [null, Validators.required],
             titulo: [null, Validators.required],
             estudiante: [null, Validators.required],
             orientador: [null, Validators.required],
@@ -167,6 +169,7 @@ export class DocumentoFormatoAComponent implements OnInit {
             evaluadorInterno: [null, Validators.required],
             evaluadorExterno: [null, Validators.required],
             firmaEstudiante: [null, Validators.required],
+            firmaTutor: [null, Validators.required],
         });
 
         this.formatoAForm.get('titulo').disable();
@@ -249,16 +252,22 @@ export class DocumentoFormatoAComponent implements OnInit {
         return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
     }
 
-    onFirmaEstudianteChange(event: any) {
+    onFirmaChange(event: any, fieldName: string) {
         const input = event && event.files ? event : { files: [] };
         const file = input.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = () => {
-                this.firmaEstudiantePreview = reader.result as string;
+                if (fieldName === 'firmaEstudiante') {
+                    this.firmaEstudiante = reader.result as string;
+                } else if (fieldName === 'firmaTutor') {
+                    this.firmaTutor = reader.result as string;
+                }
             };
             reader.readAsDataURL(file);
-            this.formatoAForm.patchValue({ firmaEstudiante: file });
+            const patchObject = {};
+            patchObject[fieldName] = file;
+            this.formatoAForm.patchValue(patchObject);
         }
     }
 

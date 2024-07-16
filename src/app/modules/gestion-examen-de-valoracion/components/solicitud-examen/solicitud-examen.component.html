@@ -47,6 +47,12 @@
                 ></documento-formatoC>
             </ng-container>
             <ng-template pTemplate="footer">
+                <button
+                    pButton
+                    class="p-button-secondary"
+                    label="Cancelar"
+                    (click)="closeModal()"
+                ></button>
                 <p-button
                     *ngIf="currentFormat != 'formatoB'"
                     icon="pi pi-chevron-left"
@@ -78,6 +84,26 @@
                 <documento-formatoA
                     (formatoAPdfGenerated)="handleFormatoAPdfGenerated($event)"
                 ></documento-formatoA>
+            </ng-container>
+        </p-dialog>
+        <p-dialog
+            header="Formato Oficio Dirigido A Evaluadores"
+            [(visible)]="displayFormatoOficioDirigidoEvaluadores"
+            [style]="{ width: '70vw' }"
+            [modal]="true"
+            [maximizable]="true"
+            [baseZIndex]="10000"
+            [draggable]="false"
+            [resizable]="false"
+        >
+            <ng-container>
+                <documento-formatoEvaluadores
+                    (formatoEvaluadoresPdfGenerated)="
+                        handleFormatoOficioDirigidoEvaluadoresPdfGenerated(
+                            $event
+                        )
+                    "
+                ></documento-formatoEvaluadores>
             </ng-container>
         </p-dialog>
         <p-dialog
@@ -1068,6 +1094,17 @@
                                             )
                                         "
                                     ></button>
+                                    <button
+                                        *ngIf="!FileOficioDirigidoEvaluadores"
+                                        pButton
+                                        icon="pi pi-plus"
+                                        class="align-self-center"
+                                        label="Crear Documento"
+                                        (click)="
+                                            showFormatoOficioDirigidoEvaluadores()
+                                        "
+                                        [loading]="loading"
+                                    ></button>
                                 </div>
                                 <div
                                     class="text-description mt-2"
@@ -1133,7 +1170,15 @@
                     [disabled]="!estudianteSeleccionado"
                 ></button>
                 <button
-                    *ngIf="editMode"
+                    *ngIf="editMode && role.includes('ROLE_DOCENTE')"
+                    pButton
+                    icon="pi pi-pencil"
+                    [label]="getButtonLabel()"
+                    (click)="updateSolicitudExamen()"
+                    [disabled]="isCoordinadorFase1Created"
+                ></button>
+                <button
+                    *ngIf="editMode && role.includes('ROLE_COORDINADOR')"
                     pButton
                     icon="pi pi-pencil"
                     [label]="getButtonLabel()"

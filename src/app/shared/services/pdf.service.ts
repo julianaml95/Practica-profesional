@@ -312,6 +312,48 @@ export class PdfService {
                 content.push(...estudianteImageContent);
             }
 
+            if (node.classList.contains('info-table')) {
+                const tableBody = [];
+                const rows = node.querySelectorAll('tr');
+                const widths = [];
+                for (let i = 0; i < rows[0].cells.length; i++) {
+                    const cell = rows[0].cells[i];
+                    widths[i] =
+                        cell.style.width !== ''
+                            ? cell.style.width
+                            : `${cell.offsetWidth}px`;
+                }
+                rows.forEach((row) => {
+                    const rowData = [];
+                    const cells = row.querySelectorAll('td, th');
+                    cells.forEach((cell) => {                        
+                        rowData.push({
+                            text: cell.innerText.trim(),
+                            bold: cell.tagName === 'TH',
+                            fillColor:
+                                cell.tagName === 'TH' ? '#E0E0E0' : '#FFFFFF',
+                        });
+                    });
+                    tableBody.push(rowData);
+                });
+
+                // Verifica si 'widths' tiene algún valor undefined y reemplace por un valor por defecto.
+                for (let i = 0; i < widths.length; i++) {
+                    if (widths[i] === undefined) {
+                        widths[i] = 'auto';
+                    }
+                }
+
+                content.push({
+                    table: {
+                        headerRows: 1,
+                        widths: widths,
+                        body: tableBody,
+                    },
+                    margin: [0, 2, 0, 20],
+                });
+            }
+
             if (node.classList.contains('header-logo')) {
                 const headerContent = [];
 
@@ -361,7 +403,9 @@ export class PdfService {
                     columns: headerContent,
                     style: 'flexContainer',
                 });
-            } else {
+            }
+
+            if (node.hasChildNodes()) {
                 for (let child of node.childNodes) {
                     await this.extractNodeContent(child, content);
                 }

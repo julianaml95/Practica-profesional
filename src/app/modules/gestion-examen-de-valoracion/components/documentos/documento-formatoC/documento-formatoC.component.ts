@@ -16,7 +16,7 @@ import {
 import { MessageService } from 'primeng/api';
 import { Estudiante } from 'src/app/modules/gestion-estudiantes/models/estudiante';
 import { PdfService } from 'src/app/shared/services/pdf.service';
-import { TrabajoDeGradoService } from '../../services/trabajoDeGrado.service';
+import { TrabajoDeGradoService } from '../../../services/trabajoDeGrado.service';
 import { Mensaje } from 'src/app/core/enums/enums';
 import { mapResponseException } from 'src/app/core/utils/exception-util';
 import {

@@ -14,9 +14,9 @@ import { RespuestaExamenComponent } from './components/respuesta-examen/respuest
 import { CustomFileUploadComponent } from './components/custom-file-upload/custom-file-upload.component';
 import { ResolucionExamenComponent } from './components/resolucion-examen/resolucion-examen.component';
 import { SustentacionExamenComponent } from './components/sustentacion-examen/sustentacion-examen.component';
-import { DocumentoFormatoAComponent } from './components/documento-formatoA/documento-formatoA.component';
-import { DocumentoFormatoBComponent } from './components/documento-formatoB/documento-formatoB.component';
-import { DocumentoFormatoCComponent } from './components/documento-formatoC/documento-formatoC.component';
+import { DocumentoFormatoAComponent } from './components/documentos/documento-formatoA/documento-formatoA.component';
+import { DocumentoFormatoBComponent } from './components/documentos/documento-formatoB/documento-formatoB.component';
+import { DocumentoFormatoCComponent } from './components/documentos/documento-formatoC/documento-formatoC.component';
 import { FileUploadValueAccessorDirective } from './components/respuesta-examen/fileupload-accessor-directive';
 
 import { SolicitudService } from './services/solicitud.service';
@@ -24,6 +24,9 @@ import { TrabajoDeGradoService } from './services/trabajoDeGrado.service';
 import { RespuestaService } from './services/respuesta.service';
 import { ResolucionService } from './services/resolucion.service';
 import { SustentacionService } from './services/sustentacion.service';
+import { DocumentoFormatoHvaComponent } from './components/documentos/documento-formatoHva/documento-formatoHva.component';
+import { DocumentoFormatoFComponent } from './components/documentos/documento-formatoF/documento-formatoF.component';
+import { DocumentoformatoEvaluadoresComponent } from './components/documentos/documento-formatoEvaluadores/documento-formatoEvaluadores.component';
 
 @NgModule({
     declarations: [
@@ -32,6 +35,9 @@ import { SustentacionService } from './services/sustentacion.service';
         DocumentoFormatoAComponent,
         DocumentoFormatoBComponent,
         DocumentoFormatoCComponent,
+        DocumentoFormatoHvaComponent,
+        DocumentoFormatoFComponent,
+        DocumentoformatoEvaluadoresComponent,
         SolicitudExamenComponent,
         CustomFileUploadComponent,
         RespuestaExamenComponent,

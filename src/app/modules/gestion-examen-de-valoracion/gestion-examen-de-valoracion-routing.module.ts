@@ -3,7 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { RoleGuard } from 'src/app/core/guards/role/role-guard';
 
 import { BandejaExamenDeValoracionComponent } from './components/bandeja-examen/bandeja-examen-de-valoracion.component';
-import { DocumentoFormatoAComponent } from './components/documento-formatoA/documento-formatoA.component';
+import { DocumentoFormatoAComponent } from './components/documentos/documento-formatoA/documento-formatoA.component';
 import { ResolucionExamenComponent } from './components/resolucion-examen/resolucion-examen.component';
 import { RespuestaExamenComponent } from './components/respuesta-examen/respuesta-examen.component';
 import { SolicitudExamenComponent } from './components/solicitud-examen/solicitud-examen.component';

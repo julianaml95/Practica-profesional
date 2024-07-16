@@ -51,6 +51,8 @@ export enum EstadoProceso {
     EXAMEN_DE_VALORACION_APROBADO_Y_APLAZADO = 'Examen de valoracion aprobado de un evaluador y aplazado por otro',
     EXAMEN_DE_VALORACION_NO_APROBADO_Y_APLAZADO = 'Examen de valoracion no aprobado de un evaluador y aplazado por otro',
     EXAMEN_DE_VALORACION_CANCELADO = 'Examen de valoración cancelado debiado a que se recibieron 4 NO APROBADO por parte de los evaluadores',
+    EXAMEN_DE_VALORACION_NO_ACTUALIZADO = 'El docente no ha cargado la informacion actualizada del examen de valoracion',
+    EXAMEN_DE_VALORACION_ACTUALIZADO = 'Examen de valoracion actualizado, a la espera del coordinador',
     PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_GENERACION_RESOLUCION = 'Pendiente verificacion archivos coordinador',
     DEVUELTO_GENERACION_DE_RESOLUCION_POR_COORDINADOR = 'Se ha solicitado correciones por parte del coordinador para continuar con el proceso de generacion de resolucion',
     PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE2_GENERACION_RESOLUCION = 'Pendiente registro de informacion por parte del coordinador con respuesta de comite',
@@ -67,6 +69,8 @@ export enum EstadoProceso {
     SUSTENTACION_APROBADA = 'Sustentación aprobada. Examen de valoración finalizado con éxito',
     SUSTENTACION_NO_APROBADA = 'Sustentación no aprobada. Examen de valoración finalizado.',
     SUSTENTACION_APLAZADA = 'Sustentación aplazada. Examen de valoración en espera',
+    CANCELADO_TRABAJO_GRADO = 'El trabajo de grado ha sido cancelado de forma DEFINITIVA por el coordinador',
+    EVALUADOR_NO_RESPONDIO = 'Evaluador del examen de valoracion no dio respuesta',
 }
 
 export enum EstadoEmpresa {

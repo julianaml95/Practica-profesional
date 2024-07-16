@@ -121,6 +121,12 @@
                         tooltipPosition="top"
                         icon="pi pi-plus"
                         (click)="agregarEvaluacion('expertoEvaluaciones')"
+                        [disabled]="
+                            expertoEvaluaciones
+                                ?.at(0)
+                                ?.get('respuestaExamenValoracionExperto' + 0)
+                                ?.value == 'APROBADO'
+                        "
                     ></button>
                 </div>
                 <div class="field grid">
@@ -786,6 +792,12 @@
                         tooltipPosition="top"
                         icon="pi pi-plus"
                         (click)="agregarEvaluacion('docenteEvaluaciones')"
+                        [disabled]="
+                            docenteEvaluaciones
+                                ?.at(0)
+                                ?.get('respuestaExamenValoracionDocente' + 0)
+                                ?.value == 'APROBADO'
+                        "
                     ></button>
                 </div>
                 <div class="field grid">

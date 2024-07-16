@@ -743,9 +743,23 @@ export class ResolucionExamenComponent implements OnInit {
                         this.estado ==
                             EstadoProceso.DEVUELTO_GENERACION_DE_RESOLUCION_POR_COMITE)
                 ) {
+                    const resolucionData = this.resolucionForm.value;
+
+                    const base64AnteproyectoFinal = await this.formatFileString(
+                        this.FileAnteproyectoFinal,
+                        'linkAnteproyectoFinal'
+                    );
+                    const base64SolicitudComite = await this.formatFileString(
+                        this.FileSolicitudComite,
+                        'linkSolicitudComite'
+                    );
+                    resolucionData.linkAnteproyectoFinal =
+                        base64AnteproyectoFinal;
+                    resolucionData.linkSolicitudComite = base64SolicitudComite;
+
                     await lastValueFrom(
                         this.resolucionService.updateResolucionDocente(
-                            this.resolucionForm.value,
+                            resolucionData,
                             this.trabajoDeGradoId
                         )
                     );
@@ -774,10 +788,12 @@ export class ResolucionExamenComponent implements OnInit {
                         EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_GENERACION_RESOLUCION
                 ) {
                     const base64AnteproyectoFinal = await this.formatFileString(
-                        this.FileAnteproyectoFinal
+                        this.FileAnteproyectoFinal,
+                        null
                     );
                     const base64SolicitudComite = await this.formatFileString(
-                        this.FileSolicitudComite
+                        this.FileSolicitudComite,
+                        null
                     );
 
                     const resolucionData =
@@ -894,10 +910,12 @@ export class ResolucionExamenComponent implements OnInit {
                         EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_GENERACION_RESOLUCION
                 ) {
                     const base64AnteproyectoFinal = await this.formatFileString(
-                        this.FileAnteproyectoFinal
+                        this.FileAnteproyectoFinal,
+                        null
                     );
                     const base64SolicitudComite = await this.formatFileString(
-                        this.FileSolicitudComite
+                        this.FileSolicitudComite,
+                        null
                     );
 
                     const resolucionData =
@@ -1110,10 +1128,14 @@ export class ResolucionExamenComponent implements OnInit {
         }
     }
 
-    async formatFileString(file: any): Promise<any> {
+    async formatFileString(file: any, fileControlName: string): Promise<any> {
         try {
             const base64 = await this.convertFileToBase64(file);
-            return `${base64}`;
+            if (fileControlName != null) {
+                return `${fileControlName}.pdf-${base64}`;
+            } else {
+                return `${base64}`;
+            }
         } catch (error) {
             console.error('Error al convertir el archivo a base64:', error);
             throw error;
