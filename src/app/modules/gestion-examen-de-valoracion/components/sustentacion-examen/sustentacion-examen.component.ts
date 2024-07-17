@@ -1096,7 +1096,7 @@ export class SustentacionExamenComponent implements OnInit {
                     this.estado ==
                         EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_SUSTENTACION
                 ) {
-                    const base64FormatoF = await this.formatFileString(
+                    const b64FormatoF = await this.formatFileString(
                         this.FileFormatoF
                     );
 
@@ -1115,7 +1115,7 @@ export class SustentacionExamenComponent implements OnInit {
                                           ).value,
                                   },
                                   obtenerDocumentosParaEnvio: {
-                                      base64FormatoF,
+                                      b64FormatoF,
                                   },
                               }
                             : {
@@ -1218,8 +1218,8 @@ export class SustentacionExamenComponent implements OnInit {
                                   numeroActaConsejo,
                                   fechaActaConsejo,
                                   fechaSustentacion,
-                                  idJuradoInterno,
-                                  idJuradoExterno,
+                                  idJuradoInterno: 'Sin cambios',
+                                  idJuradoExterno: 'Sin cambios',
                                   envioEmail: {
                                       asunto: this.sustentacionForm.get(
                                           'asuntoConsejo'
@@ -1285,7 +1285,7 @@ export class SustentacionExamenComponent implements OnInit {
                     this.estado ==
                         EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_COORDINADOR_FASE1_SUSTENTACION
                 ) {
-                    const base64FormatoF = await this.formatFileString(
+                    const b64FormatoF = await this.formatFileString(
                         this.FileFormatoF
                     );
 
@@ -1304,7 +1304,7 @@ export class SustentacionExamenComponent implements OnInit {
                                           ).value,
                                   },
                                   obtenerDocumentosParaEnvio: {
-                                      base64FormatoF,
+                                      b64FormatoF,
                                   },
                               }
                             : {
@@ -1396,6 +1396,7 @@ export class SustentacionExamenComponent implements OnInit {
                         idJuradoExterno,
                         numeroActaConsejo,
                         fechaActaConsejo,
+                        fechaSustentacion,
                     } = this.sustentacionForm.value;
 
                     const sustentacionData =
@@ -1405,8 +1406,8 @@ export class SustentacionExamenComponent implements OnInit {
                                   juradosAceptados: 'ACEPTADO',
                                   numeroActaConsejo,
                                   fechaActaConsejo,
-                                  idJuradoInterno,
-                                  idJuradoExterno,
+                                  idJuradoInterno: 'Sin cambios',
+                                  idJuradoExterno: 'Sin cambios',
                                   envioEmail: {
                                       asunto: this.sustentacionForm.get(
                                           'asuntoConsejo'
@@ -1419,6 +1420,11 @@ export class SustentacionExamenComponent implements OnInit {
                               }
                             : {
                                   juradosAceptados: 'RECHAZADO',
+                                  fechaSustentacion,
+                                  numeroActaConsejo,
+                                  fechaActaConsejo,
+                                  idJuradoInterno,
+                                  idJuradoExterno,
                                   envioEmail: {
                                       asunto: this.sustentacionForm.get(
                                           'asuntoConsejo'

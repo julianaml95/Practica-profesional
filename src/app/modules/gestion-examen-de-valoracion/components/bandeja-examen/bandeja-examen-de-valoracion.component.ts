@@ -148,8 +148,8 @@ export class BandejaExamenDeValoracionComponent implements OnInit {
     }
 
     isCrearExamenDisabled(): boolean {
-        if (this.solicitudesPorEstudiante.length === 0) {
-            return true;
+        if (this.solicitudesPorEstudiante.length == 0) {
+            return false;
         }
         const ultimoTrabajoDeGrado =
             this.solicitudesPorEstudiante[
