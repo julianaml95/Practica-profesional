@@ -872,6 +872,18 @@
                     >
                         <div class="field grid">
                             <div
+                                class="flex flex-1 justify-content-end align-items-center"
+                                *ngIf="isDocente && !isCoordinadorFase1"
+                            >
+                                <button
+                                    *ngIf="editMode"
+                                    pButton
+                                    icon="pi pi-eye"
+                                    label="Revisar documentos"
+                                    (click)="openModal()"
+                                ></button>
+                            </div>
+                            <div
                                 class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
                             >
                                 <div
@@ -937,6 +949,20 @@
                     </div>
                     <p-fieldset legend="Comite" styleClass="bg-bluegray-50">
                         <div class="field grid">
+                            <div
+                                class="flex flex-1 justify-content-end align-items-center"
+                                *ngIf="
+                                    isCoordinadorFase1 && !isCoordinadorFase2
+                                "
+                            >
+                                <button
+                                    *ngIf="editMode"
+                                    pButton
+                                    icon="pi pi-eye"
+                                    label="Revisar documentos"
+                                    (click)="openModal()"
+                                ></button>
+                            </div>
                             <div
                                 class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
                             >
@@ -1161,7 +1187,11 @@
                     (click)="showFormatoB()"
                 ></button>
                 <button
-                    *ngIf="editMode && role.includes('ROLE_COORDINADOR')"
+                    *ngIf="
+                        editMode &&
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase2
+                    "
                     pButton
                     icon="pi pi-eye"
                     label="Revisar documentos"
