@@ -307,6 +307,18 @@
                         </p>
                     </div>
                     <p-fieldset legend="Docente" styleClass="bg-bluegray-50">
+                        <div
+                            class="flex flex-1 justify-content-end align-items-center"
+                            *ngIf="role.includes('ROLE_DOCENTE')"
+                        >
+                            <button
+                                *ngIf="!editMode"
+                                pButton
+                                icon="pi pi-eye"
+                                label="Revisar documentos"
+                                (click)="openModal()"
+                            ></button>
+                        </div>
                         <div class="field grid justify-content-center">
                             <div class="col-5">
                                 <label class="label-required"

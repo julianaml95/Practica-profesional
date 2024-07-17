@@ -518,6 +518,18 @@
                     >
                         <div class="field grid">
                             <div
+                                class="flex flex-1 justify-content-end align-items-center"
+                                *ngIf="isDocente && !isCoordinadorFase1"
+                            >
+                                <button
+                                    *ngIf="editMode"
+                                    pButton
+                                    icon="pi pi-eye"
+                                    label="Revisar documentos"
+                                    (click)="openModal()"
+                                ></button>
+                            </div>
+                            <div
                                 class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
                             >
                                 <div
@@ -778,6 +790,18 @@
                         </p>
                     </div>
                     <p-fieldset legend="Concejo" styleClass="bg-bluegray-50">
+                        <div
+                            class="flex flex-1 justify-content-end align-items-center"
+                            *ngIf="isCoordinadorFase2 && !isCoordinadorFase3"
+                        >
+                            <button
+                                *ngIf="editMode"
+                                pButton
+                                icon="pi pi-eye"
+                                label="Revisar documentos"
+                                (click)="openModal()"
+                            ></button>
+                        </div>
                         <div class="field grid justify-content-center">
                             <div
                                 class="col-5 flex flex-nowrap align-items-center justify-content-between"
@@ -814,6 +838,7 @@
                     icon="pi pi-save"
                     label="Guardar"
                     (click)="createOrUpdateResolucion()"
+                    [disabled]="role.includes('ROLE_DOCENTE') && !isReviewed"
                 ></button>
                 <button
                     *ngIf="
