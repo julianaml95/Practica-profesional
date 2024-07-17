@@ -15,6 +15,7 @@ import { Router } from '@angular/router';
 import {
     Subscription,
     catchError,
+    firstValueFrom,
     forkJoin,
     lastValueFrom,
     of,
@@ -77,7 +78,7 @@ export class SustentacionExamenComponent implements OnInit {
     editMode: boolean = false;
     errorMessageShown: boolean = false;
     displayModal: boolean = false;
-    displayFormatoHVAGrado: boolean = false;
+    displayFormatoHVA: boolean = false;
     displayFormatoF: boolean = false;
     isPdfLoaded: boolean = false;
     isDocente: boolean = false;
@@ -762,8 +763,8 @@ export class SustentacionExamenComponent implements OnInit {
     }
     //#endregion
 
-    showFormatoHVAGrado() {
-        this.displayFormatoHVAGrado = true;
+    showFormatoHVA() {
+        this.displayFormatoHVA = true;
     }
 
     showFormatoF() {
@@ -771,17 +772,15 @@ export class SustentacionExamenComponent implements OnInit {
     }
 
     handleFormatoHvaPdfGenerated(file: File) {
-        const pdfFile = new File([file], 'EstudioHojaVidaAcademicaGrado.pdf', {
+        const pdfFile = new File([file], 'EstudioHojaVidaAcademica.pdf', {
             type: 'application/pdf',
         });
-        this.FileEstudioHVAGrado = pdfFile;
+        this.FileEstudioHVA = pdfFile;
         this.convertFileToBase64(pdfFile)
             .then((base64) => {
                 this.sustentacionForm
-                    .get('linkEstudioHojaVidaAcademicaGrado')
-                    .setValue(
-                        `linkEstudioHojaVidaAcademicaGrado.pdf-${base64}`
-                    );
+                    .get('linkEstudioHojaVidaAcademica')
+                    .setValue(`linkEstudioHojaVidaAcademica.pdf-${base64}`);
             })
             .catch((error) => {
                 console.error('Error al convertir el archivo a base64:', error);
@@ -1477,12 +1476,30 @@ export class SustentacionExamenComponent implements OnInit {
                     this.estado ==
                         EstadoProceso.PENDIENTE_SUBIDA_ARCHIVOS_ESTUDIANTE_SUSTENTACION
                 ) {
-                    await lastValueFrom(
-                        this.sustentacionService.createSustentacionEstudiante(
-                            this.sustentacionForm.value,
-                            this.trabajoDeGradoId
-                        )
-                    );
+                    try {
+                        const response = await firstValueFrom(
+                            this.sustentacionService.verificarEgresado(
+                                this.trabajoDeGradoId
+                            )
+                        );
+                        if (response) {
+                            await lastValueFrom(
+                                this.sustentacionService.createSustentacionEstudiante(
+                                    this.sustentacionForm.value,
+                                    this.trabajoDeGradoId
+                                )
+                            );
+                        } else {
+                            this.isLoading = false;
+                            return this.messageService.add(
+                                warnMessage(
+                                    'No es permitido registrar la información debido a que el estudiante no ha completado los datos de egresado.'
+                                )
+                            );
+                        }
+                    } catch (error) {
+                        console.error('Error al crear la sustentación:', error);
+                    }
                 } else if (
                     this.isEstudianteCreated == true &&
                     this.estado ==

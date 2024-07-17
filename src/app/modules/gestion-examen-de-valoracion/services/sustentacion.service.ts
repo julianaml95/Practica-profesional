@@ -26,6 +26,17 @@ export class SustentacionService {
         );
     }
 
+    verificarEgresado(idTrabajoGrado: number): Observable<any> {
+        return this.http.get<any>(
+            backendGestionTrabajoDeGrado(
+                `sustentacion_proyecto_investigacion/verificarEgresado/${idTrabajoGrado}`
+            ),
+            {
+                headers: getHeaders(),
+            }
+        );
+    }
+
     createSustentacionEstudiante(
         sustentacion: Sustentacion,
         idTrabajoGrado: number

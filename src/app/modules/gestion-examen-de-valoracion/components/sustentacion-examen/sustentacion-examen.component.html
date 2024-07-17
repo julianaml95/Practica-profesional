@@ -127,7 +127,7 @@
         </p-dialog>
         <p-dialog
             header="Formato Hoja de Vida Academica para Grado"
-            [(visible)]="displayFormatoHVAGrado"
+            [(visible)]="displayFormatoHVA"
             [style]="{ width: '70vw' }"
             [modal]="true"
             [maximizable]="true"
@@ -637,6 +637,15 @@
                                                 'linkEstudioHojaVidaAcademica'
                                             )
                                         "
+                                    ></button>
+                                    <button
+                                        *ngIf="!FileEstudioHVA"
+                                        pButton
+                                        icon="pi pi-plus"
+                                        class="align-self-center"
+                                        label="Crear Documento"
+                                        (click)="showFormatoHVA()"
+                                        [loading]="loading"
                                     ></button>
                                 </div>
                                 <div
@@ -1247,15 +1256,6 @@
                                                 'linkEstudioHojaVidaAcademicaGrado'
                                             )
                                         "
-                                    ></button>
-                                    <button
-                                        *ngIf="!FileEstudioHVAGrado"
-                                        pButton
-                                        icon="pi pi-plus"
-                                        class="align-self-center"
-                                        label="Crear Documento"
-                                        (click)="showFormatoHVAGrado()"
-                                        [loading]="loading"
                                     ></button>
                                 </div>
                                 <div

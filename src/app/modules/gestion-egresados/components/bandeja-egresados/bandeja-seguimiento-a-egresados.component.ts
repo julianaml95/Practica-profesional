@@ -37,7 +37,8 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     }
 
     loadData() {
-        const estudiante = this.localStorageService.getLocalStorage('est');
+        const estudiante =
+            this.localStorageService.getLocalStorage('estEgresado');
         if (estudiante) {
             this.estudianteSeleccionado = estudiante;
             this.listCursos();
@@ -62,7 +63,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
 
     limpiarEstudiante() {
         this.estudianteSeleccionado = null;
-        this.localStorageService.clearLocalStorage('est');
+        this.localStorageService.clearLocalStorage('estEgresado');
     }
 
     showBuscadorEstudiantes() {
@@ -87,7 +88,7 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
                                         this.mapEstudianteLabel(response);
                                     this.localStorageService.saveLocalStorage(
                                         this.mapEstudianteLabel(response),
-                                        'est'
+                                        'estEgresado'
                                     );
                                     this.listCursos();
                                     this.listEmpresas();

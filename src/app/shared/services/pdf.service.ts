@@ -274,7 +274,7 @@ export class PdfService {
                             ],
                             alignment: 'left',
                             display: 'inline',
-                            margin: [-10, 20, 0, 5],
+                            margin: [20, 35, 0, 5],
                         });
                     }
                 }
@@ -326,7 +326,7 @@ export class PdfService {
                 rows.forEach((row) => {
                     const rowData = [];
                     const cells = row.querySelectorAll('td, th');
-                    cells.forEach((cell) => {                        
+                    cells.forEach((cell) => {
                         rowData.push({
                             text: cell.innerText.trim(),
                             bold: cell.tagName === 'TH',

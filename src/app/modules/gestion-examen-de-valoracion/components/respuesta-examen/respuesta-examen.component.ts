@@ -474,14 +474,10 @@ export class RespuestaExamenComponent implements OnInit {
     checkEstados() {
         switch (this.estado) {
             case EstadoProceso.PENDIENTE_RESULTADO_EXAMEN_DE_VALORACION:
-            case EstadoProceso.EXAMEN_DE_VALORACION_APLAZADO_EVALUADOR_1 ||
-                EstadoProceso.EXAMEN_DE_VALORACION_APLAZADO_EVALUADOR_2:
-            case EstadoProceso.EXAMEN_DE_VALORACION_NO_APROBADO_EVALUADOR_1 ||
-                EstadoProceso.EXAMEN_DE_VALORACION_NO_APROBADO_EVALUADOR_2:
                 this.messageService.add({
                     severity: 'warn',
                     summary: 'Advertencia',
-                    detail: 'El examen de valoración no está aprobado/aplazado.',
+                    detail: EstadoProceso.PENDIENTE_RESULTADO_EXAMEN_DE_VALORACION,
                 });
                 break;
             case EstadoProceso.EXAMEN_DE_VALORACION_CANCELADO:
@@ -798,6 +794,7 @@ export class RespuestaExamenComponent implements OnInit {
             );
             return;
         }
+        this.isLoading = true;
         const respuestaId =
             formArrayName === 'expertoEvaluaciones'
                 ? this.evaluacionExpertoIds[index]
@@ -851,17 +848,16 @@ export class RespuestaExamenComponent implements OnInit {
                             .patchValue({
                                 id: response.id,
                             });
-                        this.messageService.add(
-                            infoMessage(
-                                Aviso.RESPUESTA_ACTUALIZADA_CORRECTAMENTE
-                            )
-                        );
                     }
                 },
                 error: (e) => {
                     this.handlerResponseException(e);
                 },
                 complete: () => {
+                    this.isLoading = false;
+                    this.messageService.add(
+                        infoMessage(Aviso.RESPUESTA_ACTUALIZADA_CORRECTAMENTE)
+                    );
                     this.router.navigate(['examen-de-valoracion']);
                 },
             });
@@ -904,8 +900,8 @@ export class RespuestaExamenComponent implements OnInit {
             );
             return;
         }
+        this.isLoading = true;
         const evaluacionData = this.mapEvaluacion(formArrayName, index);
-
         const respuestaMail = {
             envioEmail: {
                 asunto: 'Envio respuesta evaluadores',
@@ -913,12 +909,12 @@ export class RespuestaExamenComponent implements OnInit {
                     'Buenos dias, envio documentos enviados por el evaluador Mage',
             },
         };
-
         const { [formArrayName]: omit, ...rest } = this.respuestaForm.value;
         const castBit = {
             ...rest,
             estadoFinalizado: Number(rest.estadoFinalizado),
         };
+
         this.respuestaService
             .createRespuestaExamen(
                 {
@@ -939,15 +935,16 @@ export class RespuestaExamenComponent implements OnInit {
                             .patchValue({
                                 id: response.id,
                             });
-                        this.messageService.add(
-                            infoMessage(Aviso.RESPUESTA_GUARDADA_CORRECTAMENTE)
-                        );
                     }
                 },
                 error: (e) => {
                     this.handlerResponseException(e);
                 },
                 complete: () => {
+                    this.isLoading = false;
+                    this.messageService.add(
+                        infoMessage(Aviso.RESPUESTA_GUARDADA_CORRECTAMENTE)
+                    );
                     this.router.navigate(['examen-de-valoracion']);
                 },
             });
@@ -1119,16 +1116,11 @@ export class RespuestaExamenComponent implements OnInit {
     }
 
     handlerResponseException(response: any) {
-        const error = response?.error;
-        if (!error) return;
-        if (response.status === 500) {
-            const mapException = mapResponseException(error);
-            mapException.forEach((value) => {
-                this.messageService.add(errorMessage(value));
-            });
-        } else if (response.status === 409) {
-            this.messageService.add(errorMessage(error.mensaje));
-        }
+        if (response.status != 500) return;
+        const mapException = mapResponseException(response.error);
+        mapException.forEach((value, _) => {
+            this.messageService.add(errorMessage(value));
+        });
     }
 
     isActiveIndex(): Boolean {

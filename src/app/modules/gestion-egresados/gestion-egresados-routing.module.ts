@@ -14,7 +14,7 @@ const routes: Routes = [
                 component: BandejaSeguimientoAEgresadosComponent,
                 canActivate: [RoleGuard],
                 data: {
-                    roles: ['ROLE_ESTUDIANTE'],
+                    roles: ['ROLE_ESTUDIANTE', 'ROLE_COORDINADOR'],
                 },
             },
         ],

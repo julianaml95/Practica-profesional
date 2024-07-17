@@ -146,11 +146,9 @@
                         <span>{{ docente?.value?.nombres }}</span>
                     </div>
                     <!-- END -->
-
-                    <div
-                        class="col-2 col-label text-right mr-2 align-self-start"
-                    >
-                        {{ docente?.value?.nombres }}
+                    <div class="col-2 col-label text-right flex flex-column">
+                        <span>{{ docente?.value?.nombres }}</span>
+                        <span>{{ experto?.value?.nombres }}</span>
                     </div>
                 </div>
             </div>
@@ -180,7 +178,7 @@
             </div>
         </form>
     </div>
-    <div id="formatoC2">
+    <div id="formatoC2" class="hidden">
         <div class="flex flex-column w-full mb-4">
             <div
                 class="flex flex-row align-items-center justify-content-evenly header-logo"
@@ -327,7 +325,6 @@
                         <span>{{ experto?.value?.nombres }}</span>
                     </div>
                     <!-- END -->
-
                     <div
                         class="col-2 col-label text-right mr-2 align-self-start"
                     >

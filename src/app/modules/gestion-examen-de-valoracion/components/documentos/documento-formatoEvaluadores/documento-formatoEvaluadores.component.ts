@@ -75,7 +75,7 @@ export class DocumentoformatoEvaluadoresComponent implements OnInit {
     ngOnInit() {
         this.initForm();
         this.fechaActual = new Date();
-
+        this.formatoEvaluadoresForm.get('consecutivo').setValue('MC/051');
         this.tituloSubscription =
             this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
                 next: (response) => {

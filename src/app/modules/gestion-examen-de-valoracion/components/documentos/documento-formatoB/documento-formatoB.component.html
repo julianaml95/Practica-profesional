@@ -112,7 +112,7 @@
                     >
                         <!-- FIELD TO PDF -->
                         <div class="field-content p-show">
-                            <label for=""></label
+                            <label>Jurado:</label
                             ><span
                                 >{{ docente?.value?.nombres }}
                                 {{ docente?.value?.correo }},
@@ -147,6 +147,35 @@
                                 >
                                     <span>Correo</span>
                                     <span>{{ docente?.value?.correo }}</span>
+                                </div>
+                            </p-card>
+                        </div>
+                        <div class="flex align-items-center mt-2">
+                            <p-card class="w-full max-w-30rem">
+                                <div class="flex justify-content-between">
+                                    <span class="card-title"
+                                        >Datos del Jurado Externo</span
+                                    >
+                                </div>
+                                <div
+                                    class="mt-2 card-data flex justify-content-between"
+                                >
+                                    <span>Nombres y Apellidos</span>
+                                    <span>{{ experto?.value?.nombres }}</span>
+                                </div>
+                                <div
+                                    class="mt-2 card-data flex justify-content-between"
+                                >
+                                    <span>Universidad</span>
+                                    <span>{{
+                                        experto?.value?.universidad
+                                    }}</span>
+                                </div>
+                                <div
+                                    class="mt-2 card-data flex justify-content-between"
+                                >
+                                    <span>Correo</span>
+                                    <span>{{ experto?.value?.correo }}</span>
                                 </div>
                             </p-card>
                         </div>
@@ -226,10 +255,10 @@
                         <hr style="display: inline" />
                     </div>
                     <!-- END -->
-                    <span
-                        class="col-2 col-label text-right mr-2 align-self-start"
-                        >{{ docente?.value?.nombres }}</span
-                    >
+                    <div class="col-2 col-label text-right flex flex-column">
+                        <span>{{ docente?.value?.nombres }}</span>
+                        <span>{{ experto?.value?.nombres }}</span>
+                    </div>
                 </div>
             </div>
             <div
@@ -258,7 +287,7 @@
             </div>
         </form>
     </div>
-    <div id="formatoB2">
+    <div id="formatoB2" class="hidden">
         <div class="flex flex-column w-full mb-4">
             <div
                 class="flex flex-row align-items-center justify-content-evenly header-logo"

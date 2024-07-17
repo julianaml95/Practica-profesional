@@ -1354,7 +1354,23 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="grid column-gap-4 mb-6">
+                                    <div
+                                        class="grid column-gap-4 mb-6"
+                                        *ngIf="
+                                            docenteEvaluaciones
+                                                .at(i)
+                                                .get(
+                                                    'respuestaExamenValoracionDocente' +
+                                                        i
+                                                )?.value == 'APLAZADO' ||
+                                            docenteEvaluaciones
+                                                .at(i)
+                                                .get(
+                                                    'respuestaExamenValoracionDocente' +
+                                                        i
+                                                )?.value == 'NO_APROBADO'
+                                        "
+                                    >
                                         <div
                                             class="label-required col-2 text-right"
                                         >
@@ -1363,23 +1379,7 @@
                                                 Correciones</label
                                             >
                                         </div>
-                                        <div
-                                            class="col-9 flex column-gap-4"
-                                            *ngIf="
-                                                docenteEvaluaciones
-                                                    .at(i)
-                                                    .get(
-                                                        'respuestaExamenValoracionDocente' +
-                                                            i
-                                                    )?.value == 'APLAZADO' ||
-                                                docenteEvaluaciones
-                                                    .at(i)
-                                                    .get(
-                                                        'respuestaExamenValoracionDocente' +
-                                                            i
-                                                    )?.value == 'NO_APROBADO'
-                                            "
-                                        >
+                                        <div class="col-9 flex column-gap-4">
                                             <p-calendar
                                                 [formControlName]="
                                                     'fechaMaximaEntrega' + i
