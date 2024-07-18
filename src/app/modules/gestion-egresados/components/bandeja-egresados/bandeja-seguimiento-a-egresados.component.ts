@@ -135,7 +135,6 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     showAddEmpresa() {
         const ref = this.dialogService.open(EmpresaEgresadoComponent, {
             header: 'Agregar empresa',
-            height: '60vh',
             width: '40%',
             styleClass: 'dialog-empresa',
             data: { estudianteId: this.estudianteSeleccionado.id },
@@ -148,7 +147,6 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     showUpdateEmpresa(id: number) {
         const ref = this.dialogService.open(EmpresaEgresadoComponent, {
             header: 'Editar empresa',
-            height: '60vh',
             width: '40%',
             styleClass: 'dialog-empresa',
             data: {
@@ -164,7 +162,6 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     showAddCurso() {
         const ref = this.dialogService.open(CursoEgresadoComponent, {
             header: 'Agregar curso',
-            height: '58vh',
             width: '40%',
             styleClass: 'dialog-curso',
             data: { estudianteId: this.estudianteSeleccionado.id },
@@ -177,7 +174,6 @@ export class BandejaSeguimientoAEgresadosComponent implements OnInit {
     showUpdateCurso(id: number) {
         const ref = this.dialogService.open(CursoEgresadoComponent, {
             header: 'Editar curso',
-            height: '58vh',
             width: '40%',
             styleClass: 'dialog-curso',
             data: { cursoId: id, estudianteId: this.estudianteSeleccionado.id },

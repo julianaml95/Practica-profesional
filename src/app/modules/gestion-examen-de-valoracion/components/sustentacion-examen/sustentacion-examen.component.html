@@ -126,7 +126,7 @@
             </div>
         </p-dialog>
         <p-dialog
-            header="Formato Hoja de Vida Academica para Grado"
+            header="Formato Hoja de Vida Academica"
             [(visible)]="displayFormatoHVA"
             [style]="{ width: '70vw' }"
             [modal]="true"
@@ -141,6 +141,24 @@
                         handleFormatoHvaPdfGenerated($event)
                     "
                 ></documento-formatoHva>
+            </ng-container>
+        </p-dialog>
+        <p-dialog
+            header="Formato Hoja de Vida Academica para Grado"
+            [(visible)]="displayFormatoHVAGrado"
+            [style]="{ width: '70vw' }"
+            [modal]="true"
+            [maximizable]="true"
+            [baseZIndex]="10000"
+            [draggable]="false"
+            [resizable]="false"
+        >
+            <ng-container>
+                <documento-formatoHvaGrado
+                    (formatoHvaGradoPdfGenerated)="
+                        handleFormatoHvaGradoPdfGenerated($event)
+                    "
+                ></documento-formatoHvaGrado>
             </ng-container>
         </p-dialog>
         <p-dialog
@@ -212,7 +230,7 @@
     </div>
     <ng-template class="w-full" pTemplate="footer">
         <form [formGroup]="sustentacionForm" enctype="multipart/form-data">
-            <div class="flex flex-column gap-2">
+            <div class="sustentacion flex flex-column gap-2">
                 <div class="text-center font-medium mb-4">
                     <p>
                         <b>Sustentación del proyecto de investigación</b>
@@ -236,6 +254,18 @@
                         </p>
                     </div>
                     <p-fieldset legend="Docente" styleClass="bg-bluegray-50">
+                        <div
+                            class="flex flex-1 justify-content-end align-items-center"
+                            *ngIf="role.includes('ROLE_DOCENTE')"
+                        >
+                            <button
+                                *ngIf="!editMode"
+                                pButton
+                                icon="pi pi-eye"
+                                label="Revisar documentos"
+                                (click)="openModal()"
+                            ></button>
+                        </div>
                         <div class="field grid justify-content-center">
                             <div class="col-5 mt-4">
                                 <label class="label-required"
@@ -361,6 +391,18 @@
                     >
                         <div class="field grid">
                             <div
+                                class="flex flex-1 justify-content-end align-items-center"
+                                *ngIf="isDocente && !isCoordinadorFase1"
+                            >
+                                <button
+                                    *ngIf="editMode"
+                                    pButton
+                                    icon="pi pi-eye"
+                                    label="Revisar documentos"
+                                    (click)="openModal()"
+                                ></button>
+                            </div>
+                            <div
                                 class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
                             >
                                 <div
@@ -426,6 +468,20 @@
                     </div>
                     <p-fieldset legend="Comite" styleClass="bg-bluegray-50">
                         <div class="field grid">
+                            <div
+                                class="flex flex-1 justify-content-end align-items-center"
+                                *ngIf="
+                                    isCoordinadorFase1 && !isCoordinadorFase2
+                                "
+                            >
+                                <button
+                                    *ngIf="editMode"
+                                    pButton
+                                    icon="pi pi-eye"
+                                    label="Revisar documentos"
+                                    (click)="openModal()"
+                                ></button>
+                            </div>
                             <div
                                 class="flex m-4 w-full justify-content-center align-items-center column-gap-4"
                             >
@@ -664,7 +720,7 @@
                                     No acta de revisión trabajo
                                 </label>
                                 <input
-                                    class="ml-2"
+                                    class="max-w-10rem ml-2"
                                     pInputText
                                     formControlName="numeroActa"
                                 />
@@ -698,6 +754,18 @@
                         </p>
                     </div>
                     <p-fieldset legend="Consejo" styleClass="bg-bluegray-50">
+                        <div
+                            class="flex flex-1 justify-content-end align-items-center"
+                            *ngIf="isCoordinadorFase2 && !isCoordinadorFase3"
+                        >
+                            <button
+                                *ngIf="editMode"
+                                pButton
+                                icon="pi pi-eye"
+                                label="Revisar documentos"
+                                (click)="openModal()"
+                            ></button>
+                        </div>
                         <div class="field grid justify-content-center">
                             <div class="col-5">
                                 <label>Aceptación de Jurados</label>
@@ -836,13 +904,12 @@
                         </div>
                         <div class="field grid justify-content-center">
                             <div
-                                class="col-5 flex flex-nowrap align-items-center justify-content-start"
+                                class="col-5 flex flex-nowrap align-items-center justify-content-between"
                             >
                                 <label class="label-required"
                                     >Fecha Sustentacion</label
                                 >
                                 <p-calendar
-                                    class="ml-4"
                                     formControlName="fechaSustentacion"
                                     [showIcon]="true"
                                     dateFormat="dd.mm.yy"
@@ -857,7 +924,7 @@
                                     No acta de revisión trabajo final
                                 </label>
                                 <input
-                                    class="ml-2"
+                                    class="max-w-10rem ml-2"
                                     pInputText
                                     formControlName="numeroActaConsejo"
                                 />
@@ -893,6 +960,18 @@
                         </p>
                     </div>
                     <p-fieldset legend="Estudiante" styleClass="bg-bluegray-50">
+                        <div
+                            class="flex flex-1 justify-content-end align-items-center"
+                            *ngIf="isCoordinadorFase3 && !isEstudiante"
+                        >
+                            <button
+                                *ngIf="editMode"
+                                pButton
+                                icon="pi pi-eye"
+                                label="Revisar documentos"
+                                (click)="openModal()"
+                            ></button>
+                        </div>
                         <div class="field grid justify-content-center">
                             <div class="col-5">
                                 <label class="label-required"
@@ -1068,6 +1147,18 @@
                         </p>
                     </div>
                     <p-fieldset legend="Consejo" styleClass="bg-bluegray-50">
+                        <div
+                            class="flex flex-1 justify-content-end align-items-center"
+                            *ngIf="isEstudiante && !isCoordinadorFase4"
+                        >
+                            <button
+                                *ngIf="editMode"
+                                pButton
+                                icon="pi pi-eye"
+                                label="Revisar documentos"
+                                (click)="openModal()"
+                            ></button>
+                        </div>
                         <div class="field grid justify-content-center">
                             <div class="col-5">
                                 <label class="label-required"
@@ -1257,6 +1348,15 @@
                                             )
                                         "
                                     ></button>
+                                    <button
+                                        *ngIf="!FileEstudioHVAGrado"
+                                        pButton
+                                        icon="pi pi-plus"
+                                        class="align-self-center"
+                                        label="Crear Documento"
+                                        (click)="showFormatoHVAGrado()"
+                                        [loading]="loading"
+                                    ></button>
                                 </div>
                                 <div
                                     class="text-description mt-2"
@@ -1274,7 +1374,7 @@
                                     No acta de revisión trabajo final
                                 </label>
                                 <input
-                                    class="ml-2"
+                                    class="max-w-10rem ml-2"
                                     pInputText
                                     formControlName="numeroActaFinal"
                                 />
@@ -1301,9 +1401,14 @@
                     icon="pi pi-save"
                     label="Guardar"
                     (click)="createOrUpdateSustentacion()"
+                    [disabled]="role.includes('ROLE_DOCENTE') && !isReviewed"
                 ></button>
                 <button
-                    *ngIf="editMode && role.includes('ROLE_COORDINADOR')"
+                    *ngIf="
+                        editMode &&
+                        role.includes('ROLE_COORDINADOR') &&
+                        isCoordinadorFase4
+                    "
                     pButton
                     icon="pi pi-eye"
                     label="Revisar documentos"

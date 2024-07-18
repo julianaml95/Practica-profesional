@@ -49,6 +49,14 @@
             <ng-template pTemplate="footer">
                 <div class="flex justify-content-between align-items-center">
                     <div>
+                        <button
+                            pButton
+                            class="p-button-secondary"
+                            label="Cancelar"
+                            (click)="closeModal()"
+                        ></button>
+                    </div>
+                    <div>
                         <p-button
                             *ngIf="currentFormat != 'formatoB'"
                             icon="pi pi-chevron-left"
@@ -64,14 +72,6 @@
                             styleClass="p-button-text"
                             (click)="nextFormat()"
                         ></p-button>
-                    </div>
-                    <div>
-                        <button
-                            pButton
-                            class="p-button-secondary"
-                            label="Cancelar"
-                            (click)="closeModal()"
-                        ></button>
                     </div>
                 </div>
             </ng-template>
@@ -1029,7 +1029,7 @@
                                     >No Acta de aprobacion del examen</label
                                 >
                                 <input
-                                    class="ml-2"
+                                    class="max-w-10rem ml-2"
                                     pInputText
                                     formControlName="numeroActa"
                                 />
@@ -1215,7 +1215,7 @@
                     icon="pi pi-save"
                     label="Guardar"
                     (click)="createSolicitudExamen()"
-                    [disabled]="!estudianteSeleccionado"
+                    [disabled]="!isReviewed"
                 ></button>
                 <button
                     *ngIf="editMode && role.includes('ROLE_DOCENTE')"
@@ -1223,7 +1223,7 @@
                     icon="pi pi-pencil"
                     [label]="getButtonLabel()"
                     (click)="updateSolicitudExamen()"
-                    [disabled]="isCoordinadorFase1Created"
+                    [disabled]="isCoordinadorFase1 && !isReviewed"
                 ></button>
                 <button
                     *ngIf="editMode && role.includes('ROLE_COORDINADOR')"

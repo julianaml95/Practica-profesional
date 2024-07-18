@@ -17,7 +17,7 @@ import { SustentacionExamenComponent } from './components/sustentacion-examen/su
 import { DocumentoFormatoAComponent } from './components/documentos/documento-formatoA/documento-formatoA.component';
 import { DocumentoFormatoBComponent } from './components/documentos/documento-formatoB/documento-formatoB.component';
 import { DocumentoFormatoCComponent } from './components/documentos/documento-formatoC/documento-formatoC.component';
-import { FileUploadValueAccessorDirective } from './components/respuesta-examen/fileupload-accessor-directive';
+import { FileUploadValueAccessorDirective } from './components/respuesta-examen/utils/fileupload-accessor-directive';
 
 import { SolicitudService } from './services/solicitud.service';
 import { TrabajoDeGradoService } from './services/trabajoDeGrado.service';
@@ -27,6 +27,7 @@ import { SustentacionService } from './services/sustentacion.service';
 import { DocumentoFormatoHvaComponent } from './components/documentos/documento-formatoHva/documento-formatoHva.component';
 import { DocumentoFormatoFComponent } from './components/documentos/documento-formatoF/documento-formatoF.component';
 import { DocumentoformatoEvaluadoresComponent } from './components/documentos/documento-formatoEvaluadores/documento-formatoEvaluadores.component';
+import { DocumentoFormatoHvaGradoComponent } from './components/documentos/documento-formatoHvaGrado/documento-formatoHvaGrado.component';
 
 @NgModule({
     declarations: [
@@ -36,6 +37,7 @@ import { DocumentoformatoEvaluadoresComponent } from './components/documentos/do
         DocumentoFormatoBComponent,
         DocumentoFormatoCComponent,
         DocumentoFormatoHvaComponent,
+        DocumentoFormatoHvaGradoComponent,
         DocumentoFormatoFComponent,
         DocumentoformatoEvaluadoresComponent,
         SolicitudExamenComponent,

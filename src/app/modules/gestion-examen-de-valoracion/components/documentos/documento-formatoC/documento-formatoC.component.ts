@@ -126,7 +126,7 @@ export class DocumentoFormatoCComponent implements OnInit {
 
     initForm(): void {
         this.formatoCForm = this.fb.group({
-            receptor: [null, Validators.required],
+            receptor: ['Luz Marina Sierra Martínez', Validators.required],
             asunto: [null, Validators.required],
             titulo: [null, Validators.required],
             observaciones: [null, Validators.required],
@@ -135,6 +135,8 @@ export class DocumentoFormatoCComponent implements OnInit {
         });
 
         this.formatoCForm.get('titulo').disable();
+        this.formatoCForm.get('asunto').disable();
+        this.formatoCForm.get('observaciones').disable();
         this.formatoCForm.get('juradoInterno').disable();
         this.formatoCForm.get('juradoExterno').disable();
         this.formReady.emit(this.formatoCForm);

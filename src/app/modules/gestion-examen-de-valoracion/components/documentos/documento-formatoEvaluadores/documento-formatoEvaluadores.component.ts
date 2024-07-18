@@ -75,7 +75,6 @@ export class DocumentoformatoEvaluadoresComponent implements OnInit {
     ngOnInit() {
         this.initForm();
         this.fechaActual = new Date();
-        this.formatoEvaluadoresForm.get('consecutivo').setValue('MC/051');
         this.tituloSubscription =
             this.trabajoDeGradoService.tituloSeleccionadoSubject$.subscribe({
                 next: (response) => {
@@ -125,7 +124,7 @@ export class DocumentoformatoEvaluadoresComponent implements OnInit {
 
     initForm(): void {
         this.formatoEvaluadoresForm = this.fb.group({
-            consecutivo: [null, Validators.required],
+            consecutivo: ['MC/051', Validators.required],
             juradoExterno: [null, Validators.required],
             juradoInterno: [null, Validators.required],
             asunto: [null, Validators.required],

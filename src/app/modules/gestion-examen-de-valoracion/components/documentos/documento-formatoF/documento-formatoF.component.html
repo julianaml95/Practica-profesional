@@ -28,7 +28,9 @@
         <div class="mt-4 form-container pl-8 pr-8">
             <form [formGroup]="formatoFForm">
                 <div class="field grid justify-content-start">
-                    <label class="col-2" for="titulo">TÍTULO:</label>
+                    <label class="col-2 label-required" for="titulo"
+                        >TÍTULO:</label
+                    >
                     <div class="col-10">
                         <input
                             pInputText
@@ -36,12 +38,15 @@
                             id="titulo"
                             class="p-inputtext-md w-full"
                             formControlName="titulo"
+                            readonly
                         />
                     </div>
                 </div>
 
                 <div class="field grid justify-content-start">
-                    <label class="col-2" for="estudiante">ESTUDIANTE:</label>
+                    <label class="col-2 label-required" for="estudiante"
+                        >ESTUDIANTE:</label
+                    >
                     <div class="col-10">
                         <input
                             pInputText
@@ -49,12 +54,15 @@
                             id="estudiante"
                             class="p-inputtext-md w-full"
                             formControlName="estudiante"
+                            readonly
                         />
                     </div>
                 </div>
 
                 <div class="field grid justify-content-start">
-                    <label class="col-2" for="director">DIRECTOR:</label>
+                    <label class="col-2 label-required" for="director"
+                        >DIRECTOR:</label
+                    >
                     <div class="col-10">
                         <input
                             pInputText
@@ -67,7 +75,7 @@
                 </div>
 
                 <div class="field grid justify-content-start">
-                    <label class="col-2" for="trabajoCumple"
+                    <label class="col-2 label-required" for="trabajoCumple"
                         >A) EL TRABAJO CUMPLE CON LAS CONDICIONES DE
                         ENTREGA?</label
                     >
@@ -94,7 +102,7 @@
                 </div>
 
                 <div class="field grid justify-content-start">
-                    <label class="col-2" for="documentoTerminado"
+                    <label class="col-2 label-required" for="documentoTerminado"
                         >B) DOCUMENTO Y ANEXOS COMPLETAMENTE TERMINADOS?</label
                     >
                     <div class="col-10">
@@ -135,7 +143,7 @@
                 </div>
 
                 <div class="field grid justify-content-start">
-                    <label class="col-2" for="jurados"
+                    <label class="col-2 label-required" for="jurados"
                         >JURADOS SUGERIDOS Y DATOS DE CONTACTO:</label
                     >
                     <div class="col-10">
@@ -157,10 +165,10 @@
                 </div>
 
                 <div class="field grid mt-4">
-                    <span class="col-10 text-right align-self-start">
+                    <span class="col-9 text-right align-self-start">
                         <b>Firma Director</b>
                     </span>
-                    <div class="col-2 text-center">
+                    <div class="col-3 text-center">
                         <p-fileUpload
                             name="firmaDirector"
                             chooseIcon="pi pi-file"

@@ -110,7 +110,7 @@ export class DocumentoFormatoFComponent implements OnInit {
             documentoTerminadoNo: [false, Validators.required],
             documentoTerminadoSi: [false, Validators.required],
             jurados: [null, Validators.required],
-            observaciones: [null, Validators.required],
+            observaciones: [null],
             firmaDirector: [null, Validators.required],
         });
 
@@ -207,7 +207,7 @@ export class DocumentoFormatoFComponent implements OnInit {
                             image: this.logoImage,
                             width: 50,
                             height: 70,
-                            margin: [0, 5, 0, 5],
+                            margin: [0, -10, 0, 5],
                             alignment: 'right',
                             opacity: 0.6,
                         },
@@ -219,9 +219,14 @@ export class DocumentoFormatoFComponent implements OnInit {
                     alignment: 'center',
                 },
                 {
-                    text: 'FORMATO F: REMISION DEL DOCUMENTO FINAL AL COMITÉ DE PROGRAMA POR EL DIRECTOR RESPECTIVO',
-                    style: 'subheader',
-                    alignment: 'left',
+                    columns: [
+                        { text: 'FORMATO F:', style: 'label', width: '25%' },
+                        {
+                            text: 'REMISION DEL DOCUMENTO FINAL AL COMITÉ DE PROGRAMA POR EL DIRECTOR RESPECTIVO',
+                            style: 'value',
+                            width: '75%',
+                        },
+                    ],
                 },
                 {
                     columns: [
@@ -307,7 +312,7 @@ export class DocumentoFormatoFComponent implements OnInit {
                 { text: 'OBSERVACIONES:', style: 'label' },
                 {
                     text:
-                        formValues.observaciones ||
+                        formValues?.observaciones ||
                         '______________________________',
                     style: 'value',
                 },
@@ -353,7 +358,7 @@ export class DocumentoFormatoFComponent implements OnInit {
                                 {
                                     image: this.footerImage,
                                     width: 100,
-                                    height: 80,
+                                    height: 60,
                                     alignment: 'left',
                                     margin: [0, 5, 0, 5],
                                     opacity: 0.6,
@@ -375,9 +380,10 @@ export class DocumentoFormatoFComponent implements OnInit {
                                             type: 'line',
                                             x1: 0,
                                             y1: 0,
-                                            x2: 300,
+                                            x2: 320,
                                             y2: 0,
                                             lineWidth: 1,
+                                            color: '#ff0000',
                                         },
                                     ],
                                     margin: [0, 2, 0, 2],

@@ -36,7 +36,6 @@
 @media (max-width: 768px) {
     ::ng-deep .dialog-empresa {
         width: 90% !important;
-        top: -10% !important;
     }
 
     .col-label,
@@ -47,6 +46,6 @@
 
     .col-label {
         text-align: left !important;
-        margin-bottom: 1rem;
+        margin-bottom: 0.2rem;
     }
 }

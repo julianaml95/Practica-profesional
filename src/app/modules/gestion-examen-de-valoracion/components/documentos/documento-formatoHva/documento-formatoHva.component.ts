@@ -45,8 +45,6 @@ export class DocumentoFormatoHvaComponent implements OnInit {
 
     loading = false;
 
-    fechaActual: Date;
-
     logoImage: string;
     firmaEstudiante: string | ArrayBuffer;
     firmaCoordinador: string | ArrayBuffer;
@@ -65,7 +63,6 @@ export class DocumentoFormatoHvaComponent implements OnInit {
 
     ngOnInit() {
         this.initForm();
-        this.fechaActual = new Date();
 
         this.estudianteSubscription =
             this.trabajoDeGradoService.estudianteSeleccionado$.subscribe({
@@ -98,8 +95,8 @@ export class DocumentoFormatoHvaComponent implements OnInit {
             periodoi: [false, Validators.required],
             periodoii: [false, Validators.required],
             anioPeriodo: [anio, Validators.required],
-            facultad: [null, Validators.required],
-            programa: [null, Validators.required],
+            facultad: ["Ingeniería Electrónica y Telecomunicaciones", Validators.required],
+            programa: ["Maestría en Computación", Validators.required],
             nombreEstudiante: [null, Validators.required],
             cedulaCiudadania: [null, Validators.required],
             lugarExpedicion: [null, Validators.required],
@@ -318,11 +315,16 @@ export class DocumentoFormatoHvaComponent implements OnInit {
                             ],
                         ],
                     },
-                    margin: [0, 10, 0, 0],
+                    layout: {
+                        hLineWidth: function (i, node) {
+                            return i === 0 ? 0 : 1;
+                        },
+                    },
+                    margin: [0, 0, 0, 0],
                 },
                 {
                     table: {
-                        widths: ['*', '*', '*', '*'],
+                        widths: ['25%', '25%', '25%', '25%'],
                         body: [
                             [
                                 {
